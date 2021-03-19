@@ -22,8 +22,12 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "*"
-click = "*"
+python = ">=3.6.0"
+typer = "*"
+tqdm = "^4.59.0"
+PyYAML = "^5.4.1"
+dearpygui = "^0.6.281"
+yaspin = "^1.4.1"
 
 [tool.poetry.dev-dependencies]
 bumpversion = "*"

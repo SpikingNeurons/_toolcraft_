@@ -45,3 +45,22 @@ poetry update
 poetry build
 poetry publish
 ```
+
+
+## bump2version
+
+This helps to version.
+
+
+Note: Once pypi is updated you can never use the same version number even if you
+  delete files and recreate repo
+
+
+```cmd
+REM bump2version major
+REM bump2version minor
+bump2version patch
+git push
+poetry build
+poetry push
+```

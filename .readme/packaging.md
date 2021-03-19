@@ -47,9 +47,9 @@ poetry publish
 ```
 
 
-## bump2version
+## versioning
 
-This helps to version.
+This helps to version. Note that poetry uses bump2version
 
 
 Note: Once pypi is updated you can never use the same version number even if you
@@ -57,13 +57,18 @@ Note: Once pypi is updated you can never use the same version number even if you
 
 
 ```cmd
-REM bump2version major
-REM bump2version minor
-bump2version patch
-git push
-git push --tags
+REM check current version
+poetry version
+
+REM bump it
+REM rules: patch, minor, major, prepatch, preminor, premajor, prerelease
+poetry version <bump_rule>
+
+REM build and publish
 poetry build
 poetry publish
+
+REM if you use travis-ci then push git tag
 ```
 
 

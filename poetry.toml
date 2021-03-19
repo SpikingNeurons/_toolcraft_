@@ -1,0 +1,3 @@
+cache-dir = "C:\\Users\\prave\\Documents\\Github\\toolcraft\\.poetry_cache"
+[virtualenvs]
+create = true

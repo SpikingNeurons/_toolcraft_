@@ -30,7 +30,7 @@ dearpygui = "^0.6.281"
 yaspin = "^1.4.1"
 
 [tool.poetry.dev-dependencies]
-bumpversion = "*"
+bump2version = "^1.0.1"
 coverage = "*"
 flake8 = "*"
 invoke = "*"

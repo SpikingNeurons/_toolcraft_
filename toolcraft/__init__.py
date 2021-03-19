@@ -11,12 +11,12 @@ Resolving __version__
 
 __author__ = """Praveen Kulkarni"""
 __email__ = 'praveenneuron@gmail.com'
-__version__ = 'fff'
+
 # Note that this is done as code cannot know the version number and it is the job of pyproject.toml
-# try:
-#     from importlib.metadata import version, PackageNotFoundError
-#     __version__ = version(__name__)
-# except PackageNotFoundError as pnf:
-#     __version__ = 'cannot estimate version'
-# except ModuleNotFoundError as mnf:
-#     __version__ = 'cannot estimate version'
+try:
+    from importlib.metadata import version, PackageNotFoundError
+    __version__ = version(__name__)
+except PackageNotFoundError as pnf:
+    __version__ = 'cannot estimate version'
+except ModuleNotFoundError as mnf:
+    __version__ = 'cannot estimate version'

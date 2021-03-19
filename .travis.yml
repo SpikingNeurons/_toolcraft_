@@ -18,4 +18,4 @@ deploy:
   on:
     tags: true
     repo: SpikingNeurons/toolcraft
-    python: 3.7
+    python: 3.6

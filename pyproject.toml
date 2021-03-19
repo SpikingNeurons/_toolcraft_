@@ -40,6 +40,7 @@ pytest = "*"
 sphinx = "*"
 tox = "*"
 yapf = "*"
+poetry = "^1.1.5"
 
 [tool.poetry.scripts]
 toolcraft = 'toolcraft.cli:main'

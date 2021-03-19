@@ -6,7 +6,36 @@ Here we write tips related to packaging
 
 ## Poetry
 
-### configuration (venv, cache, pypi)
+### Installation
+
+Poetry should not be installed from pip
+So use this
+```
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+```
+Then you need to get poetry in your path
+So add below code to PATH system environment variable
+```
+%USERPROFILE%\.poetry\bin
+```
+
+Check poetry
+
+```
+poetry --version
+```
+
+Poetry update
+
+```
+poetry self update
+```
+
+Poetry uninstall then check
+
+https://python-poetry.org/docs/#enable-tab-completion-for-bash-fish-or-zsh
+
+### Configuration (venv, cache, pypi)
 
 https://python-poetry.org/docs/configuration/
 
@@ -31,10 +60,31 @@ REM configure pypi token
 poetry config pypi-token.pypi <token from pypi>
 ```
 
-### environment info
+### Environment info
 
 ```cmd
 poetry env info
+```
+
+
+### Package managing tasks
+
+Note that click (or else typer) are cli tools provided by library we are deploying.
+To manage th library itself we use `invoke`.
+Also note that it is part of dev dependencies and will never be distributed when packaged.
+
+Please refer `tasks.py`
+
+Calling invoke tasks is easy and must be done with poetry
+
+```
+poetry run invoke docs
+poetry run invoke coverage
+poetry run invoke test
+poetry run invoke lint
+poetry run invoke clean
+poetry run invoke dist
+...
 ```
 
 
@@ -47,32 +97,35 @@ poetry publish
 ```
 
 
-## versioning
+### Versioning
 
-This helps to version. Note that poetry uses bump2version
-
+This helps to version.
 
 Note: Once pypi is updated you can never use the same version number even if you
   delete files and recreate repo
 
+Note: bump rules are:
+  patch, minor, major, prepatch, preminor, premajor, prerelease
 
 ```cmd
-REM check current version
 poetry version
 
-REM bump it
-REM rules: patch, minor, major, prepatch, preminor, premajor, prerelease
 poetry version <bump_rule>
 
-REM build and publish
 poetry build
+
 poetry publish
 
-REM if you use travis-ci then push git tag
+```
+
+Note: for poetry publish from local desk you need to set API token from pypi
+
+```
+poetry config pypi-token.pypi my-token
 ```
 
 
-## deleting releases from github tags and pypi
+### Deleting releases from github tags and pypi
 
 Sometimes we might need to delete bad releases. So this is how we do it.
 

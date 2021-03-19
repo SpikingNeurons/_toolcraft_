@@ -61,6 +61,22 @@ REM bump2version major
 REM bump2version minor
 bump2version patch
 git push
+git push --tags
 poetry build
-poetry push
+poetry publish
 ```
+
+
+## deleting releases from github tags and pypi
+
+Sometimes we might need to delete bad releases. So this is how we do it.
+
+Note test and then bump version. In case later bugs are realized we can still delete it.
+
+```cmd
+git push --delete origin v0.1.2
+git tag -d v0.1.2
+```
+
+For PyPi you manually delete realese or Yank it...
+Note that releasing is serious so do it rarely ...

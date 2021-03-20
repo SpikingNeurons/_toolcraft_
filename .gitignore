@@ -105,3 +105,4 @@ ENV/
 .vscode/
 .poetry_cache
 /.idea
+/.sphinx/.build

@@ -1,17 +1,13 @@
 """Console script for toolcraft."""
 import sys
+# Note that this will load all tools and call APP() to register the commands
+from . import tools
 
-import click
 
-
-@click.command()
 def main():
-    """Console script for toolcraft."""
-    click.echo("Replace this message by putting your code into "
-               "toolcraft.cli.main")
-    click.echo("See click documentation at https://click.palletsprojects.com/")
-    return 0
+    tools.APP()
 
 
-if __name__ == "__main__":
-    sys.exit(main())  # pragma: no cover
+if __name__ == '__main__':
+    sys.exit(main())
+

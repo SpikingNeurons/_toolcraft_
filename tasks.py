@@ -19,9 +19,11 @@ TOX_DIR = ROOT_DIR.joinpath(".tox")
 COVERAGE_FILE = ROOT_DIR.joinpath(".coverage")
 COVERAGE_DIR = ROOT_DIR.joinpath("htmlcov")
 COVERAGE_REPORT = COVERAGE_DIR.joinpath("index.html")
-DOCS_DIR = ROOT_DIR.joinpath("docs")
-DOCS_BUILD_DIR = DOCS_DIR.joinpath("_build")
-DOCS_INDEX = DOCS_BUILD_DIR.joinpath("index.html")
+SPHINX_DIR = ROOT_DIR.joinpath(".sphinx")
+SPHINX_BUILD_DIR = SPHINX_DIR.joinpath(".build")
+DOCUSAURUS_DIR = ROOT_DIR.joinpath(".website")
+NOTEBOOKS_DIR = ROOT_DIR.joinpath(".notebooks")
+SPHINX_INDEX = SPHINX_BUILD_DIR.joinpath("index.html")
 PYTHON_DIRS = [str(d) for d in [SOURCE_DIR, TEST_DIR]]
 
 
@@ -105,11 +107,59 @@ def coverage(c, publish=False):
 @task(help={'launch': "Launch documentation in the web browser"})
 def docs(c, launch=True):
     """
-    Generate documentation
+    Generate documentation.
+
+    Make sure that you have docusaurus website classic template setup as given below.
+    Note that the .website dir must not be present before creating
+
+    ```
+    npx @docusaurus/init@latest init .website classic
+    cd .website
+    yarn run start
+    ```
+
+    You can also do to build static website and serve locally.
+    ```
+    yarn run build
+    npm run serve
+    ```
     """
-    _run(c, "sphinx-build -b html {} {}".format(DOCS_DIR, DOCS_BUILD_DIR))
-    if launch:
-        webbrowser.open(DOCS_INDEX.as_uri())
+    # build sphinx
+    _run(c, "sphinx-build -b html {} {}".format(SPHINX_DIR, SPHINX_BUILD_DIR))
+
+    # Note we assume that the docusaurus website is already there at .website
+    ...
+
+    # parse sphinx
+    _i = SPHINX_BUILD_DIR
+    _o = DOCUSAURUS_DIR
+    _run(c, f"python scripts\\parse_sphinx.py -i {_i.as_posix()} -o {_o.as_posix()}")
+
+    # copy sphinx js files to docusaurus js folder
+    for _js in [
+        'documentation_options.js', 'jquery.js', 'underscore.js',
+        'doctools.js', 'language_data.js', 'searchtools.js',
+    ]:
+        _src = SPHINX_BUILD_DIR / '_static' / _js
+        _dst = DOCUSAURUS_DIR / 'static' / _js
+        _dst.parent.mkdir(parents=True, exist_ok=True)
+        # if _js == 'searchtools.js':
+        #     _src = SPHINX_BUILD_DIR / _js
+        _run(c, f"cp {_src.as_posix()} {_dst.as_posix()}")
+
+    # copy module sources
+    _i = SPHINX_BUILD_DIR / '_sources'
+    _o = DOCUSAURUS_DIR / 'static' / '_sphinx-sources'
+    _run(c, f"cp -r {_i.as_posix()} {_o.as_posix()}")
+
+    # parse notebooks
+    _i = NOTEBOOKS_DIR
+    _o = DOCUSAURUS_DIR
+    _run(c, f"python scripts\\parse_notebooks.py -i {_i.as_posix()} -o {_o.as_posix()}")
+
+    # launch
+    # if launch:
+    #     webbrowser.open(SPHINX_INDEX.as_uri())
 
 
 @task
@@ -117,7 +167,7 @@ def clean_docs(c):
     """
     Clean up files from documentation builds
     """
-    _run(c, "rm -fr {}".format(DOCS_BUILD_DIR))
+    _run(c, "rm -fr {}".format(SPHINX_BUILD_DIR))
 
 
 @task
@@ -141,6 +191,17 @@ def clean_python(c):
     _run(c, "find . -name '*.pyo' -exec rm -f {} +")
     _run(c, "find . -name '*~' -exec rm -f {} +")
     _run(c, "find . -name '__pycache__' -exec rm -fr {} +")
+
+
+@task(help={'full-report': "Provides more detailed report"})
+def check_safety(c, full_report=True):
+    """
+    Performs safety checks
+    """
+    if full_report:
+        _run(c, "safety check --full-report")
+    else:
+        _run(c, "safety check")
 
 
 @task

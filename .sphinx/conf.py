@@ -35,6 +35,12 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    "sphinx_autodoc_typehints",
+    "sphinx.ext.doctest",
+    "sphinx.ext.todo",
+    "sphinx.ext.coverage",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.ifconfig",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -51,6 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'toolcraft'
+# noinspection PyShadowingBuiltins
 copyright = "2021, Praveen Kulkarni"
 author = "Praveen Kulkarni"
 
@@ -68,7 +75,7 @@ release = toolcraft.__version__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -79,8 +86,17 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = False
+todo_include_todos = True
 
+# Default options for autodoc directives. Applied to all autodoc directives
+autodoc_default_options = {
+    "undoc-members": True,
+    "show-inheritance": True,
+    "member-order": "bysource",
+}
+
+# Inlcude init docstrings into body of autoclass directives
+autoclass_content = "both"
 
 # -- Options for HTML output -------------------------------------------
 
@@ -92,14 +108,28 @@ html_theme = 'alabaster'
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see the
 # documentation.
-#
-# html_theme_options = {}
+html_theme_options = {}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# Custom sidebar templates, must be a dictionary that maps document names
+# to template names.
+#
+# The default sidebars (for documents that don't match any pattern) are
+# defined by theme itself.  Builtin themes are using these templates by
+# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
+# 'searchbox.html']``.
+#
+# html_sidebars = {}
+
+# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
+html_show_sphinx = False
+
+# If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
+html_show_copyright = False
 
 # -- Options for HTMLHelp output ---------------------------------------
 
@@ -161,6 +191,25 @@ texinfo_documents = [
      'One line description of project.',
      'Miscellaneous'),
 ]
+
+# -- Options for Epub output -------------------------------------------------
+
+# Bibliographic Dublin Core info.
+epub_title = project
+
+# The unique identifier of the text. This can be a ISBN number
+# or the project homepage.
+#
+# epub_identifier = ''
+
+# A unique identification for the text.
+#
+# epub_uid = ''
+
+# A list of files that should not be packed into the epub file.
+epub_exclude_files = ["search.html"]
+
+
 
 
 

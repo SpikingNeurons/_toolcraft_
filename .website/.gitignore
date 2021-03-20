@@ -18,3 +18,17 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+/_tutorials
+/_modules
+/pages
+/history.html
+/index.html
+/installation.html
+/modules.html
+/py-modindex.html
+/readme.html
+/search.html
+/usage.html
+/authors.html
+/contributing.html
+/genindex.html

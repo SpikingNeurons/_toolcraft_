@@ -104,8 +104,13 @@ def coverage(c, publish=False):
         webbrowser.open(COVERAGE_REPORT.as_uri())
 
 
-@task(help={'launch': "Launch documentation in the web browser"})
-def docs(c, launch=True):
+@task(
+    help={
+        'launch': "Launch documentation in the web browser",
+        'static': "Will build static website"
+    }
+)
+def docs(c, launch=True, static=True):
     """
     Generate documentation.
 
@@ -157,9 +162,10 @@ def docs(c, launch=True):
     _o = DOCUSAURUS_DIR
     _run(c, f"python scripts\\parse_notebooks.py -i {_i.as_posix()} -o {_o.as_posix()}")
 
-    # launch
-    # if launch:
-    #     webbrowser.open(SPHINX_INDEX.as_uri())
+    if static:
+        _run(c, f"cd .website && yarn run build")
+    if launch:
+        _run(c, f"cd .website && yarn run serve")
 
 
 @task

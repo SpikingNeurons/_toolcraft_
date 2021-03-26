@@ -1636,7 +1636,9 @@ class HookUp:
     """
     A class which will replace the hooked up method.
 
-
+    todo: Check contextlib
+      + https://docs.python.org/3/library/contextlib.html#contextlib.ContextDecorator
+      + looks like this library will more use cases and we need to explore it
 
     todo: The hook up methods create clutter in class definition while
       browsing code in pycharm via structure pane

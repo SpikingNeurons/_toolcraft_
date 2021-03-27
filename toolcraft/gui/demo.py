@@ -152,10 +152,10 @@ def demo_accelerator_callback(sender, data):
             if shortcut != None and shortcut != "":
                 if are_all_true(shortcut):
                     get_item_callback(item)(item, None)
-        
+
 def show_demo():
 
-    
+
     # the render callback is a function that runs every frame
 
     #set_accelerator_callback(demo_accelerator_callback)
@@ -223,7 +223,7 @@ def show_demo():
                 add_checkbox("No move##demo", callback=lambda sender, data: configure_item("Dear PyGui Demo", no_move=get_value(sender)))
                 add_checkbox("No resize##demo", callback=lambda sender, data: configure_item("Dear PyGui Demo", no_resize=get_value(sender)))
                 add_checkbox("No collapse##demo", callback=lambda sender, data: configure_item("Dear PyGui Demo", no_collapse=get_value(sender)))
-            
+
                 add_checkbox("No close##demo", callback=lambda sender, data: configure_item("Dear PyGui Demo", no_close=get_value(sender)))
                 add_checkbox("No background##demo", callback=lambda sender, data: configure_item("Dear PyGui Demo", no_background=get_value(sender)))
                 add_checkbox("No bring to front##demo", callback=lambda sender, data: configure_item("Dear PyGui Demo", no_bring_to_front_on_focus=get_value(sender)))
@@ -270,7 +270,7 @@ def show_demo():
                     disable_items.append(f"Click##{i}")
                 with group("increment_buttons##demo", horizontal=True):
                     add_text("Press a button: ")
-                    add_button("Left##demo", arrow=True, direction=mvDir_Left, 
+                    add_button("Left##demo", arrow=True, direction=mvDir_Left,
                                callback=lambda sender, data: set_value("value", int(get_value("value"))-1))
                     add_button("Right##demo", arrow=True, direction=mvDir_Right,
                                callback=lambda sender, data: set_value("value", int(get_value("value"))+1))
@@ -279,7 +279,7 @@ def show_demo():
                 add_separator()
 
                 add_label_text("label##demo", default_value="Value")
-                add_combo("combo##demo", items=["AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK"], 
+                add_combo("combo##demo", items=["AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK"],
                           default_value="AAAA", callback=log_callback)
                 add_input_text("input text##demo", default_value="Hello, world!", callback=log_callback)
                 helpmarker(
@@ -331,7 +331,7 @@ def show_demo():
                 with tree_node("Colored Text"):
                     add_text("Pink", color=[255, 0, 255])
                     add_text("Yellow", color=[255, 255, 0])
-    
+
             with tree_node("Images##demo"):
                 add_text("Below we are displaying the font texture (which is the only texture we have access to in this demo).")
                 add_image("image##demo", "INTERNAL_DPG_FONT_ATLAS")
@@ -348,8 +348,8 @@ def show_demo():
                 add_image_button("#image##button2", "#cooltexture")
 
             with tree_node("Text Input##demo"):
-                disable_items = ["##multiline##demo","default##demo", "decimal##demo", "hexdecimal##demo", 
-                                 "uppercase##demo", "no blank##demo", "scientific##demo","password##demo", 
+                disable_items = ["##multiline##demo","default##demo", "decimal##demo", "hexdecimal##demo",
+                                 "uppercase##demo", "no blank##demo", "scientific##demo","password##demo",
                                  "password (w/ hint)##demo", "password (clear)##demo"]
                 add_checkbox("Enable-Disable##text_input", default_value=True, callback=toggle_config, callback_data={'kwargs': ['enabled'], 'items': disable_items})
                 add_checkbox("readonly##text_input", default_value=False, callback=toggle_config, callback_data={'kwargs': ['readonly'], 'items': disable_items})
@@ -373,7 +373,7 @@ def show_demo():
                     add_input_text("uppercase##demo", uppercase=True, callback=log_callback)
                     add_input_text("no blank##demo", no_spaces=True, callback=log_callback)
                     add_input_text("scientific##demo", scientific=True, callback=log_callback)
-            
+
                 with tree_node("Password Input##demo"):
                     add_input_text("password##demo", password=True, callback=log_callback)
                     add_input_text("password (w/ hint)##demo", password=True, hint="<password>", source="password##demo", callback=log_callback)
@@ -418,17 +418,17 @@ def show_demo():
                 helpmarker("Click and drag a preview square, drop on another color widget to apply the color")
                 add_checkbox("With No Options Menu", callback=lambda sender, data: configure_items(color_edit_names, no_options = get_value(sender)))
                 helpmarker("Right clicking a color widget brings up an options context menu")
-                
+
                 add_text("Color Widget:")
                 add_color_edit3(color_edit_names[0])
-                
+
                 add_text("Color Widget HSV with Alpha:")
                 add_color_edit4(color_edit_names[1], source=color_edit_names[0], display_hsv=True, alpha_preview=True)
                 add_text("Color button with Picker:")
                 helpmarker("using no inputs and no label leaves only the preview\n"
                            "click the color edit preview will reveal the color picker.")
                 add_color_edit4("Color Edit 4##2", source=color_edit_names[0], no_inputs=True, no_label=True)
-                
+
                 add_text("Color button with Custom Picker Popup:")
                 add_color_edit4("Color Edit 4 (with custom popup)", source=color_edit_names[0], no_inputs=True, no_picker=True)
                 helpmarker("we can override the popup with our own custom popup that includes a color pallet")
@@ -440,7 +440,7 @@ def show_demo():
                         if i<9: add_same_line()
                         if i>9 and i<19: add_same_line()
                         if i>19 and i<29: add_same_line()
-                
+
                 add_text("Color button only:")
                 add_checkbox("no_border", callback=lambda sender, data: configure_item("Color Button", no_border=get_value(sender)))
                 add_color_button("Color Button", (255, 50, 255, 0), width=50, height=50)
@@ -453,9 +453,9 @@ def show_demo():
                     add_checkbox("Display HEX", callback=lambda sender, data: configure_item("Color Picker 4", display_hex = get_value(sender)))
                 def apply_hue(sender, data):
                     log_debug(get_value(sender))
-                    if(get_value(sender) == 0): 
+                    if(get_value(sender) == 0):
                         configure_item("Color Picker 4", picker_hue_bar = True)
-                    elif(get_value(sender) == 1): 
+                    elif(get_value(sender) == 1):
                         configure_item("Color Picker 4", picker_hue_wheel = True)
                 add_radio_button("Display Type", items=["Hue Bar", "Hue Wheel"], callback=apply_hue)
                 add_color_picker4("Color Picker 4", source=color_edit_names[0], alpha_preview= True, alpha_bar=True)
@@ -470,9 +470,9 @@ def show_demo():
                 add_label_text("ints_values", default_value="Color Tuple: ", label=f"{get_value('Color Edit 4 (ints value)')}", color=get_value('Color Edit 4 (ints value)'))
 
             with tree_node("Multi-component Widgets##demo"):
-                disable_items = ["input float2##demo", "drag float2##demo", "slider float2##demo", "input int2##demo", "drag int2##demo", 
-                                 "slider int2##demo", "input float3##demo", "drag float3##demo", "slider float3##demo", "input int3##demo", 
-                                 "drag int3##demo", "slider int3##demo", "input float4##demo", "drag float4##demo", "slider float4##demo", 
+                disable_items = ["input float2##demo", "drag float2##demo", "slider float2##demo", "input int2##demo", "drag int2##demo",
+                                 "slider int2##demo", "input float3##demo", "drag float3##demo", "slider float3##demo", "input int3##demo",
+                                 "drag int3##demo", "slider int3##demo", "input float4##demo", "drag float4##demo", "slider float4##demo",
                                  "input int4##demo", "drag int4##demo", "slider int4##demo"]
                 add_checkbox("Enable-Disable##multi-component_widgets", default_value=True, callback=toggle_config, callback_data={'kwargs': ['enabled'], 'items': disable_items})
                 add_input_float2("input float2##demo", min_value=0.0, max_value=100.0)
@@ -526,8 +526,8 @@ def show_demo():
                             for j in range(0, 4):
                                 add_slider_float(f"##v{j}{i}##demo", default_value=values[j], vertical=True, max_value=1.0, height=50)
                                 if i != 3:
-                                    add_same_line()   
-                            
+                                    add_same_line()
+
                 add_same_line()
                 with group("v group 3##demo"):
                     add_slider_float("##vs1##demo", vertical=True, max_value=1.0, height=160, width=40)
@@ -582,7 +582,7 @@ def show_demo():
                         add_text("A pretty long sentence if you really think about it. It's also pointless.")
 
             with tree_node("Widgets Width##demo"):
-                
+
                 add_text("Width=100")
                 add_drag_float("float##demowidths1", width=100)
 
@@ -642,7 +642,7 @@ def show_demo():
                 add_listbox("##demolistbox3", items=["AAAA", "BBBB", "CCCC", "DDDD"], default_value=2, width=100)
                 add_same_line()
                 add_listbox("##demolistbox4", items=["AAAA", "BBBB", "CCCC", "DDDD"], default_value=3, width=100)
-                
+
 
                 add_text("Spacing(100):")
                 add_button("A##demospacing", width=50, height=50)
@@ -863,8 +863,8 @@ def show_demo():
             add_checkbox("Draw To Background##demo", callback=fancy_drawing)
 
             add_drawing("drawing##widget##demo", width=900, height=200)
-            draw_rectangle("drawing##widget##demo", (0, 0), (900, 200), (255, 0, 0, 255), fill=(0, 0, 25, 255), 
-                           rounding=12, thickness = 1.0, tag="square") 
+            draw_rectangle("drawing##widget##demo", (0, 0), (900, 200), (255, 0, 0, 255), fill=(0, 0, 25, 255),
+                           rounding=12, thickness = 1.0, tag="square")
             draw_line("drawing##widget##demo", (10, 10), (100, 100), (255, 0, 0, 255), 1, tag="line command")
             draw_triangle("drawing##widget##demo", (150, 10), (110, 100), (190, 100), (255, 255, 0, 255), thickness = 3.0)
             draw_quad("drawing##widget##demo", (210, 10), (290, 10), (290, 100), (210, 100), (255, 255, 0, 255), thickness = 3.0)
@@ -951,18 +951,18 @@ def show_demo():
 
                 timedatax = []
                 timedatay = []
-                
+
                 time_index = 0
                 while time_index < 739497600:
                     timedatax.append(time_index)
                     timedatay.append(time_index/(60*60*24))
                     time_index+=60*60*24*7
-                
+
                 add_text("When time is enabled, x-axis values are interpreted as UNIX timestamps in seconds (e.g. 1599243545).", bullet=True)
                 add_text("UNIX timestamps are seconds since 00:00:00 UTC on 1 January 1970", bullet=True)
                 add_plot("Time Plot##demo", y_axis_name="Days since 1970", height=400, xaxis_time=True)
                 add_line_series("Time Plot##demo", "Days", timedatax, timedatay)
-                
+
             with tree_node("Shade Plots##demo"):
 
                 stock_datax = []
@@ -1007,7 +1007,7 @@ def show_demo():
 
                 add_plot("Scatter Plot##demo", height=400)
                 add_scatter_series("Scatter Plot##demo", "Data 1", scatter_data1x, scatter_data1y)
-                add_scatter_series("Scatter Plot##demo", "Data 2", scatter_data2x, scatter_data2y, 
+                add_scatter_series("Scatter Plot##demo", "Data 2", scatter_data2x, scatter_data2y,
                                    size=7, marker=mvPlotMarker_Square, fill=[255, 0, 0, 100], xy_data_format=True)
 
             with tree_node("Bar Plots##demo"):
@@ -1056,25 +1056,25 @@ def show_demo():
                 add_stem_series("Stem Plots##plot##demo", "Data 2", stem_datax, stem_data2y, marker=mvPlotMarker_Diamond)
 
             with tree_node("Pie Charts##demo"):
-                add_plot("##PieChart1##demo", no_mouse_pos=True, 
+                add_plot("##PieChart1##demo", no_mouse_pos=True,
                          xaxis_no_gridlines=True, xaxis_no_tick_marks=True, xaxis_no_tick_labels=True,
                          yaxis_no_gridlines=True, yaxis_no_tick_marks=True, yaxis_no_tick_labels=True, width=250, height=250)
                 add_same_line()
-                add_plot("##PieChart2##demo", no_mouse_pos=True, 
+                add_plot("##PieChart2##demo", no_mouse_pos=True,
                          xaxis_no_gridlines=True, xaxis_no_tick_marks=True, xaxis_no_tick_labels=True,
-                         yaxis_no_gridlines=True, yaxis_no_tick_marks=True, yaxis_no_tick_labels=True, 
+                         yaxis_no_gridlines=True, yaxis_no_tick_marks=True, yaxis_no_tick_labels=True,
                          width=250, height=250)
                 set_plot_xlimits("##PieChart1##demo", 0, 1)
                 set_plot_xlimits("##PieChart2##demo", 0, 1)
                 set_plot_ylimits("##PieChart1##demo", 0, 1)
                 set_plot_ylimits("##PieChart2##demo", 0, 1)
                 add_pie_series("##PieChart1##demo", "PieChart1", [0.25, 0.30, 0.30], ["fish", "cow", "chicken"], 0.5, 0.5, 0.5)
-                add_pie_series("##PieChart2##demo", "PieChart2", [1, 1, 2, 3, 5], ["A", "B", "C", "D", "E"], 0.5, 0.5, 0.5, 
+                add_pie_series("##PieChart2##demo", "PieChart2", [1, 1, 2, 3, 5], ["A", "B", "C", "D", "E"], 0.5, 0.5, 0.5,
                                normalize=True, format="%.0f")
 
             with tree_node("Heatmaps##demo"):
-                add_plot("Heat Plot##demo", show_color_scale=True, scale_min=0.0, scale_max=6.0, 
-                         scale_height=400, no_legend=True, 
+                add_plot("Heat Plot##demo", show_color_scale=True, scale_min=0.0, scale_max=6.0,
+                         scale_height=400, no_legend=True,
                          no_mouse_pos=True, xaxis_lock_min=True, xaxis_lock_max=True, xaxis_no_gridlines=True, xaxis_no_tick_marks=True,
                          yaxis_no_gridlines=True, yaxis_no_tick_marks=True, yaxis_lock_min=True, yaxis_lock_max=True, height=400)
                 values = [0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0,
@@ -1117,7 +1117,7 @@ def show_demo():
                 add_line_series("Multi Axes Plot##demo", "Series 3", x2datax, x2datay, axis=2)
 
             with tree_node("Annotations##demo"):
-                
+
                 add_plot("Annotations##plotsdemo", height=400)
                 add_annotation("Annotations##plotsdemo", "BL", 0.25, 0.25, -15, 15, color=[255, 255, 0, 255])
                 add_annotation("Annotations##plotsdemo", "BR", 0.75, 0.25, 15, 15, color=[255, 255, 0, 255])
@@ -1135,7 +1135,7 @@ def show_demo():
                 add_hline_series("Infinite Line Plot##demo", "horizontal", infinite_y_data)
 
             with tree_node("Drag Lines and Points##demo"):
-                
+
                 add_plot("##dragplotsdemo", height=400)
                 add_slider_float("Drag Line 2##demo")
                 add_drag_line("##dragplotsdemo", "dline1", color=[255, 0, 0, 255])
@@ -1153,7 +1153,7 @@ def show_demo():
                 for i in range(0, 1000):
                     sindatax.append(i/1000)
                     sindatay.append(0.5 + 0.5*sin(50*i/1000))
-     
+
                 add_plot("Plot1##demoquery", height=400, query_callback=query, query=True, no_menus=True)
                 add_plot("Plot2##demoquery", height=400, query_callback=query, no_menus=True, no_legend=True)
                 add_line_series("Plot1##demoquery", "0.5 + 0.5 * sin(x)", sindatax, sindatay)
@@ -1176,7 +1176,7 @@ def show_demo():
 
             add_button("Delete row 6##demo", callback=lambda sender, data: delete_row("Table##widget##demo", 6))
             add_same_line()
-            add_button("Delete col 1##demo", callback=lambda sender, data: delete_column("Table##widget##demo", 1))   
+            add_button("Delete col 1##demo", callback=lambda sender, data: delete_column("Table##widget##demo", 1))
             add_same_line()
             add_button("Add row##demo", callback=lambda sender, data: add_row("Table##widget##demo", ["new1", "new2", "new3", 53]))
             add_same_line()
@@ -1229,7 +1229,7 @@ def show_demo():
                 add_button("Clear Selections##demo", callback=clear_stuff)
 
             with node_editor("Node Editor 1##demo", link_callback=link_callback, delink_callback=delink_callback):
-    
+
                 with node("Node 1##demo", x_pos=10, y_pos=10):
 
                     with node_attribute("Node A1##demo"):
@@ -1246,10 +1246,10 @@ def show_demo():
                     with node_attribute("Node A4##demo", output=True):
                         add_input_float("F4##demo", width=200)
 
-                with node("Node 3##demo", x_pos=25, y_pos=150):                   
+                with node("Node 3##demo", x_pos=25, y_pos=150):
                     with node_attribute("Node A5##demo"):
                         add_input_text("T5##demo", width=200)
-                    with node_attribute("Node A6##demo", static=True): 
+                    with node_attribute("Node A6##demo", static=True):
                         add_simple_plot("Node Plot##demo", value=(0.3, 0.9, 2.5, 8.9), width=200, height=80, histogram=True)
 
         with collapsing_header("Logging##demo"):
@@ -1375,7 +1375,7 @@ def show_demo():
                 add_label_text("Mouse dblclick##demoevents")
                 add_label_text("Mouse released##demoevents")
                 add_label_text("Mouse wheel##demoevents")
-                
+
                 add_label_text("Keys down##demoevents")
                 add_label_text("Keys pressed##demoevents")
                 add_label_text("Keys released##demoevents")

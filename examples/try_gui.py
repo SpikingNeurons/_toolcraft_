@@ -22,6 +22,7 @@ def main():
 
 def demo():
     gui.demo.show_demo()
+    # dpgc.start_dearpygui(primary_window="Dear PyGui Demo")
     dpgc.start_dearpygui()
 
 

@@ -11,7 +11,7 @@ class Topic1(gui.CollapsingHeader):
 
     message: gui.Text = gui.Text(
         msgs=[
-            "This is topic 1. We will just add some bullet points ..."
+            "This is topic 1. We will just add some bullet points below ..."
         ],
     )
     bullets: gui.Text = gui.Text(
@@ -29,13 +29,8 @@ class Topic1(gui.CollapsingHeader):
 class Topic2(gui.CollapsingHeader):
 
     label: str = "Topic 2 - Plots"
-
-    message: gui.Text = gui.Text(
-        msgs=[
-            "This is topic 2. We will just add some plots ..."
-        ],
-    )
     line_plot: gui.Plot = gui.Plot(
+        label="This is line plot ...",
         items=[
             gui.LineSeries(
                 name="line 1",
@@ -47,23 +42,36 @@ class Topic2(gui.CollapsingHeader):
                 x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100)
             )
-        ],
+        ] + gui.LineSeries.generate_from_npy(
+            data=np.random.normal(0.0, scale=1.5, size=(100, 5)),
+            label=[f"line {i}" for i in range(3, 3+5)]
+        ),
         height=200,
     )
     scatter_plot: gui.Plot = gui.Plot(
+        label="This is scatter plot ...",
         items=[
             gui.ScatterSeries(
                 name="scatter 1",
-                x=np.arange(100),
+                x=np.random.normal(1.0, scale=2.0, size=100),
                 y=np.random.normal(0.0, scale=2.0, size=100)
             ),
             gui.ScatterSeries(
                 name="scatter 2",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100)
+                x=np.random.normal(0.0, scale=2.0, size=100),
+                y=np.random.normal(1.0, scale=2.0, size=100),
             )
-        ],
+        ] + gui.ScatterSeries.generate_from_npy(
+            data=np.random.normal(0.0, scale=1.5, size=(500, 2)),
+            label=np.random.randint(3, 3+5, 500),
+            label_formatter="scatter {label}"
+        ),
         height=200,
+    )
+    subplot_msg: gui.Text = gui.Text(
+        msgs=[
+            "This is sub plot with ManagedColumn ..."
+        ],
     )
     subplot: gui.ManagedColumn = gui.ManagedColumn(
         items=[

@@ -731,6 +731,68 @@ class LineSeries(PlotType):
             axis=self.axis,
         )
 
+    @staticmethod
+    def generate_from_npy(
+        data: np.ndarray,
+        label: t.List[str],
+        x_axis: np.ndarray = None
+    ) -> t.List["LineSeries"]:
+        # ---------------------------------------------- 01
+        # validate if data is 2 dim
+        if data.ndim != 2:
+            e.code.CodingError(
+                msgs=[
+                    f"Expecting data to be 2D array",
+                    f"Found ndim={data.ndim}"
+                ]
+            )
+        # validate if lengths are correct
+        if data.shape[1] != len(label):
+            e.code.NotAllowed(
+                msgs=[
+                    f"The number of columns in data does not match to the "
+                    f"number of labels ..."
+                ]
+            )
+        # check x_axis and convert it if needed
+        if isinstance(x_axis, np.ndarray):
+            # length must be same
+            if len(data) != len(x_axis):
+                e.code.CodingError(
+                    msgs=[
+                        f"The length of data does not match the length of "
+                        f"x_axis",
+                        f"{len(data)}!={len(x_axis)}"
+                    ]
+                )
+            # if x_axis is 2D then it should match the columns
+            if x_axis.ndim == 2:
+                if x_axis.shape[1] != data.shape[1]:
+                    e.code.NotAllowed(
+                        msgs=[
+                            f"When using 2D x_axis the columns should equal "
+                            f"number of columns in data"
+                        ]
+                    )
+        elif x_axis is None:
+            x_axis = np.arange(data.shape[0])
+
+        # ---------------------------------------------- 02
+        # loop over columns and generate series
+        _ret = []
+        for _column_id in range(data.shape[1]):
+            _ret.append(
+                LineSeries(
+                    name=label[_column_id],
+                    x=x_axis if x_axis.ndim == 1 else x_axis[:, _column_id],
+                    y=data[:, _column_id].copy()
+                )
+            )
+
+        # ---------------------------------------------- 04
+        # return
+        return _ret
+
 
 @dataclasses.dataclass(frozen=True)
 class PieSeries(PlotType):
@@ -801,6 +863,55 @@ class ScatterSeries(PlotType):
             xy_data_format=self.xy_data_format,
             axis=self.axis,
         )
+
+    @staticmethod
+    def generate_from_npy(
+        data: np.ndarray,
+        label: np.ndarray,
+        label_formatter: str,
+    ) -> t.List["ScatterSeries"]:
+        # ---------------------------------------------- 01
+        # validate if lengths are correct
+        if len(data) != len(label):
+            e.code.NotAllowed(
+                msgs=[
+                    f"The data and label are not of same length ..."
+                ]
+            )
+        # validate if data is 2 dim
+        if data.ndim != 2:
+            e.code.CodingError(
+                msgs=[
+                    f"Expecting data to be 2D array",
+                    f"Found ndim={data.ndim}"
+                ]
+            )
+        # ---------------------------------------------- 02
+        # estimate unique labels
+        _labels = np.unique(label)
+
+        # ---------------------------------------------- 03
+        # loop over categories and generate series
+        _ret = []
+        for _label in _labels:
+            # filter data to plot for this label
+            _data_filtered = data[label == _label]
+
+            # get formatted label
+            _label_formatted = label_formatter.format(label=_label)
+
+            # create and append
+            _ret.append(
+                ScatterSeries(
+                    name=_label_formatted,
+                    x=_data_filtered[:, 0].copy(),
+                    y=_data_filtered[:, 1].copy(),
+                ),
+            )
+
+        # ---------------------------------------------- 04
+        # return
+        return _ret
 
 
 @dataclasses.dataclass(frozen=True)

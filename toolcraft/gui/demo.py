@@ -2,6 +2,7 @@ from dearpygui.core import *
 from dearpygui.simple import *
 from math import sin, cos
 import random
+import numpy as np
 
 ########################################################################################################################
 # Helpers
@@ -990,6 +991,24 @@ def show_demo():
                 add_shade_series("Stock Prices##demo", "Stock 3", stock_datax, stock_data3, y2=stock_datay2, fill=[0, 255, 0, 64])
                 add_shade_series("Stock Prices##demo", "Shade between lines", stock_datax, stock_data5, y2=stock_data4, fill=[255, 255, 100, 64])
 
+
+            with tree_node("Simple Plots##demo"):
+                add_simple_plot(
+                    "Simple Plot1##demo",
+                    value=np.random.normal(0.5, 2.0, 100),
+                    overlay="Simple plot overlay ...",
+                    histogram=True,
+                    height=200,
+                )
+                add_simple_plot(
+                    "Simple Plot2##demo",
+                    value=np.random.normal(0.5, 2.0, 100),
+                    overlay="Simple plot overlay ...",
+                    histogram=False,
+                    height=200,
+                )
+
+
             with tree_node("Scatter Plots##demo"):
 
                 scatter_data1x = []
@@ -1008,7 +1027,8 @@ def show_demo():
                 add_plot("Scatter Plot##demo", height=400)
                 add_scatter_series("Scatter Plot##demo", "Data 1", scatter_data1x, scatter_data1y)
                 add_scatter_series("Scatter Plot##demo", "Data 2", scatter_data2x, scatter_data2y,
-                                   size=7, marker=mvPlotMarker_Square, fill=[255, 0, 0, 100], xy_data_format=True)
+                                   size=7, marker=mvPlotMarker_Square, fill=[255, 0, 0, 100],
+                                   xy_data_format=True)
 
             with tree_node("Bar Plots##demo"):
 
@@ -1119,11 +1139,13 @@ def show_demo():
             with tree_node("Annotations##demo"):
 
                 add_plot("Annotations##plotsdemo", height=400)
-                add_annotation("Annotations##plotsdemo", "BL", 0.25, 0.25, -15, 15, color=[255, 255, 0, 255])
+                add_annotation("Annotations##plotsdemo", "BL", 0.25, 0.25,
+                               -15, 15, color=[255, 255, 0, 255], tag="BLtag")
                 add_annotation("Annotations##plotsdemo", "BR", 0.75, 0.25, 15, 15, color=[255, 255, 0, 255])
                 add_annotation("Annotations##plotsdemo", "TR not clampled", 0.75, 0.75, -15, -15, color=[255, 255, 0, 255], clamped=False)
                 add_annotation("Annotations##plotsdemo", "TL", 0.25, 0.75, -15, -15, color=[255, 255, 0, 255])
                 add_annotation("Annotations##plotsdemo", "Center", 0.5, 0.5, 0, 0, color=[255, 255, 0, 255])
+                # delete_annotation("Annotations##plotsdemo", "BLtag")
 
             with tree_node("Infinite Lines##demo"):
 

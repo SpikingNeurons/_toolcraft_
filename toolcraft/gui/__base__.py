@@ -9,6 +9,7 @@ import addict
 import typing as t
 from dearpygui import core as dpgc
 from dearpygui import simple as dpgs
+import numpy as np
 import enum
 
 from .. import error as e
@@ -18,6 +19,8 @@ from .. import util
 _LOGGER = logger.get_logger()
 
 MANDATORY = "__IT_IS_MANDATORY__"
+PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
+PLOT_LABEL_TYPE = t.Union[t.List[str], np.ndarray]
 
 
 class _ReadOnlyClass(type):
@@ -31,11 +34,104 @@ class _ReadOnlyClass(type):
         )
 
 
-class Color(metaclass=_ReadOnlyClass):
-    WHITE = [255., 255., 255., 255.]
-    BLACK = [0., 0., 0., 255.]
+class PlotColorMap(enum.Enum):
+    """
+    Refer to
+    >>> dpgc.mvPlotColormap_Cool
+    """
+    Cool = enum.auto()
+    Dark = enum.auto()
+    Deep = enum.auto()
+    Default = enum.auto()
+    Hot = enum.auto()
+    Jet = enum.auto()
+    Paired = enum.auto()
+    Pastel = enum.auto()
+    Pink = enum.auto()
+    Plasma = enum.auto()
+    Viridis = enum.auto()
 
-    DEFAULT = dataclasses.field(default_factory=lambda: Color.WHITE)
+    @property
+    def dpg_value(self) -> int:
+        try:
+            return getattr(dpgc, f"mvPlotColormap_{self.name}")
+        except AttributeError:
+            e.code.NotSupported(
+                msgs=[f"Unknown {self}"]
+            )
+
+
+class PlotMarker(enum.Enum):
+    """
+    Refer to
+    >>> dpgc.mvPlotMarker_Asterisk
+    """
+    Asterisk = enum.auto()
+    Circle = enum.auto()
+    Cross = enum.auto()
+    Diamond = enum.auto()
+    Down = enum.auto()
+    Left = enum.auto()
+    Null = enum.auto()
+    Plus = enum.auto()
+    Right = enum.auto()
+    Square = enum.auto()
+    Up = enum.auto()
+
+    @property
+    def dpg_value(self) -> int:
+        try:
+            return getattr(dpgc, f"mvPlotMarker_{self.name}")
+        except AttributeError:
+            e.code.NotSupported(
+                msgs=[f"Unknown {self}"]
+            )
+
+
+class Color(enum.Enum):
+    DEFAULT = enum.auto()
+    WHITE = enum.auto()
+    BLACK = enum.auto()
+    CUSTOM = enum.auto()
+
+    @property
+    def dpg_value(self) -> t.List[float]:
+        if self is self.DEFAULT:
+            return [0., 0., 0., -1.]
+        elif self is self.WHITE:
+            return [255., 255., 255., 255.]
+        elif self is self.BLACK:
+            return [0., 0., 0., 255.]
+        elif self is self.CUSTOM:
+            e.code.CodingError(
+                msgs=[
+                    f"Seems like you are using custom color in that case "
+                    f"please pass [r, g, b, a] kwargs i.e. Color.CUSTOM(...)"
+                ]
+            )
+        else:
+            e.code.NotSupported(
+                msgs=[f"Unknown {self}"]
+            )
+
+    def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
+        """
+        This method return fake Color when called with Color.CUSTOM(...)
+        """
+        if self is self.CUSTOM:
+            class _:
+                ...
+            __ = _()
+            __.dpg_value = [r, g, b, a]
+            # noinspection PyTypeChecker
+            return __
+        else:
+            e.code.CodingError(
+                msgs=[
+                    f"You are allowed to pass custom values only with "
+                    f"{self.CUSTOM} color."
+                ]
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -59,7 +155,7 @@ class Builder(abc.ABC):
 
     @property
     @util.CacheResult
-    def children(self) -> t.Dict[t.Union[int, str], "Widget"]:
+    def children(self) -> t.Dict[str, "Widget"]:
         """
         children are those dataclass fields that are also instance of class
         `Widget`
@@ -107,7 +203,7 @@ class Builder(abc.ABC):
         # check if mandatory values supplied
         for f in dataclasses.fields(self):
             v = getattr(self, f.name)
-            if v == MANDATORY:
+            if not isinstance(v, np.ndarray) and v == MANDATORY:
                 e.code.NotAllowed(
                     msgs=[
                         f"Please supply value for field "
@@ -204,7 +300,7 @@ class WidgetContainer(Widget, abc.ABC):
 
     @property
     @util.CacheResult
-    def children(self) -> t.Dict[int, "Widget"]:
+    def children(self) -> t.Dict[str, "Widget"]:
         # call parent implementation of children
         # we expect it to be empty
         _children = super().children
@@ -218,9 +314,12 @@ class WidgetContainer(Widget, abc.ABC):
             )
 
         # children here are elements in list
-        return {
-            f"item[{i}]": v for i, v in enumerate(self.items)
-        }
+        _ret = {}
+        for i, v in enumerate(self.items):
+            _ret[f"item[{i}]"] = v
+
+        # return
+        return _ret
 
 
 @dataclasses.dataclass(frozen=True)

@@ -236,6 +236,20 @@ class Widget(_Builder, abc.ABC):
         else:
             self.__dict__[self.LITERAL.internal] = internal
 
+    def preview(self):
+        """
+        You can see the preview of this widget without adding it to dashboard
+        """
+        @dataclasses.dataclass(frozen=True)
+        class PreviewDashboard(Dashboard):
+            name: str = "PREVIEW"
+            label: str = f"{self.__module__}:{self.__class__.__name__}"
+            widget: Widget = self
+
+        _dash = PreviewDashboard()
+        _dash.make_gui()
+        _dash.run_gui()
+
 
 @dataclasses.dataclass(frozen=True)
 class WidgetContainer(Widget, abc.ABC):
@@ -315,7 +329,10 @@ class Dashboard(Widget, abc.ABC):
             # set the things for primary window
             # dpgc.set_main_window_size(550, 550)
             # dpgc.set_main_window_resizable(False)
-            dpgc.set_main_window_title(self.label)
+            _title = self.name
+            if self.label != "":
+                _title += f" - {self.label}"
+            dpgc.set_main_window_title(_title)
 
             # -------------------------------------------------- 02
             # make gui for all children

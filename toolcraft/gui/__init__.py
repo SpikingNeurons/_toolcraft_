@@ -1,5 +1,3 @@
-from .__base__ import Dashboard, Color, MANDATORY, PLOT_DATA_TYPE, \
-    PlotColorMap, PLOT_LABEL_TYPE
+from .__base__ import MANDATORY, Color, Widget, WidgetContainer, Dashboard
 from . import demo
-from . import widget
-from . import plot_types
+from .widget import *

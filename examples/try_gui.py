@@ -2,24 +2,19 @@ import dataclasses
 import numpy as np
 
 from toolcraft import gui
-from toolcraft.gui import widget
-from toolcraft.gui import plot_types
-
-from dearpygui import simple as dpgs
-from dearpygui import core as dpgc
 
 
 @dataclasses.dataclass(frozen=True)
-class Topic1(widget.CollapsingHeader):
+class Topic1(gui.CollapsingHeader):
 
     label: str = "Topic 1 - Text"
 
-    message: widget.Text = widget.Text(
+    message: gui.Text = gui.Text(
         msgs=[
             "This is topic 1. We will just add some bullet points ..."
         ],
     )
-    bullets: widget.Text = widget.Text(
+    bullets: gui.Text = gui.Text(
         msgs=[
             "bullet 1",
             "bullet 2",
@@ -31,23 +26,23 @@ class Topic1(widget.CollapsingHeader):
 
 
 @dataclasses.dataclass(frozen=True)
-class Topic2(widget.CollapsingHeader):
+class Topic2(gui.CollapsingHeader):
 
     label: str = "Topic 2 - Plots"
 
-    message: widget.Text = widget.Text(
+    message: gui.Text = gui.Text(
         msgs=[
             "This is topic 2. We will just add some plots ..."
         ],
     )
-    line_plot: widget.Plot = widget.Plot(
+    line_plot: gui.Plot = gui.Plot(
         items=[
-            plot_types.LineSeries(
+            gui.LineSeries(
                 name="line 1",
                 x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100)
             ),
-            plot_types.LineSeries(
+            gui.LineSeries(
                 name="line 2",
                 x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100)
@@ -55,14 +50,14 @@ class Topic2(widget.CollapsingHeader):
         ],
         height=200,
     )
-    scatter_plot: widget.Plot = widget.Plot(
+    scatter_plot: gui.Plot = gui.Plot(
         items=[
-            plot_types.ScatterSeries(
+            gui.ScatterSeries(
                 name="scatter 1",
                 x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100)
             ),
-            plot_types.ScatterSeries(
+            gui.ScatterSeries(
                 name="scatter 2",
                 x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100)
@@ -70,16 +65,16 @@ class Topic2(widget.CollapsingHeader):
         ],
         height=200,
     )
-    subplot: widget.ManagedColumn = widget.ManagedColumn(
+    subplot: gui.ManagedColumn = gui.ManagedColumn(
         items=[
-            widget.Plot(
+            gui.Plot(
                 items=[
-                    plot_types.LineSeries(
+                    gui.LineSeries(
                         name="line 1",
                         x=np.arange(100),
                         y=np.random.normal(0.0, scale=2.0, size=100)
                     ),
-                    plot_types.LineSeries(
+                    gui.LineSeries(
                         name="line 2",
                         x=np.arange(100),
                         y=np.random.normal(0.0, scale=2.0, size=100)
@@ -87,14 +82,14 @@ class Topic2(widget.CollapsingHeader):
                 ],
                 height=200,
             ),
-            widget.Plot(
+            gui.Plot(
                 items=[
-                    plot_types.LineSeries(
+                    gui.LineSeries(
                         name="line 1",
                         x=np.arange(100),
                         y=np.random.normal(0.0, scale=2.0, size=100)
                     ),
-                    plot_types.LineSeries(
+                    gui.LineSeries(
                         name="line 2",
                         x=np.arange(100),
                         y=np.random.normal(0.0, scale=2.0, size=100)
@@ -102,14 +97,14 @@ class Topic2(widget.CollapsingHeader):
                 ],
                 height=200,
             ),
-            widget.Plot(
+            gui.Plot(
                 items=[
-                    plot_types.LineSeries(
+                    gui.LineSeries(
                         name="line 1",
                         x=np.arange(100),
                         y=np.random.normal(0.0, scale=2.0, size=100)
                     ),
-                    plot_types.LineSeries(
+                    gui.LineSeries(
                         name="line 2",
                         x=np.arange(100),
                         y=np.random.normal(0.0, scale=2.0, size=100)
@@ -117,14 +112,14 @@ class Topic2(widget.CollapsingHeader):
                 ],
                 height=200,
             ),
-            widget.Plot(
+            gui.Plot(
                 items=[
-                    plot_types.LineSeries(
+                    gui.LineSeries(
                         name="line 1",
                         x=np.arange(100),
                         y=np.random.normal(0.0, scale=2.0, size=100)
                     ),
-                    plot_types.LineSeries(
+                    gui.LineSeries(
                         name="line 2",
                         x=np.arange(100),
                         y=np.random.normal(0.0, scale=2.0, size=100)
@@ -141,7 +136,7 @@ class Topic2(widget.CollapsingHeader):
 @dataclasses.dataclass(frozen=True)
 class MyDashboard(gui.Dashboard):
 
-    welcome_msg: widget.Text = widget.Text(
+    welcome_msg: gui.Text = gui.Text(
         msgs=[
             "Welcome to my dashboard",
             " ..... toolcraft ..... "
@@ -159,6 +154,7 @@ def basic_dashboard():
 
 
 def demo():
+    from dearpygui import core as dpgc
     gui.demo.show_demo()
     # dpgc.start_dearpygui(primary_window="Dear PyGui Demo")
     dpgc.start_dearpygui()

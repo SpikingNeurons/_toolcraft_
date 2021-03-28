@@ -19,8 +19,6 @@ from .. import util
 _LOGGER = logger.get_logger()
 
 MANDATORY = "__IT_IS_MANDATORY__"
-PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
-PLOT_LABEL_TYPE = t.Union[t.List[str], np.ndarray]
 
 
 class _ReadOnlyClass(type):
@@ -34,108 +32,8 @@ class _ReadOnlyClass(type):
         )
 
 
-class PlotColorMap(enum.Enum):
-    """
-    Refer to
-    >>> dpgc.mvPlotColormap_Cool
-    """
-    Cool = enum.auto()
-    Dark = enum.auto()
-    Deep = enum.auto()
-    Default = enum.auto()
-    Hot = enum.auto()
-    Jet = enum.auto()
-    Paired = enum.auto()
-    Pastel = enum.auto()
-    Pink = enum.auto()
-    Plasma = enum.auto()
-    Viridis = enum.auto()
-
-    @property
-    def dpg_value(self) -> int:
-        try:
-            return getattr(dpgc, f"mvPlotColormap_{self.name}")
-        except AttributeError:
-            e.code.NotSupported(
-                msgs=[f"Unknown {self}"]
-            )
-
-
-class PlotMarker(enum.Enum):
-    """
-    Refer to
-    >>> dpgc.mvPlotMarker_Asterisk
-    """
-    Asterisk = enum.auto()
-    Circle = enum.auto()
-    Cross = enum.auto()
-    Diamond = enum.auto()
-    Down = enum.auto()
-    Left = enum.auto()
-    Null = enum.auto()
-    Plus = enum.auto()
-    Right = enum.auto()
-    Square = enum.auto()
-    Up = enum.auto()
-
-    @property
-    def dpg_value(self) -> int:
-        try:
-            return getattr(dpgc, f"mvPlotMarker_{self.name}")
-        except AttributeError:
-            e.code.NotSupported(
-                msgs=[f"Unknown {self}"]
-            )
-
-
-class Color(enum.Enum):
-    DEFAULT = enum.auto()
-    WHITE = enum.auto()
-    BLACK = enum.auto()
-    CUSTOM = enum.auto()
-
-    @property
-    def dpg_value(self) -> t.List[float]:
-        if self is self.DEFAULT:
-            return [0., 0., 0., -1.]
-        elif self is self.WHITE:
-            return [255., 255., 255., 255.]
-        elif self is self.BLACK:
-            return [0., 0., 0., 255.]
-        elif self is self.CUSTOM:
-            e.code.CodingError(
-                msgs=[
-                    f"Seems like you are using custom color in that case "
-                    f"please pass [r, g, b, a] kwargs i.e. Color.CUSTOM(...)"
-                ]
-            )
-        else:
-            e.code.NotSupported(
-                msgs=[f"Unknown {self}"]
-            )
-
-    def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
-        """
-        This method return fake Color when called with Color.CUSTOM(...)
-        """
-        if self is self.CUSTOM:
-            class _:
-                ...
-            __ = _()
-            __.dpg_value = [r, g, b, a]
-            # noinspection PyTypeChecker
-            return __
-        else:
-            e.code.CodingError(
-                msgs=[
-                    f"You are allowed to pass custom values only with "
-                    f"{self.CUSTOM} color."
-                ]
-            )
-
-
 @dataclasses.dataclass(frozen=True)
-class Builder(abc.ABC):
+class _Builder(abc.ABC):
 
     class LITERAL(metaclass=_ReadOnlyClass):
 
@@ -232,7 +130,7 @@ class Builder(abc.ABC):
 
 
 @dataclasses.dataclass(frozen=True)
-class WidgetInternal:
+class _WidgetInternal:
     name: str
     parent: t.Union["Dashboard", "Widget"]
 
@@ -241,10 +139,56 @@ class WidgetInternal:
         return f"{self.parent.id}.{self.name}"
 
 
-@dataclasses.dataclass(frozen=True)
-class Widget(Builder, abc.ABC):
+class Color(enum.Enum):
+    DEFAULT = enum.auto()
+    WHITE = enum.auto()
+    BLACK = enum.auto()
+    CUSTOM = enum.auto()
 
-    class LITERAL(Builder.LITERAL):
+    @property
+    def dpg_value(self) -> t.List[float]:
+        if self is self.DEFAULT:
+            return [0., 0., 0., -1.]
+        elif self is self.WHITE:
+            return [255., 255., 255., 255.]
+        elif self is self.BLACK:
+            return [0., 0., 0., 255.]
+        elif self is self.CUSTOM:
+            e.code.CodingError(
+                msgs=[
+                    f"Seems like you are using custom color in that case "
+                    f"please pass [r, g, b, a] kwargs i.e. Color.CUSTOM(...)"
+                ]
+            )
+        else:
+            e.code.NotSupported(
+                msgs=[f"Unknown {self}"]
+            )
+
+    def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
+        """
+        This method return fake Color when called with Color.CUSTOM(...)
+        """
+        if self is self.CUSTOM:
+            class _:
+                ...
+            __ = _()
+            __.dpg_value = [r, g, b, a]
+            # noinspection PyTypeChecker
+            return __
+        else:
+            e.code.CodingError(
+                msgs=[
+                    f"You are allowed to pass custom values only with "
+                    f"{self.CUSTOM} color."
+                ]
+            )
+
+
+@dataclasses.dataclass(frozen=True)
+class Widget(_Builder, abc.ABC):
+
+    class LITERAL(_Builder.LITERAL):
         internal = "internal"
 
     @property
@@ -257,7 +201,7 @@ class Widget(Builder, abc.ABC):
 
     @property
     @util.CacheResult
-    def internal(self) -> WidgetInternal:
+    def internal(self) -> _WidgetInternal:
         if self.LITERAL.internal in self.__dict__.keys():
             return self.__dict__[self.LITERAL.internal]
         else:
@@ -277,10 +221,10 @@ class Widget(Builder, abc.ABC):
         # dataclass fields of this class which are instance of class Widget
         for k, c in self.children.items():
             c.set_internal(
-                internal=WidgetInternal(name=k, parent=self)
+                internal=_WidgetInternal(name=k, parent=self)
             )
 
-    def set_internal(self, internal: WidgetInternal):
+    def set_internal(self, internal: _WidgetInternal):
         if self.LITERAL.internal in self.__dict__.keys():
             e.code.CodingError(
                 msgs=[

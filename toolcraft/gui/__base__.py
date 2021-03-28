@@ -5,7 +5,6 @@ The rule for now is to
 """
 import abc
 import dataclasses
-import addict
 import typing as t
 from dearpygui import core as dpgc
 from dearpygui import simple as dpgs
@@ -46,48 +45,6 @@ class _Builder(abc.ABC):
                 ]
             )
 
-    @property
-    @abc.abstractmethod
-    def id(self) -> str:
-        ...
-
-    @property
-    @util.CacheResult
-    def children(self) -> t.Dict[str, "Widget"]:
-        """
-        children are those dataclass fields that are also instance of class
-        `Widget`
-        """
-        # container
-        _ret = {}
-
-        # loop over
-        for f in dataclasses.fields(self):
-            # get value for each field
-            v = getattr(self, f.name)
-
-            # never have Dashboard as a child
-            if isinstance(v, Dashboard):
-                e.code.CodingError(
-                    msgs=[
-                        f"{Dashboard} is never meant to be used as "
-                        f"a child. Avoid using it as dataclass field"
-                    ]
-                )
-
-            # check if it is widget and make it children
-            if isinstance(v, Widget):
-                # append
-                _ret[f.name] = v
-
-            # rest all values are ignored ... you can use them as instance
-            # values for any reason ... only widgets are tracked and laid out
-            # in UI
-            ...
-
-        # return
-        return _ret
-
     def __post_init__(self):
 
         self.init_validate()
@@ -98,35 +55,7 @@ class _Builder(abc.ABC):
         ...
 
     def init(self):
-        # check if mandatory values supplied
-        for f in dataclasses.fields(self):
-            v = getattr(self, f.name)
-            if not isinstance(v, np.ndarray) and v == MANDATORY:
-                e.code.NotAllowed(
-                    msgs=[
-                        f"Please supply value for field "
-                        f"{f.name} while creating instance of class "
-                        f"{self.__class__}"
-                    ]
-                )
-
-    def make_gui(self):
         ...
-
-    def make_children_gui(self):
-        _children = self.children
-        if bool(_children):
-            # make gui for all children
-            for k, c in self.children.items():
-                c.make_gui()
-        else:
-            e.code.CodingError(
-                msgs=[
-                    f"There are no children for which we can make GUI",
-                    f"If widget {self.__class__} does not need fields that "
-                    f"hold widgets then you need not call this method"
-                ]
-            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -165,6 +94,7 @@ class Color(enum.Enum):
                 msgs=[f"Unknown {self}"]
             )
 
+    # noinspection PyPep8Naming
     def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
         """
         This method return fake Color when called with Color.CUSTOM(...)
@@ -191,6 +121,8 @@ class Widget(_Builder, abc.ABC):
     class LITERAL(_Builder.LITERAL):
         internal = "internal"
 
+    items: t.Optional[t.List["Widget"]] = None
+
     @property
     def id(self) -> str:
         return self.internal.id
@@ -198,6 +130,90 @@ class Widget(_Builder, abc.ABC):
     @property
     def parent_id(self) -> str:
         return self.internal.parent.id
+
+    @property
+    def used_as_container(self) -> bool:
+        # default behaviour is to have any widget work for both options
+        return self.items is not None
+
+    @property
+    @util.CacheResult
+    def children(self) -> t.Dict[str, "Widget"]:
+        """
+        children are those dataclass fields that are also instance of class
+        `Widget`
+        """
+        # ---------------------------------------------------- 01
+        # _children_from_fields
+        # container
+        _children_from_fields = {}
+        # loop over
+        for f in dataclasses.fields(self):
+            # get value for each field
+            v = getattr(self, f.name)
+            # never have Dashboard as a child
+            if isinstance(v, Dashboard):
+                e.code.CodingError(
+                    msgs=[
+                        f"{Dashboard} is never meant to be used as "
+                        f"a child. Avoid using it as dataclass field"
+                    ]
+                )
+            # check if it is widget and make it children
+            if isinstance(v, Widget):
+                # append
+                _children_from_fields[f.name] = v
+            # rest all values are ignored ... you can use them as instance
+            # values for any reason ... only widgets are tracked and laid out
+            # in UI
+            ...
+
+        # ---------------------------------------------------- 02
+        # _children_from_items
+        _children_from_items = {}
+        if bool(self.items):
+            for i, v in enumerate(self.items):
+                _children_from_items[f"item[{i}]"] = v
+
+        # ---------------------------------------------------- 03
+        # if used_as_container check if children come only from items
+        if self.used_as_container:
+            if bool(_children_from_fields):
+                e.code.CodingError(
+                    msgs=[
+                        f"Class {self.__class__} is configured to be used as "
+                        f"container. So please supply widgets using "
+                        f"field `items`",
+                        f"Please refrain from adding fields to class that "
+                        f"will use widgets."
+                    ]
+                )
+        else:
+            if bool(_children_from_items):
+                e.code.CodingError(
+                    msgs=[
+                        f"Class {self.__class__} is configured not to be used "
+                        f"as container. So please do not supply widgets using "
+                        f"field `items`",
+                        f"Please use dataclass fields instead to add the "
+                        f"Widgets that you like to render."
+                    ]
+                )
+
+        # ---------------------------------------------------- 03
+        # both cannot be present either one or None should be present
+        if bool(_children_from_fields) and bool(_children_from_items):
+            e.code.CodingError(
+                msgs=[
+                    f"Looks like for class {self.__class__} widgets are "
+                    f"provided both via items as well as dataclass fields",
+                    f"This should never happen"
+                ]
+            )
+        else:
+            return {
+                **_children_from_fields, **_children_from_items
+            }
 
     @property
     @util.CacheResult
@@ -211,6 +227,32 @@ class Widget(_Builder, abc.ABC):
                     f"accessing property `internal`"
                 ]
             )
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # if used as container check if items supplied
+        if self.used_as_container:
+            if self.items is None:
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"Class {self.__class__} is configured to be used as "
+                        f"container so please supply widgets using items field"
+                    ]
+                )
+
+        # check if mandatory values supplied
+        for f in dataclasses.fields(self):
+            v = getattr(self, f.name)
+            if not isinstance(v, np.ndarray) and v == MANDATORY:
+                e.code.NotAllowed(
+                    msgs=[
+                        f"Please supply value for field "
+                        f"{f.name} while creating instance of class "
+                        f"{self.__class__}"
+                    ]
+                )
 
     def init(self):
 
@@ -236,52 +278,30 @@ class Widget(_Builder, abc.ABC):
         else:
             self.__dict__[self.LITERAL.internal] = internal
 
+    @abc.abstractmethod
+    def make_gui(self):
+        ...
+
+    def make_children_gui(self):
+        # make gui for all children
+        for k, c in self.children.items():
+            c.make_gui()
+
     def preview(self):
         """
         You can see the preview of this widget without adding it to dashboard
         """
-        @dataclasses.dataclass(frozen=True)
-        class PreviewDashboard(Dashboard):
-            name: str = "PREVIEW"
-            label: str = f"{self.__module__}:{self.__class__.__name__}"
-            widget: Widget = self
-
-        _dash = PreviewDashboard()
+        _dash = Dashboard(
+            name="PREVIEW",
+            label=f"{self.__module__}:{self.__class__.__name__}",
+            items=[self],
+        )
         _dash.make_gui()
         _dash.run_gui()
 
 
 @dataclasses.dataclass(frozen=True)
-class WidgetContainer(Widget, abc.ABC):
-
-    items: t.List[Widget]
-
-    @property
-    @util.CacheResult
-    def children(self) -> t.Dict[str, "Widget"]:
-        # call parent implementation of children
-        # we expect it to be empty
-        _children = super().children
-        if bool(_children):
-            e.code.CodingError(
-                msgs=[
-                    f"Widgets can only be supplied as a list to `items` field",
-                    f"Looks like that there are some dataclass fields which "
-                    f"hold instance of class {Widget}"
-                ]
-            )
-
-        # children here are elements in list
-        _ret = {}
-        for i, v in enumerate(self.items):
-            _ret[f"item[{i}]"] = v
-
-        # return
-        return _ret
-
-
-@dataclasses.dataclass(frozen=True)
-class Dashboard(Widget, abc.ABC):
+class Dashboard(Widget):
     """
     Dashboard is nothing but window.
 
@@ -300,7 +320,7 @@ class Dashboard(Widget, abc.ABC):
     Note that we make this as primary window when we start GUI
     """
 
-    name: str
+    name: str = MANDATORY
     label: str = ""
 
     @property
@@ -339,6 +359,8 @@ class Dashboard(Widget, abc.ABC):
             self.make_children_gui()
 
     def run_gui(self):
+        # make gui
+        self.make_gui()
         # dpgc.start_dearpygui()
         dpgc.start_dearpygui(primary_window=self.id)
 

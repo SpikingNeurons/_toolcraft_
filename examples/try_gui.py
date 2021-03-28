@@ -43,7 +43,10 @@ class Topic2(gui.CollapsingHeader):
                 y=np.random.normal(0.0, scale=2.0, size=100)
             )
         ] + gui.LineSeries.generate_from_npy(
-            data=np.random.normal(0.0, scale=1.5, size=(100, 5)),
+            data=[
+                np.random.normal(0.0, scale=1.5, size=100)
+                for _ in range(5)
+            ],
             label=[f"line {i}" for i in range(3, 3+5)]
         ),
         height=200,
@@ -62,7 +65,8 @@ class Topic2(gui.CollapsingHeader):
                 y=np.random.normal(1.0, scale=2.0, size=100),
             )
         ] + gui.ScatterSeries.generate_from_npy(
-            data=np.random.normal(0.0, scale=1.5, size=(500, 2)),
+            data_x=np.random.normal(0.0, scale=1.5, size=500),
+            data_y=np.random.normal(0.0, scale=1.5, size=500),
             label=np.random.randint(3, 3+5, 500),
             label_formatter="scatter {label}"
         ),

@@ -8,7 +8,7 @@ import numpy as np
 
 from ... import error as e
 from ... import util
-from ..__base__ import Color, Widget, WidgetContainer
+from ..__base__ import Color, Widget, MANDATORY
 
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 PLOT_LABEL_TYPE = t.Union[t.List[str], np.ndarray]
@@ -74,7 +74,7 @@ class SimplePlot(Widget):
     Refer to
     >>> dpgc.add_simple_plot
     """
-    value: PLOT_DATA_TYPE
+    value: PLOT_DATA_TYPE = MANDATORY
     overlay: str = ""
     minscale: float = 0.0
     maxscale: float = 0.0
@@ -86,6 +86,10 @@ class SimplePlot(Widget):
     source: str = ""
     label: str = ""
     show: bool = True
+
+    @property
+    def used_as_container(self) -> bool:
+        return False
 
     def make_gui(self):
         dpgc.add_simple_plot(
@@ -107,13 +111,13 @@ class SimplePlot(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class Plot(WidgetContainer):
+class Plot(Widget):
     """
     Refer to
     >>> dpgc.add_plot
     """
 
-    items: t.List["PlotType"]
+    items: t.List["PlotType"] = None
 
     # the defaults supported by dearpygui
     label: str = ''
@@ -178,6 +182,10 @@ class Plot(WidgetContainer):
     show_annotations: bool = True
     show_drag_lines: bool = True
     show_drag_points: bool = True
+
+    @property
+    def used_as_container(self) -> bool:
+        return True
 
     @property
     def restrict_types(self) -> t.Tuple:
@@ -352,12 +360,16 @@ class Plot(WidgetContainer):
 
 
 @dataclasses.dataclass(frozen=True)
-class PlotType(Widget, abc.ABC):
+class PlotType(Widget):
     """
     todo: Need to implement delete for all Series. Check below method:
     >>> dpgc.delete_series
     """
-    name: str
+    name: str = MANDATORY
+
+    @property
+    def used_as_container(self) -> bool:
+        return False
 
 
 @dataclasses.dataclass(frozen=True)
@@ -366,11 +378,11 @@ class Annotation(PlotType):
     Refer to
     >>> dpgc.add_annotation
     """
-    text: str
-    x: float
-    y: float
-    xoffset: float
-    yoffset: float
+    text: str = MANDATORY
+    x: float = MANDATORY
+    y: float = MANDATORY
+    xoffset: float = MANDATORY
+    yoffset: float = MANDATORY
     color: Color = Color.DEFAULT
     clamped: bool = True
 
@@ -402,10 +414,10 @@ class AreaSeries(PlotType):
     >>> dpgc.add_area_series
     """
 
-    x: PLOT_DATA_TYPE
-    y: PLOT_DATA_TYPE
-    color: Color
-    fill: Color
+    x: PLOT_DATA_TYPE = MANDATORY
+    y: PLOT_DATA_TYPE = MANDATORY
+    color: Color = MANDATORY
+    fill: Color = MANDATORY
     weight: float = 1.0
     update_bounds: bool = True
     axis: int = 0
@@ -431,8 +443,8 @@ class BarSeries(PlotType):
     >>> dpgc.add_bar_series
     """
 
-    x: PLOT_DATA_TYPE
-    y: PLOT_DATA_TYPE
+    x: PLOT_DATA_TYPE = MANDATORY
+    y: PLOT_DATA_TYPE = MANDATORY
     weight: float = 1.0
     horizontal: bool = False
     update_bounds: bool = True
@@ -458,11 +470,11 @@ class CandleSeries(PlotType):
     >>> dpgc.add_candle_series
     """
 
-    date: PLOT_DATA_TYPE
-    opens: PLOT_DATA_TYPE
-    highs: PLOT_DATA_TYPE
-    lows: PLOT_DATA_TYPE
-    closes: PLOT_DATA_TYPE
+    date: PLOT_DATA_TYPE = MANDATORY
+    opens: PLOT_DATA_TYPE = MANDATORY
+    highs: PLOT_DATA_TYPE = MANDATORY
+    lows: PLOT_DATA_TYPE = MANDATORY
+    closes: PLOT_DATA_TYPE = MANDATORY
     tooltip: bool = True
     bull_color: Color = Color.CUSTOM(0., 255., 113., 255.)
     bear_color: Color = Color.CUSTOM(218., 13., 79., 255.)
@@ -587,10 +599,10 @@ class ErrorSeries(PlotType):
     >>> dpgc.add_error_series
     """
 
-    x: PLOT_DATA_TYPE
-    y: PLOT_DATA_TYPE
-    negative: PLOT_DATA_TYPE
-    positive: PLOT_DATA_TYPE
+    x: PLOT_DATA_TYPE = MANDATORY
+    y: PLOT_DATA_TYPE = MANDATORY
+    negative: PLOT_DATA_TYPE = MANDATORY
+    positive: PLOT_DATA_TYPE = MANDATORY
     horizontal: bool = False
     update_bounds: bool = True
     color: Color = Color.DEFAULT
@@ -618,11 +630,11 @@ class HeatSeries(PlotType):
     >>> dpgc.add_heat_series
     """
 
-    values: PLOT_DATA_TYPE
-    rows: int
-    columns: int
-    scale_min: float
-    scale_max: float
+    values: PLOT_DATA_TYPE = MANDATORY
+    rows: int = MANDATORY
+    columns: int = MANDATORY
+    scale_min: float = MANDATORY
+    scale_max: float = MANDATORY
     format: str = '%0.1f'
     bounds_min: t.Tuple[float, float] = (0., 0.)
     bounds_max: t.Tuple[float, float] = (1., 1.)
@@ -653,7 +665,7 @@ class HorizLineSeries(PlotType):
     Refer to
     >>> dpgc.add_hline_series
     """
-    x: PLOT_DATA_TYPE
+    x: PLOT_DATA_TYPE = MANDATORY
     color: Color = Color.DEFAULT
     weight: float = 1.
     update_bounds: bool = True
@@ -677,11 +689,11 @@ class ImageSeries(PlotType):
     Refer to
     >>> dpgc.add_image_series
     """
-    value: str
+    value: str = MANDATORY
     # bottom left coordinate
-    bounds_min: t.Tuple[float, float]
+    bounds_min: t.Tuple[float, float] = MANDATORY
     # top right coordinate
-    bounds_max: t.Tuple[float, float]
+    bounds_max: t.Tuple[float, float] = MANDATORY
     # normalized texture coordinates
     uv_min: t.Tuple[float, float] = (0., 0.)
     # normalized texture coordinates
@@ -712,8 +724,8 @@ class LineSeries(PlotType):
     >>> dpgc.add_line_series
     """
 
-    x: PLOT_DATA_TYPE
-    y: PLOT_DATA_TYPE
+    x: PLOT_DATA_TYPE = MANDATORY
+    y: PLOT_DATA_TYPE = MANDATORY
     color: Color = Color.DEFAULT
     weight: float = 1.0
     update_bounds: bool = True
@@ -733,63 +745,65 @@ class LineSeries(PlotType):
 
     @staticmethod
     def generate_from_npy(
-        data: np.ndarray,
+        data: t.List[np.ndarray],
         label: t.List[str],
-        x_axis: np.ndarray = None
+        x_axis: t.List[np.ndarray] = None
     ) -> t.List["LineSeries"]:
         # ---------------------------------------------- 01
-        # validate if data is 2 dim
-        if data.ndim != 2:
-            e.code.CodingError(
-                msgs=[
-                    f"Expecting data to be 2D array",
-                    f"Found ndim={data.ndim}"
-                ]
-            )
-        # validate if lengths are correct
-        if data.shape[1] != len(label):
+        # validate length of lists
+        if len(data) != len(label):
             e.code.NotAllowed(
                 msgs=[
-                    f"The number of columns in data does not match to the "
-                    f"number of labels ..."
+                    f"We expect same number of items in data and label"
                 ]
             )
-        # check x_axis and convert it if needed
-        if isinstance(x_axis, np.ndarray):
-            # length must be same
-            if len(data) != len(x_axis):
-                e.code.CodingError(
+        if x_axis is not None:
+            if len(x_axis) != len(label):
+                e.code.NotAllowed(
                     msgs=[
-                        f"The length of data does not match the length of "
-                        f"x_axis",
-                        f"{len(data)}!={len(x_axis)}"
+                        f"We expect same number of items in x_axis and label"
                     ]
                 )
-            # if x_axis is 2D then it should match the columns
-            if x_axis.ndim == 2:
-                if x_axis.shape[1] != data.shape[1]:
-                    e.code.NotAllowed(
-                        msgs=[
-                            f"When using 2D x_axis the columns should equal "
-                            f"number of columns in data"
-                        ]
-                    )
-        elif x_axis is None:
-            x_axis = np.arange(data.shape[0])
-
         # ---------------------------------------------- 02
-        # loop over columns and generate series
+        # loop over and generate series
         _ret = []
-        for _column_id in range(data.shape[1]):
+        for _index in range(len(label)):
+            # get data for index
+            _label = label[_index]
+            _data = data[_index]
+            _length = len(_data)
+            if x_axis is not None:
+                _x_axis = x_axis[_index]
+            else:
+                _x_axis = np.arange(_length)
+
+            # validate
+            if _data.ndim != 1:
+                e.code.NotAllowed(
+                    msgs=[
+                        f"We expect data to be 1D for index {_index}"
+                    ]
+                )
+            if _x_axis.shape != _data.shape:
+                e.code.NotAllowed(
+                    msgs=[
+                        f"We were expecting x_axis and data to have same "
+                        f"shape. Check item {_index}",
+                        {
+                            '_x_axis': _x_axis.shape,
+                            '_data': _data.shape
+                        }
+                    ]
+                )
+
+            # create series
             _ret.append(
                 LineSeries(
-                    name=label[_column_id],
-                    x=x_axis if x_axis.ndim == 1 else x_axis[:, _column_id],
-                    y=data[:, _column_id].copy()
+                    name=_label, x=_x_axis, y=_data
                 )
             )
 
-        # ---------------------------------------------- 04
+        # ---------------------------------------------- 03
         # return
         return _ret
 
@@ -801,11 +815,11 @@ class PieSeries(PlotType):
     >>> dpgc.add_pie_series
     """
 
-    values: PLOT_DATA_TYPE
-    labels: PLOT_LABEL_TYPE
-    x: float
-    y: float
-    radius: float
+    values: PLOT_DATA_TYPE = MANDATORY
+    labels: PLOT_LABEL_TYPE = MANDATORY
+    x: float = MANDATORY
+    y: float = MANDATORY
+    radius: float = MANDATORY
     normalize: bool = False
     angle: float = 90.
     format: str = '%0.2f'
@@ -836,8 +850,8 @@ class ScatterSeries(PlotType):
     >>> dpgc.add_scatter_series
     """
 
-    x: PLOT_DATA_TYPE
-    y: PLOT_DATA_TYPE
+    x: PLOT_DATA_TYPE = MANDATORY
+    y: PLOT_DATA_TYPE = MANDATORY
     marker: PlotMarker = PlotMarker.Circle
     size: float = 4.0
     weight: float = 1.0
@@ -866,26 +880,45 @@ class ScatterSeries(PlotType):
 
     @staticmethod
     def generate_from_npy(
-        data: np.ndarray,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
         label: np.ndarray,
         label_formatter: str,
+        size: float = 4.0,
     ) -> t.List["ScatterSeries"]:
         # ---------------------------------------------- 01
         # validate if lengths are correct
-        if len(data) != len(label):
+        if data_x.shape != label.shape:
             e.code.NotAllowed(
                 msgs=[
-                    f"The data and label are not of same length ..."
+                    f"The data_x and label are not of same length ..."
                 ]
             )
-        # validate if data is 2 dim
-        if data.ndim != 2:
-            e.code.CodingError(
+        if data_y.shape != label.shape:
+            e.code.NotAllowed(
                 msgs=[
-                    f"Expecting data to be 2D array",
-                    f"Found ndim={data.ndim}"
+                    f"The data_y and label are not of same length ..."
                 ]
             )
+        if data_x.ndim != 1:
+            e.code.NotAllowed(
+                msgs=[
+                    f"We expect data_x to be 1D"
+                ]
+            )
+        if data_y.ndim != 1:
+            e.code.NotAllowed(
+                msgs=[
+                    f"We expect data_y to be 1D"
+                ]
+            )
+        if label.ndim != 1:
+            e.code.NotAllowed(
+                msgs=[
+                    f"We expect label to be 1D"
+                ]
+            )
+
         # ---------------------------------------------- 02
         # estimate unique labels
         _labels = np.unique(label)
@@ -895,7 +928,9 @@ class ScatterSeries(PlotType):
         _ret = []
         for _label in _labels:
             # filter data to plot for this label
-            _data_filtered = data[label == _label]
+            _filter = label == _label
+            _data_x_filtered = data_x[_filter]
+            _data_y_filtered = data_y[_filter]
 
             # get formatted label
             _label_formatted = label_formatter.format(label=_label)
@@ -904,8 +939,9 @@ class ScatterSeries(PlotType):
             _ret.append(
                 ScatterSeries(
                     name=_label_formatted,
-                    x=_data_filtered[:, 0].copy(),
-                    y=_data_filtered[:, 1].copy(),
+                    x=_data_x_filtered,
+                    y=_data_y_filtered,
+                    size=size,
                 ),
             )
 
@@ -921,9 +957,9 @@ class ShadeSeries(PlotType):
     >>> dpgc.add_shade_series
     """
 
-    x: PLOT_DATA_TYPE
-    y1: PLOT_DATA_TYPE
-    y2: PLOT_DATA_TYPE
+    x: PLOT_DATA_TYPE = MANDATORY
+    y1: PLOT_DATA_TYPE = MANDATORY
+    y2: PLOT_DATA_TYPE = MANDATORY
     color: Color = Color.DEFAULT
     fill: Color = Color.DEFAULT
     weight: float = 1.0
@@ -952,8 +988,8 @@ class StairSeries(PlotType):
     >>> dpgc.add_stair_series
     """
 
-    x: PLOT_DATA_TYPE
-    y: PLOT_DATA_TYPE
+    x: PLOT_DATA_TYPE = MANDATORY
+    y: PLOT_DATA_TYPE = MANDATORY
     color: Color = Color.DEFAULT
     weight: float = 1.0
     update_bounds: bool = True
@@ -979,8 +1015,8 @@ class StemSeries(PlotType):
     >>> dpgc.add_stem_series
     """
 
-    x: PLOT_DATA_TYPE
-    y: PLOT_DATA_TYPE
+    x: PLOT_DATA_TYPE = MANDATORY
+    y: PLOT_DATA_TYPE = MANDATORY
     marker: PlotMarker = PlotMarker.Circle
     size: float = 4.0
     weight: float = 1.0
@@ -1012,8 +1048,8 @@ class TextPoint(PlotType):
     >>> dpgc.add_text_point
     """
 
-    x: float
-    y: float
+    x: float = MANDATORY
+    y: float = MANDATORY
     vertical: bool = False
     xoffset: int = 0.
     yoffset: int = 0.
@@ -1039,7 +1075,7 @@ class VertLineSeries(PlotType):
     Refer to
     >>> dpgc.add_vline_series
     """
-    x: PLOT_DATA_TYPE
+    x: PLOT_DATA_TYPE = MANDATORY
     color: Color = Color.DEFAULT
     weight: float = 1.
     update_bounds: bool = True

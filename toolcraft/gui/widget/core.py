@@ -6,7 +6,7 @@ import typing as t
 
 from ... import error as e
 from ... import util
-from ..__base__ import Widget, WidgetContainer, Color
+from ..__base__ import Widget, Color, MANDATORY
 
 
 @dataclasses.dataclass(frozen=True)
@@ -106,8 +106,7 @@ class Text(Widget):
     Refer to
     >>> dpgc.add_text
     """
-    msgs: t.Union[str, t.List[str]]
-
+    msgs: t.Union[str, t.List[str]] = MANDATORY
     wrap: int = -1
     color: Color = Color.WHITE
     bullet: bool = False
@@ -116,6 +115,10 @@ class Text(Widget):
     source: str = ""
     default_value: str = ""
     show: bool = True
+
+    @property
+    def used_as_container(self) -> bool:
+        return False
 
     def make_gui(self):
         _msgs = self.msgs if isinstance(self.msgs, list) else [self.msgs]
@@ -151,20 +154,6 @@ class CollapsingHeader(Widget, abc.ABC):
     leaf: bool = False
     bullet: bool = False
 
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # check if children available
-        if not bool(self.children):
-            e.code.CodingError(
-                msgs=[
-                    f"Please provide dataclass fields that are widgets",
-                    f"There is nothing to render ... please check class "
-                    f"{self.__class__}"
-                ]
-            )
-
     def make_gui(self):
         with dpgs.collapsing_header(
             name=self.id,
@@ -185,15 +174,19 @@ class CollapsingHeader(Widget, abc.ABC):
 
 
 @dataclasses.dataclass(frozen=True)
-class ManagedColumn(WidgetContainer):
+class ManagedColumn(Widget):
     """
     Refer to
     >>> dpgs.managed_columns
     """
-    columns: int
+    columns: int = MANDATORY
     border: bool = True
     show: bool = True
     before: str = ""
+
+    @property
+    def used_as_container(self) -> bool:
+        return True
 
     def make_gui(self):
 

@@ -37,3 +37,8 @@ except ModuleNotFoundError as mnf:
 #  may be just overwrite this file by replacing the empty dict with filled up dict as and when
 #  bump2version is executed
 PYPROJECT_TOML = {}
+
+
+# todo: we will move to tests module and will improve design
+from . import rules
+rules.main()

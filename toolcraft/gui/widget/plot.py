@@ -1,23 +1,23 @@
 import abc
 import dataclasses
-import dearpygui.core as dpgc
-import dearpygui.simple as dpgs
+import dearpygui.core as dpg
 import typing as t
 import enum
 import numpy as np
 
 from ... import error as e
 from ... import util
-from ..__base__ import Color, Widget, MANDATORY
+from ... import marshalling as m
+from ..__base__ import Color, Widget
 
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 PLOT_LABEL_TYPE = t.Union[t.List[str], np.ndarray]
 
 
-class PlotColorMap(enum.Enum):
+class PlotColorMap(m.FrozenEnum, enum.Enum):
     """
     Refer to
-    >>> dpgc.mvPlotColormap_Cool
+    >>> dpg.mvPlotColormap_Cool
     """
     Cool = enum.auto()
     Dark = enum.auto()
@@ -31,20 +31,24 @@ class PlotColorMap(enum.Enum):
     Plasma = enum.auto()
     Viridis = enum.auto()
 
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_plot_color_map"
+
     @property
     def dpg_value(self) -> int:
         try:
-            return getattr(dpgc, f"mvPlotColormap_{self.name}")
+            return getattr(dpg, f"mvPlotColormap_{self.name}")
         except AttributeError:
             e.code.NotSupported(
                 msgs=[f"Unknown {self}"]
             )
 
 
-class PlotMarker(enum.Enum):
+class PlotMarker(m.FrozenEnum, enum.Enum):
     """
     Refer to
-    >>> dpgc.mvPlotMarker_Asterisk
+    >>> dpg.mvPlotMarker_Asterisk
     """
     Asterisk = enum.auto()
     Circle = enum.auto()
@@ -58,10 +62,14 @@ class PlotMarker(enum.Enum):
     Square = enum.auto()
     Up = enum.auto()
 
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_plot_marker"
+
     @property
     def dpg_value(self) -> int:
         try:
-            return getattr(dpgc, f"mvPlotMarker_{self.name}")
+            return getattr(dpg, f"mvPlotMarker_{self.name}")
         except AttributeError:
             e.code.NotSupported(
                 msgs=[f"Unknown {self}"]
@@ -72,36 +80,34 @@ class PlotMarker(enum.Enum):
 class SimplePlot(Widget):
     """
     Refer to
-    >>> dpgc.add_simple_plot
+    >>> dpg.add_simple_plot
     """
-    value: PLOT_DATA_TYPE = MANDATORY
     overlay: str = ""
     minscale: float = 0.0
     maxscale: float = 0.0
     histogram: bool = False
     tip: str = ""
-    before: str = ""
     width: int = 0
     height: int = 0
     source: str = ""
     label: str = ""
     show: bool = True
 
-    @property
-    def used_as_container(self) -> bool:
-        return False
+    def build(self, before: str = ""):
+        # there is nothing to do here as it will happen when you call plot()
+        ...
 
-    def make_gui(self):
-        dpgc.add_simple_plot(
+    def plot(self, value: PLOT_DATA_TYPE, before: str = ""):
+        dpg.add_simple_plot(
             name=self.id,
             parent=self.parent_id,
-            value=self.value,
+            value=value,
             overlay=self.overlay,
             minscale=self.minscale,
             maxscale=self.maxscale,
             histogram=self.histogram,
             tip=self.tip,
-            before=self.before,
+            before=before,
             width=self.width,
             height=self.height,
             source=self.source,
@@ -114,10 +120,8 @@ class SimplePlot(Widget):
 class Plot(Widget):
     """
     Refer to
-    >>> dpgc.add_plot
+    >>> dpg.add_plot
     """
-
-    items: t.List["PlotType"] = None
 
     # the defaults supported by dearpygui
     label: str = ''
@@ -166,9 +170,6 @@ class Plot(Widget):
     y3axis_lock_max: bool = False
     # Parent to add this item to. (runtime adding)
     parent: str = ''
-    # This item will be displayed before the specified item in the parent.
-    # (runtime adding)
-    before: str = ''
     width: int = -1
     height: int = -1
     # Callback ran when plot is queried. Should be of the form
@@ -183,53 +184,10 @@ class Plot(Widget):
     show_drag_lines: bool = True
     show_drag_points: bool = True
 
-    @property
-    def used_as_container(self) -> bool:
-        return True
+    def plot(self, plot_type: "PlotType"):
+        plot_type.plot(parent_id=self.id)
 
-    @property
-    def restrict_types(self) -> t.Tuple:
-        return PlotType,
-
-    @property
-    @util.CacheResult
-    def children(self) -> t.Dict[str, "PlotType"]:
-
-        # get children from super
-        # noinspection PyTypeChecker
-        _children = super().children  # type: t.Dict[str, PlotType]
-
-        # let us change key to name
-        # note that the key is `item[...]` format as this is widget container
-        # but for PlotType we can safely use name
-        # Note that the actual keys from super will be unique but we need to
-        # make that sure for `PlotType.name`
-        _ret = {}
-        for k, v in _children.items():
-            # check if item is PlotType
-            if not isinstance(v, PlotType):
-                e.code.CodingError(
-                    msgs=[
-                        f"We expect you to add only items of type {PlotType} "
-                        f"to {Plot}",
-                        f"Found unsupported type {type(v)}"
-                    ]
-                )
-            # add to dict with new key
-            if v.name not in _ret.keys():
-                _ret[v.name] = v
-            else:
-                e.code.CodingError(
-                    msgs=[
-                        f"The name `{v.name}` is repeated while adding items to "
-                        f"WidgetContainer {Plot}"
-                    ]
-                )
-
-        # return
-        return _ret
-
-    def make_gui(self):
+    def build(self, before: str = ""):
         # ------------------------------------------------ 01
         # resolve if query callback overridden
         if self.__class__.query_callback != Plot.query_callback:
@@ -239,9 +197,10 @@ class Plot(Widget):
 
         # ------------------------------------------------ 02
         # call add plot
-        dpgc.add_plot(
+        dpg.add_plot(
             name=self.id,
             parent=self.parent_id,
+            before=before,
             x_axis_name=self.x_axis_name,
             y_axis_name=self.y_axis_name,
             no_legend=self.no_legend,
@@ -285,7 +244,6 @@ class Plot(Widget):
             y3axis_invert=self.y3axis_invert,
             y3axis_lock_min=self.y3axis_lock_min,
             y3axis_lock_max=self.y3axis_lock_max,
-            before=self.before,
             width=self.width,
             height=self.height,
             show_color_scale=self.show_color_scale,
@@ -300,10 +258,6 @@ class Plot(Widget):
             query_callback=_query_callback
         )
 
-        # ------------------------------------------------ 03
-        # make children gui ... i.e. the items
-        self.make_children_gui()
-
     # noinspection PyMethodMayBeStatic
     def query_callback(self, sender, data):
         e.code.CodingError(
@@ -314,81 +268,87 @@ class Plot(Widget):
         )
 
     def get_plot_xlimits(self) -> t.Tuple[float, float]:
-        _ = dpgc.get_plot_xlimits(plot=self.id)
+        _ = dpg.get_plot_xlimits(plot=self.id)
         return _[0], _[1]
 
     def get_plot_ylimits(self) -> t.Tuple[float, float]:
-        _ = dpgc.get_plot_ylimits(plot=self.id)
+        _ = dpg.get_plot_ylimits(plot=self.id)
         return _[0], _[1]
 
     def set_plot_xlimits(self, xmin: float, xmax: float):
-        dpgc.set_plot_xlimits(plot=self.id, xmin=xmin, xmax=xmax)
+        dpg.set_plot_xlimits(plot=self.id, xmin=xmin, xmax=xmax)
 
     def set_plot_ylimits(self, ymin: float, ymax: float):
-        dpgc.set_plot_ylimits(plot=self.id, ymin=ymin, ymax=ymax)
+        dpg.set_plot_ylimits(plot=self.id, ymin=ymin, ymax=ymax)
 
     def set_plot_xlimits_auto(self):
-        dpgc.set_plot_xlimits_auto(plot=self.id)
+        dpg.set_plot_xlimits_auto(plot=self.id)
 
     def set_plot_ylimits_auto(self):
-        dpgc.set_plot_ylimits_auto(plot=self.id)
+        dpg.set_plot_ylimits_auto(plot=self.id)
 
     def set_xticks(self, label_pairs: t.List[t.Tuple[str, float]]):
-        dpgc.set_xticks(plot=self.id, label_pairs=label_pairs)
+        dpg.set_xticks(plot=self.id, label_pairs=label_pairs)
 
     def set_yticks(self, label_pairs: t.List[t.Tuple[str, float]]):
-        dpgc.set_yticks(plot=self.id, label_pairs=label_pairs)
+        dpg.set_yticks(plot=self.id, label_pairs=label_pairs)
 
     def reset_xticks(self):
-        dpgc.reset_xticks(plot=self.id)
+        dpg.reset_xticks(plot=self.id)
 
     def reset_yticks(self):
-        dpgc.reset_yticks(plot=self.id)
+        dpg.reset_yticks(plot=self.id)
 
     def clear(self):
-        dpgc.clear_plot(plot=self.id)
+        dpg.clear_plot(plot=self.id)
 
     def is_plot_queried(self) -> bool:
-        return dpgc.is_plot_queried(plot=self.id)
+        return dpg.is_plot_queried(plot=self.id)
 
     def set_color_map(self, color_map: PlotColorMap):
-        dpgc.set_color_map(plot=self.id, map=color_map.dpg_value)
+        dpg.set_color_map(plot=self.id, map=color_map.dpg_value)
 
     def get_plot_query_area(self) -> t.Tuple[float, float, float, float]:
         # noinspection PyTypeChecker
-        return dpgc.get_plot_query_area(plot=self.id)
+        return dpg.get_plot_query_area(plot=self.id)
 
 
 @dataclasses.dataclass(frozen=True)
-class PlotType(Widget):
+class PlotType(abc.ABC):
     """
+    Note that this is not a Widget nor a m.HashableClass as this will reprent
+    data that we will plot and there is no need to serialize it.
     todo: Need to implement delete for all Series. Check below method:
-    >>> dpgc.delete_series
+    >>> dpg.delete_series
     """
-    name: str = MANDATORY
+    label: str
 
-    @property
-    def used_as_container(self) -> bool:
-        return False
+    @abc.abstractmethod
+    def plot(self, parent_id: str):
+        ...
+
+    def delete(self, children_only: bool = False):
+        e.code.NotSupported(
+            msgs=[f"please implement delete for {self.__class__}"])
 
 
 @dataclasses.dataclass(frozen=True)
 class Annotation(PlotType):
     """
     Refer to
-    >>> dpgc.add_annotation
+    >>> dpg.add_annotation
     """
-    text: str = MANDATORY
-    x: float = MANDATORY
-    y: float = MANDATORY
-    xoffset: float = MANDATORY
-    yoffset: float = MANDATORY
+    text: str
+    x: float
+    y: float
+    xoffset: float
+    yoffset: float
     color: Color = Color.DEFAULT
     clamped: bool = True
 
-    def make_gui(self):
-        dpgc.add_annotation(
-            plot=self.parent_id,
+    def plot(self, parent_id: str):
+        dpg.add_annotation(
+            plot=parent_id,
             text=self.text,
             x=self.x,
             y=self.y,
@@ -397,13 +357,7 @@ class Annotation(PlotType):
             color=self.color.dpg_value,
             clamped=self.clamped,
             # note that tag acts as name
-            tag=self.name,
-        )
-
-    def delete(self):
-        dpgc.delete_annotation(
-            plot=self.parent_id,
-            name=self.name,
+            tag=self.label,
         )
 
 
@@ -411,21 +365,21 @@ class Annotation(PlotType):
 class AreaSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_area_series
+    >>> dpg.add_area_series
     """
 
-    x: PLOT_DATA_TYPE = MANDATORY
-    y: PLOT_DATA_TYPE = MANDATORY
-    color: Color = MANDATORY
-    fill: Color = MANDATORY
+    x: PLOT_DATA_TYPE
+    y: PLOT_DATA_TYPE
+    color: Color
+    fill: Color
     weight: float = 1.0
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_area_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_area_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             y=self.y,
             color=self.color.dpg_value,
@@ -440,20 +394,20 @@ class AreaSeries(PlotType):
 class BarSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_bar_series
+    >>> dpg.add_bar_series
     """
 
-    x: PLOT_DATA_TYPE = MANDATORY
-    y: PLOT_DATA_TYPE = MANDATORY
+    x: PLOT_DATA_TYPE
+    y: PLOT_DATA_TYPE
     weight: float = 1.0
     horizontal: bool = False
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_bar_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_bar_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             y=self.y,
             weight=self.weight,
@@ -467,14 +421,14 @@ class BarSeries(PlotType):
 class CandleSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_candle_series
+    >>> dpg.add_candle_series
     """
 
-    date: PLOT_DATA_TYPE = MANDATORY
-    opens: PLOT_DATA_TYPE = MANDATORY
-    highs: PLOT_DATA_TYPE = MANDATORY
-    lows: PLOT_DATA_TYPE = MANDATORY
-    closes: PLOT_DATA_TYPE = MANDATORY
+    date: PLOT_DATA_TYPE
+    opens: PLOT_DATA_TYPE
+    highs: PLOT_DATA_TYPE
+    lows: PLOT_DATA_TYPE
+    closes: PLOT_DATA_TYPE
     tooltip: bool = True
     bull_color: Color = Color.CUSTOM(0., 255., 113., 255.)
     bear_color: Color = Color.CUSTOM(218., 13., 79., 255.)
@@ -482,10 +436,10 @@ class CandleSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_candle_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_candle_series(
+            plot=parent_id,
+            name=self.label,
             date=self.date,
             opens=self.opens,
             highs=self.highs,
@@ -504,7 +458,7 @@ class CandleSeries(PlotType):
 class DragLine(PlotType):
     """
     Refer to
-    >>> dpgc.add_drag_line
+    >>> dpg.add_drag_line
     """
     source: str = ""
     color: Color = Color.DEFAULT
@@ -513,16 +467,16 @@ class DragLine(PlotType):
     show_label: bool = True
     default_value: float = 0.0
 
-    def make_gui(self):
+    def plot(self, parent_id: str):
         # if overridden get the callback
         _callback = None
         if DragLine.callback != self.__class__.callback:
             _callback = self.callback
 
         # add
-        dpgc.add_drag_line(
-            plot=self.parent_id,
-            name=self.name,
+        dpg.add_drag_line(
+            plot=parent_id,
+            name=self.label,
             source=self.source,
             color=self.color.dpg_value,
             thickness=self.thickness,
@@ -532,9 +486,10 @@ class DragLine(PlotType):
             callback=_callback,
         )
 
-    def delete(self):
-        dpgc.delete_drag_line(
-            plot=self.parent_id, name=self.name
+    def delete(self, children_only: bool = False):
+        e.code.NotSupported(msgs=["figure it out"])
+        dpg.delete_drag_line(
+            plot=..., name=self.label
         )
 
     # noinspection PyMethodMayBeStatic
@@ -550,7 +505,7 @@ class DragLine(PlotType):
 class DragPoint(PlotType):
     """
     Refer to
-    >>> dpgc.add_drag_point
+    >>> dpg.add_drag_point
     """
     source: str = ""
     color: Color = Color.DEFAULT
@@ -559,16 +514,16 @@ class DragPoint(PlotType):
     default_x: float = 0.0
     default_y: float = 0.0
 
-    def make_gui(self):
+    def plot(self, parent_id: str):
         # if overridden get the callback
         _callback = None
         if DragLine.callback != self.__class__.callback:
             _callback = self.callback
 
         # add
-        dpgc.add_drag_point(
-            plot=self.parent_id,
-            name=self.name,
+        dpg.add_drag_point(
+            plot=parent_id,
+            name=self.label,
             source=self.source,
             color=self.color.dpg_value,
             radius=self.radius,
@@ -578,9 +533,10 @@ class DragPoint(PlotType):
             callback=_callback,
         )
 
-    def delete(self):
-        dpgc.delete_drag_point(
-            plot=self.parent_id, name=self.name
+    def delete(self, children_only: bool = False):
+        e.code.NotSupported(msgs=["figure it out"])
+        dpg.delete_drag_point(
+            plot=..., name=self.label
         )
 
     # noinspection PyMethodMayBeStatic
@@ -596,22 +552,22 @@ class DragPoint(PlotType):
 class ErrorSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_error_series
+    >>> dpg.add_error_series
     """
 
-    x: PLOT_DATA_TYPE = MANDATORY
-    y: PLOT_DATA_TYPE = MANDATORY
-    negative: PLOT_DATA_TYPE = MANDATORY
-    positive: PLOT_DATA_TYPE = MANDATORY
+    x: PLOT_DATA_TYPE
+    y: PLOT_DATA_TYPE
+    negative: PLOT_DATA_TYPE
+    positive: PLOT_DATA_TYPE
     horizontal: bool = False
     update_bounds: bool = True
     color: Color = Color.DEFAULT
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_error_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_error_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             y=self.y,
             negative=self.negative,
@@ -627,25 +583,25 @@ class ErrorSeries(PlotType):
 class HeatSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_heat_series
+    >>> dpg.add_heat_series
     """
 
-    values: PLOT_DATA_TYPE = MANDATORY
-    rows: int = MANDATORY
-    columns: int = MANDATORY
-    scale_min: float = MANDATORY
-    scale_max: float = MANDATORY
+    values: PLOT_DATA_TYPE
+    rows: int
+    columns: int
+    scale_min: float
+    scale_max: float
     format: str = '%0.1f'
     bounds_min: t.Tuple[float, float] = (0., 0.)
     bounds_max: t.Tuple[float, float] = (1., 1.)
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
+    def plot(self, parent_id: str):
         # noinspection PyTypeChecker
-        dpgc.add_heat_series(
-            plot=self.parent_id,
-            name=self.name,
+        dpg.add_heat_series(
+            plot=parent_id,
+            name=self.label,
             values=self.values,
             rows=self.rows,
             columns=self.columns,
@@ -663,18 +619,18 @@ class HeatSeries(PlotType):
 class HorizLineSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_hline_series
+    >>> dpg.add_hline_series
     """
-    x: PLOT_DATA_TYPE = MANDATORY
+    x: PLOT_DATA_TYPE
     color: Color = Color.DEFAULT
     weight: float = 1.
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_hline_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_hline_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             color=self.color.dpg_value,
             weight=self.weight,
@@ -687,13 +643,13 @@ class HorizLineSeries(PlotType):
 class ImageSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_image_series
+    >>> dpg.add_image_series
     """
-    value: str = MANDATORY
+    value: str
     # bottom left coordinate
-    bounds_min: t.Tuple[float, float] = MANDATORY
+    bounds_min: t.Tuple[float, float]
     # top right coordinate
-    bounds_max: t.Tuple[float, float] = MANDATORY
+    bounds_max: t.Tuple[float, float]
     # normalized texture coordinates
     uv_min: t.Tuple[float, float] = (0., 0.)
     # normalized texture coordinates
@@ -703,10 +659,10 @@ class ImageSeries(PlotType):
     axis: int = 0
 
     # noinspection PyTypeChecker
-    def make_gui(self):
-        dpgc.add_image_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_image_series(
+            plot=parent_id,
+            name=self.label,
             value=self.value,
             bounds_min=self.bounds_min,
             bounds_max=self.bounds_max,
@@ -721,20 +677,20 @@ class ImageSeries(PlotType):
 class LineSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_line_series
+    >>> dpg.add_line_series
     """
 
-    x: PLOT_DATA_TYPE = MANDATORY
-    y: PLOT_DATA_TYPE = MANDATORY
+    x: PLOT_DATA_TYPE
+    y: PLOT_DATA_TYPE
     color: Color = Color.DEFAULT
     weight: float = 1.0
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_line_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_line_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             y=self.y,
             color=self.color.dpg_value,
@@ -799,7 +755,7 @@ class LineSeries(PlotType):
             # create series
             _ret.append(
                 LineSeries(
-                    name=_label, x=_x_axis, y=_data
+                    label=_label, x=_x_axis, y=_data
                 )
             )
 
@@ -812,24 +768,24 @@ class LineSeries(PlotType):
 class PieSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_pie_series
+    >>> dpg.add_pie_series
     """
 
-    values: PLOT_DATA_TYPE = MANDATORY
-    labels: PLOT_LABEL_TYPE = MANDATORY
-    x: float = MANDATORY
-    y: float = MANDATORY
-    radius: float = MANDATORY
+    values: PLOT_DATA_TYPE
+    labels: PLOT_LABEL_TYPE
+    x: float
+    y: float
+    radius: float
     normalize: bool = False
     angle: float = 90.
     format: str = '%0.2f'
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_pie_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_pie_series(
+            plot=parent_id,
+            name=self.label,
             values=self.values,
             labels=self.labels,
             x=self.x,
@@ -847,11 +803,11 @@ class PieSeries(PlotType):
 class ScatterSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_scatter_series
+    >>> dpg.add_scatter_series
     """
 
-    x: PLOT_DATA_TYPE = MANDATORY
-    y: PLOT_DATA_TYPE = MANDATORY
+    x: PLOT_DATA_TYPE
+    y: PLOT_DATA_TYPE
     marker: PlotMarker = PlotMarker.Circle
     size: float = 4.0
     weight: float = 1.0
@@ -862,10 +818,10 @@ class ScatterSeries(PlotType):
     xy_data_format: bool = False
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_scatter_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_scatter_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             y=self.y,
             marker=self.marker.dpg_value,
@@ -938,7 +894,7 @@ class ScatterSeries(PlotType):
             # create and append
             _ret.append(
                 ScatterSeries(
-                    name=_label_formatted,
+                    label=_label_formatted,
                     x=_data_x_filtered,
                     y=_data_y_filtered,
                     size=size,
@@ -954,22 +910,22 @@ class ScatterSeries(PlotType):
 class ShadeSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_shade_series
+    >>> dpg.add_shade_series
     """
 
-    x: PLOT_DATA_TYPE = MANDATORY
-    y1: PLOT_DATA_TYPE = MANDATORY
-    y2: PLOT_DATA_TYPE = MANDATORY
+    x: PLOT_DATA_TYPE
+    y1: PLOT_DATA_TYPE
+    y2: PLOT_DATA_TYPE
     color: Color = Color.DEFAULT
     fill: Color = Color.DEFAULT
     weight: float = 1.0
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_shade_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_shade_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             y1=self.y1,
             y2=self.y2,
@@ -985,20 +941,20 @@ class ShadeSeries(PlotType):
 class StairSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_stair_series
+    >>> dpg.add_stair_series
     """
 
-    x: PLOT_DATA_TYPE = MANDATORY
-    y: PLOT_DATA_TYPE = MANDATORY
+    x: PLOT_DATA_TYPE
+    y: PLOT_DATA_TYPE
     color: Color = Color.DEFAULT
     weight: float = 1.0
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_stair_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_stair_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             y=self.y,
             color=self.color.dpg_value,
@@ -1012,11 +968,11 @@ class StairSeries(PlotType):
 class StemSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_stem_series
+    >>> dpg.add_stem_series
     """
 
-    x: PLOT_DATA_TYPE = MANDATORY
-    y: PLOT_DATA_TYPE = MANDATORY
+    x: PLOT_DATA_TYPE
+    y: PLOT_DATA_TYPE
     marker: PlotMarker = PlotMarker.Circle
     size: float = 4.0
     weight: float = 1.0
@@ -1025,10 +981,10 @@ class StemSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_stem_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_stem_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             y=self.y,
             marker=self.marker.dpg_value,
@@ -1045,21 +1001,21 @@ class StemSeries(PlotType):
 class TextPoint(PlotType):
     """
     Refer to
-    >>> dpgc.add_text_point
+    >>> dpg.add_text_point
     """
 
-    x: float = MANDATORY
-    y: float = MANDATORY
+    x: float
+    y: float
     vertical: bool = False
     xoffset: int = 0.
     yoffset: int = 0.
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_text_point(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_text_point(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             y=self.y,
             xoffset=self.xoffset,
@@ -1073,18 +1029,18 @@ class TextPoint(PlotType):
 class VertLineSeries(PlotType):
     """
     Refer to
-    >>> dpgc.add_vline_series
+    >>> dpg.add_vline_series
     """
-    x: PLOT_DATA_TYPE = MANDATORY
+    x: PLOT_DATA_TYPE
     color: Color = Color.DEFAULT
     weight: float = 1.
     update_bounds: bool = True
     axis: int = 0
 
-    def make_gui(self):
-        dpgc.add_vline_series(
-            plot=self.parent_id,
-            name=self.name,
+    def plot(self, parent_id: str):
+        dpg.add_vline_series(
+            plot=parent_id,
+            name=self.label,
             x=self.x,
             color=self.color.dpg_value,
             weight=self.weight,

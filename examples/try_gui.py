@@ -31,14 +31,34 @@ class Topic2(gui.CollapsingHeader):
     label: str = "Topic 2 - Plots"
     line_plot: gui.Plot = gui.Plot(
         label="This is line plot ...",
-        items=[
+        height=200,
+    )
+    scatter_plot: gui.Plot = gui.Plot(
+        label="This is scatter plot ...",
+        height=200,
+    )
+    subplot_msg: gui.Text = gui.Text(
+        msgs=[
+            "This is sub plot with ManagedColumn ..."
+        ],
+    )
+    subplot: gui.ManagedColumn = gui.ManagedColumn(
+        columns=2,
+        border=True,
+    )
+
+    def plot_some_examples(self):
+        # ------------------------------------------------------- 01
+        # _line_plot
+        _line_plot = self.line_plot
+        _line_plot_items = [
             gui.LineSeries(
-                name="line 1",
+                label="line 1",
                 x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100)
             ),
             gui.LineSeries(
-                name="line 2",
+                label="line 2",
                 x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100)
             )
@@ -48,19 +68,20 @@ class Topic2(gui.CollapsingHeader):
                 for _ in range(5)
             ],
             label=[f"line {i}" for i in range(3, 3+5)]
-        ),
-        height=200,
-    )
-    scatter_plot: gui.Plot = gui.Plot(
-        label="This is scatter plot ...",
-        items=[
+        )
+        for _i in _line_plot_items:
+            _line_plot.plot(plot_type=_i)
+
+        # ------------------------------------------------------- 02
+        _scatter_plot = self.scatter_plot
+        _scatter_plot_items = [
             gui.ScatterSeries(
-                name="scatter 1",
+                label="scatter 1",
                 x=np.random.normal(1.0, scale=2.0, size=100),
                 y=np.random.normal(0.0, scale=2.0, size=100)
             ),
             gui.ScatterSeries(
-                name="scatter 2",
+                label="scatter 2",
                 x=np.random.normal(0.0, scale=2.0, size=100),
                 y=np.random.normal(1.0, scale=2.0, size=100),
             )
@@ -69,80 +90,31 @@ class Topic2(gui.CollapsingHeader):
             data_y=np.random.normal(0.0, scale=1.5, size=500),
             label=np.random.randint(3, 3+5, 500),
             label_formatter="scatter {label}"
-        ),
-        height=200,
-    )
-    subplot_msg: gui.Text = gui.Text(
-        msgs=[
-            "This is sub plot with ManagedColumn ..."
-        ],
-    )
-    subplot: gui.ManagedColumn = gui.ManagedColumn(
-        items=[
-            gui.Plot(
-                items=[
-                    gui.LineSeries(
-                        name="line 1",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    ),
-                    gui.LineSeries(
-                        name="line 2",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    )
-                ],
-                height=200,
-            ),
-            gui.Plot(
-                items=[
-                    gui.LineSeries(
-                        name="line 1",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    ),
-                    gui.LineSeries(
-                        name="line 2",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    )
-                ],
-                height=200,
-            ),
-            gui.Plot(
-                items=[
-                    gui.LineSeries(
-                        name="line 1",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    ),
-                    gui.LineSeries(
-                        name="line 2",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    )
-                ],
-                height=200,
-            ),
-            gui.Plot(
-                items=[
-                    gui.LineSeries(
-                        name="line 1",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    ),
-                    gui.LineSeries(
-                        name="line 2",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    )
-                ],
-                height=200,
-            ),
-        ],
-        columns=2,
-        border=True,
-    )
+        )
+        for _i in _scatter_plot_items:
+            _scatter_plot.plot(plot_type=_i)
+
+        # ------------------------------------------------------- 03
+        _subplot = self.subplot
+        for i in range(4):
+            _plot = gui.Plot(height=200)
+            _subplot.add_child(
+                name=f"plot_{i}", widget=_plot
+            )
+            _plot.plot(
+                gui.LineSeries(
+                    label="line 1",
+                    x=np.arange(100),
+                    y=np.random.normal(0.0, scale=2.0, size=100)
+                )
+            )
+            _plot.plot(
+                gui.LineSeries(
+                    label="line 2",
+                    x=np.arange(100),
+                    y=np.random.normal(0.0, scale=2.0, size=100)
+                )
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -156,13 +128,20 @@ class MyDashboard(gui.Dashboard):
     )
 
     topic1: Topic1 = Topic1()
+    topic11: Topic1 = Topic1()
     topic2: Topic2 = Topic2()
+
+    def build_children(self):
+        self.topic2.build()
+        self.topic1.build()
+        self.topic11.build(before=self.topic2.id)
 
 
 def basic_dashboard():
-    dash = MyDashboard(name="my_dashboard", label=" My Dashboard")
-    dash.make_gui()
-    dash.run_gui()
+    _dash = MyDashboard(dash_id="my_dashboard", title="My Dashboard")
+    _dash.build()
+    _dash.topic2.plot_some_examples()
+    _dash.run()
 
 
 def demo():
@@ -174,7 +153,7 @@ def demo():
 
 def main():
     basic_dashboard()
-    demo()
+    # demo()
 
 
 if __name__ == '__main__':

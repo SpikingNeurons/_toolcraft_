@@ -68,6 +68,10 @@ class Window(Widget):
     # Collapse the window
     collapsed: bool = False
 
+    @property
+    def is_container(self) -> bool:
+        return True
+
     def build(self, before: str = ""):
 
         if before != "":
@@ -120,6 +124,10 @@ class Text(Widget):
     default_value: str = ""
     show: bool = True
 
+    @property
+    def is_container(self) -> bool:
+        return False
+
     def build(self, before: str = ""):
         _msgs = self.msgs if isinstance(self.msgs, list) else [self.msgs]
         for _msg in _msgs:
@@ -153,6 +161,10 @@ class CollapsingHeader(Widget, abc.ABC):
     leaf: bool = False
     bullet: bool = False
 
+    @property
+    def is_container(self) -> bool:
+        return True
+
     def build(self, before: str = ""):
         dpg.add_collapsing_header(
             name=self.id,
@@ -179,8 +191,25 @@ class ManagedColumn(Widget):
     columns: int
     border: bool = True
     show: bool = True
+    widths: t.List[float] = None
+
+    @property
+    def is_container(self) -> bool:
+        return True
+
+    def init_validate(self):
+        # check if num of elements in widths is same as number of columns
+        if self.widths is not None:
+            if len(self.widths) != self.columns:
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"The widths field should have {self.columns} elements",
+                        f"Found {len(self.widths)} elements in widths instead"
+                    ]
+                )
 
     def build(self, before: str = ""):
+        # add ui component
         dpg.add_managed_columns(
             name=self.id,
             parent=self.parent_id,
@@ -189,5 +218,14 @@ class ManagedColumn(Widget):
             show=self.show,
             before=before,
         )
+
+        # set column widths
+        # todo: this feature is still not working
+        #   issue filed here: https://github.com/hoffstadt/DearPyGui/issues/780
+        if self.widths is not None:
+            for i in range(self.columns):
+                dpg.set_managed_column_width(
+                    item=self.id, column=i, width=self.widths[i]
+                )
 
 

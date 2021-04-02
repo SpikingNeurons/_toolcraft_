@@ -104,6 +104,19 @@ class Widget(m.HashableClass, abc.ABC):
         return WidgetInternal(owner=self)
 
     @property
+    @abc.abstractmethod
+    def is_container(self) -> bool:
+        """
+        If the dpg component needs a call to end
+        Needed when the component is container and is used in with context
+        Tou figure out which component is container refer to
+        >>> from dearpygui import simple
+        And check which methods decorated with `#contextmanager` are making
+        call to `end()`
+        """
+        ...
+
+    @property
     @util.CacheResult
     def children(self) -> t.Dict[str, "Widget"]:
         # this will be populated when add_child is called
@@ -296,7 +309,14 @@ class Widget(m.HashableClass, abc.ABC):
     def build_post_runner(
         self, *, hooked_method_return_value: t.Any
     ):
+        # build children that is fields that are widgets
         self.build_children()
+
+        # if container close it
+        if self.is_container:
+            dpg.end()
+
+        # set flag to indicate build is done
         self.internal.is_build_done = True
 
     def add_child(self, name: str, widget: "Widget"):
@@ -329,8 +349,9 @@ class Widget(m.HashableClass, abc.ABC):
         # first setup the widget
         widget.setup(name=name, parent=self)
 
-        # now lets build the widget
-        widget.build()
+        # now lets build the widget only if parent is built
+        if self.internal.is_build_done:
+            widget.build()
 
     def preview(self):
         """
@@ -340,6 +361,7 @@ class Widget(m.HashableClass, abc.ABC):
             dash_id="preview",
             title=f"PREVIEW: {self.__module__}:{self.__class__.__name__}",
         )
+        _dash.build()
         _dash.add_child(
             name="child", widget=self,
         )
@@ -379,6 +401,10 @@ class Dashboard(Widget):
                 f"You need not use this property for dash baord"
             ]
         )
+
+    @property
+    def is_container(self) -> bool:
+        return True
 
     def init(self):
         # call super

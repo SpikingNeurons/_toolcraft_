@@ -77,10 +77,12 @@ class PlotMarker(m.FrozenEnum, enum.Enum):
 
 
 @dataclasses.dataclass(frozen=True)
-class SimplePlot(Widget):
+class _SimplePlot(Widget):
     """
     Refer to
     >>> dpg.add_simple_plot
+    todo: instead of add_simple_plot make you own SimplePlot derived from Plot
+      This is because we connot plot with build() as value is needed
     """
     overlay: str = ""
     minscale: float = 0.0
@@ -92,6 +94,10 @@ class SimplePlot(Widget):
     source: str = ""
     label: str = ""
     show: bool = True
+
+    @property
+    def is_container(self) -> bool:
+        return False
 
     def build(self, before: str = ""):
         # there is nothing to do here as it will happen when you call plot()
@@ -183,6 +189,10 @@ class Plot(Widget):
     show_annotations: bool = True
     show_drag_lines: bool = True
     show_drag_points: bool = True
+
+    @property
+    def is_container(self) -> bool:
+        return False
 
     def plot(self, plot_type: "PlotType"):
         plot_type.plot(parent_id=self.id)

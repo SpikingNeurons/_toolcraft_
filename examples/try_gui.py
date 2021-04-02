@@ -1,11 +1,11 @@
 import dataclasses
 import numpy as np
 
-from toolcraft import gui
+from toolcraft import gui, util
 
 
 @dataclasses.dataclass(frozen=True)
-class Topic1(gui.CollapsingHeader):
+class Info(gui.CollapsingHeader):
 
     label: str = "Topic 1 - Text"
 
@@ -26,22 +26,26 @@ class Topic1(gui.CollapsingHeader):
 
 
 @dataclasses.dataclass(frozen=True)
-class Topic2(gui.CollapsingHeader):
+class Plotting(gui.CollapsingHeader):
 
-    label: str = "Topic 2 - Plots"
+    label: str = "Topic 2 - Plotting"
+
     line_plot: gui.Plot = gui.Plot(
         label="This is line plot ...",
         height=200,
     )
+
     scatter_plot: gui.Plot = gui.Plot(
         label="This is scatter plot ...",
         height=200,
     )
+
     subplot_msg: gui.Text = gui.Text(
         msgs=[
             "This is sub plot with ManagedColumn ..."
         ],
     )
+
     subplot: gui.ManagedColumn = gui.ManagedColumn(
         columns=2,
         border=True,
@@ -49,6 +53,10 @@ class Topic2(gui.CollapsingHeader):
 
     def plot_some_examples(self):
         # ------------------------------------------------------- 01
+        # _simple_plot
+        ...
+
+        # ------------------------------------------------------- 02
         # _line_plot
         _line_plot = self.line_plot
         _line_plot_items = [
@@ -72,7 +80,7 @@ class Topic2(gui.CollapsingHeader):
         for _i in _line_plot_items:
             _line_plot.plot(plot_type=_i)
 
-        # ------------------------------------------------------- 02
+        # ------------------------------------------------------- 03
         _scatter_plot = self.scatter_plot
         _scatter_plot_items = [
             gui.ScatterSeries(
@@ -94,7 +102,7 @@ class Topic2(gui.CollapsingHeader):
         for _i in _scatter_plot_items:
             _scatter_plot.plot(plot_type=_i)
 
-        # ------------------------------------------------------- 03
+        # ------------------------------------------------------- 04
         _subplot = self.subplot
         for i in range(4):
             _plot = gui.Plot(height=200)
@@ -118,6 +126,25 @@ class Topic2(gui.CollapsingHeader):
 
 
 @dataclasses.dataclass(frozen=True)
+class ButtonAction(gui.CollapsingHeader):
+
+    label: str = "Topic 3 - Button with threaded action"
+
+    columns: gui.ManagedColumn = gui.ManagedColumn(
+        columns=2
+    )
+
+    def build_children(self):
+        self.columns.build()
+        self.columns.add_child(
+            name="child1", widget=gui.Text(msgs="This is child 1")
+        )
+        self.columns.add_child(
+            name="child2", widget=gui.Text(msgs="This is child 2")
+        )
+
+
+@dataclasses.dataclass(frozen=True)
 class MyDashboard(gui.Dashboard):
 
     welcome_msg: gui.Text = gui.Text(
@@ -127,14 +154,17 @@ class MyDashboard(gui.Dashboard):
         ],
     )
 
-    topic1: Topic1 = Topic1()
-    topic11: Topic1 = Topic1()
-    topic2: Topic2 = Topic2()
+    topic1: Info = Info()
+
+    topic2: Plotting = Plotting()
+
+    topic3: ButtonAction = ButtonAction()
 
     def build_children(self):
+        self.welcome_msg.build()
         self.topic2.build()
-        self.topic1.build()
-        self.topic11.build(before=self.topic2.id)
+        self.topic1.build(before=self.topic2.id)
+        self.topic3.build()
 
 
 def basic_dashboard():

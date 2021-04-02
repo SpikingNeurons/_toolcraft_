@@ -5,145 +5,30 @@ The rule for now is to
 """
 import abc
 import dataclasses
-import addict
 import typing as t
-from dearpygui import core as dpgc
-from dearpygui import simple as dpgs
+from dearpygui import core as dpg
 import numpy as np
 import enum
 
 from .. import error as e
 from .. import logger
 from .. import util
+from .. import marshalling as m
 
 _LOGGER = logger.get_logger()
 
 MANDATORY = "__IT_IS_MANDATORY__"
 
 
-class _ReadOnlyClass(type):
-    def __setattr__(self, key, value):
-        e.code.NotAllowed(
-            msgs=[
-                f"Class {self} is read only.",
-                f"You cannot override its attribute {key!r} programmatically.",
-                f"Edit it during class definition ..."
-            ]
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class _Builder(abc.ABC):
-
-    class LITERAL(metaclass=_ReadOnlyClass):
-
-        def __new__(cls, *args, **kwargs):
-            e.code.NotAllowed(
-                msgs=[
-                    f"This class is meant to be used to hold class "
-                    f"variables only",
-                    f"Do not try to create instance of {cls} ..."
-                ]
-            )
-
-    @property
-    @abc.abstractmethod
-    def id(self) -> str:
-        ...
-
-    @property
-    @util.CacheResult
-    def children(self) -> t.Dict[str, "Widget"]:
-        """
-        children are those dataclass fields that are also instance of class
-        `Widget`
-        """
-        # container
-        _ret = {}
-
-        # loop over
-        for f in dataclasses.fields(self):
-            # get value for each field
-            v = getattr(self, f.name)
-
-            # never have Dashboard as a child
-            if isinstance(v, Dashboard):
-                e.code.CodingError(
-                    msgs=[
-                        f"{Dashboard} is never meant to be used as "
-                        f"a child. Avoid using it as dataclass field"
-                    ]
-                )
-
-            # check if it is widget and make it children
-            if isinstance(v, Widget):
-                # append
-                _ret[f.name] = v
-
-            # rest all values are ignored ... you can use them as instance
-            # values for any reason ... only widgets are tracked and laid out
-            # in UI
-            ...
-
-        # return
-        return _ret
-
-    def __post_init__(self):
-
-        self.init_validate()
-
-        self.init()
-
-    def init_validate(self):
-        ...
-
-    def init(self):
-        # check if mandatory values supplied
-        for f in dataclasses.fields(self):
-            v = getattr(self, f.name)
-            if not isinstance(v, np.ndarray) and v == MANDATORY:
-                e.code.NotAllowed(
-                    msgs=[
-                        f"Please supply value for field "
-                        f"{f.name} while creating instance of class "
-                        f"{self.__class__}"
-                    ]
-                )
-
-    def make_gui(self):
-        ...
-
-    def make_children_gui(self):
-        _children = self.children
-        if bool(_children):
-            # make gui for all children
-            for k, c in self.children.items():
-                c.make_gui()
-        else:
-            e.code.CodingError(
-                msgs=[
-                    f"There are no children for which we can make GUI",
-                    f"If widget {self.__class__} does not need fields that "
-                    f"hold widgets then you need not call this method"
-                ]
-            )
-
-
-@dataclasses.dataclass(frozen=True)
-class _WidgetInternal:
-    name: str
-    parent: t.Union["Dashboard", "Widget"]
-
-    @property
-    def id(self) -> str:
-        return f"{self.parent.id}.{self.name}"
-
-
-class Color(enum.Enum):
+class Color(m.FrozenEnum, enum.Enum):
     DEFAULT = enum.auto()
     WHITE = enum.auto()
     BLACK = enum.auto()
     CUSTOM = enum.auto()
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_color"
 
     @property
     def dpg_value(self) -> t.List[float]:
@@ -165,6 +50,7 @@ class Color(enum.Enum):
                 msgs=[f"Unknown {self}"]
             )
 
+    # noinspection PyPep8Naming
     def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
         """
         This method return fake Color when called with Color.CUSTOM(...)
@@ -185,11 +71,24 @@ class Color(enum.Enum):
             )
 
 
-@dataclasses.dataclass(frozen=True)
-class Widget(_Builder, abc.ABC):
+class WidgetInternal(m.Internal):
+    name: str
+    parent: t.Union["Dashboard", "Widget"]
+    allow_to_setup: bool = False
+    is_setup_done: bool = False
+    is_build_done: bool = False
 
-    class LITERAL(_Builder.LITERAL):
-        internal = "internal"
+    @property
+    def id(self) -> str:
+        return f"{self.parent.id}.{self.name}"
+
+    def vars_that_can_be_overwritten(self) -> t.List[str]:
+        return super().vars_that_can_be_overwritten() + \
+               ['allow_to_setup', 'is_setup_done', 'is_build_done', ]
+
+
+@dataclasses.dataclass(frozen=True)
+class Widget(m.HashableClass, abc.ABC):
 
     @property
     def id(self) -> str:
@@ -201,80 +100,260 @@ class Widget(_Builder, abc.ABC):
 
     @property
     @util.CacheResult
-    def internal(self) -> _WidgetInternal:
-        if self.LITERAL.internal in self.__dict__.keys():
-            return self.__dict__[self.LITERAL.internal]
-        else:
-            e.code.CodingError(
-                msgs=[
-                    f"the method {self.set_internal} needs to be called before "
-                    f"accessing property `internal`"
-                ]
-            )
-
-    def init(self):
-
-        # call super
-        super().init()
-
-        # every self will assign itself as parent for all its children i.e.
-        # dataclass fields of this class which are instance of class Widget
-        for k, c in self.children.items():
-            c.set_internal(
-                internal=_WidgetInternal(name=k, parent=self)
-            )
-
-    def set_internal(self, internal: _WidgetInternal):
-        if self.LITERAL.internal in self.__dict__.keys():
-            e.code.CodingError(
-                msgs=[
-                    f"internal was already set for widget {self}",
-                    f"We expect the set_internal to be called only once during "
-                    f"the lifetime of the program."
-                ]
-            )
-        else:
-            self.__dict__[self.LITERAL.internal] = internal
-
-
-@dataclasses.dataclass(frozen=True)
-class WidgetContainer(Widget, abc.ABC):
-
-    items: t.List[Widget]
+    def internal(self) -> WidgetInternal:
+        return WidgetInternal(owner=self)
 
     @property
     @util.CacheResult
     def children(self) -> t.Dict[str, "Widget"]:
-        # call parent implementation of children
-        # we expect it to be empty
-        _children = super().children
-        if bool(_children):
+        # this will be populated when add_child is called
+        return {}
+
+    @classmethod
+    def hook_up_methods(cls):
+        # call super
+        super().hook_up_methods()
+
+        # hookup build
+        util.HookUp(
+            cls=cls,
+            silent=True,
+            method=cls.build,
+            pre_method=cls.build_pre_runner,
+            post_method=cls.build_post_runner,
+        )
+
+    def copy(self) -> "Widget":
+        """
+        Note that Widgets can have widgets. Also widgets are mutable object.
+        We want default_factory so that the Widget when used with other
+        parent Widget make its copy and remains immutable when the instance
+        is shared across different widgets.
+
+        This simple allows us to avoid using default_factory option of
+        `dataclass.Field` while building UI.
+
+        We need this behaviour as we have internal property that needs to
+        have different info when Widget is used in different places. Also we
+        really do not want to send extra info i.e. `self.id` and
+        `self.parent_id` to update and add Ui components this extra copy
+        helps us in that.
+
+        Note on allow_to_setup
+          This is useful variable. The actual copy will have this false and
+          hence will make the original copy unusable across UI. But the code
+          will make a copy and save it inside widgets as child in that case
+          we set allow_to_setup.
+          In short only instances made using copy() can setup[ and build
+        """
+        _dict = {
+            f.name: getattr(self, f.name)
+            for f in dataclasses.fields(self)
+        }
+        # noinspection PyArgumentList
+        _ret = self.__class__(**_dict)  # type: Widget
+        _ret.internal.allow_to_setup = True
+        return _ret
+
+    def delete(self, children_only: bool = False):
+        dpg.delete_item(item=self.id, children_only=children_only)
+
+    def setup(self, name: str, parent: "Widget"):
+        # ---------------------------------------------------- 01
+        # if self is Dashboard we expect parent to be None
+        if isinstance(self, Dashboard):
+            if parent is not None:
+                e.code.CodingError(
+                    msgs=[
+                        f"While setting up dashboard please supply "
+                        f"parent to be None as it has no parent"
+                    ]
+                )
+        else:
+            if parent is None:
+                e.code.CodingError(
+                    msgs=[
+                        f"Please supply parent ..."
+                    ]
+                )
+
+        # ---------------------------------------------------- 02
+        # check if instance is made via copy() method i.e. if it is allowed
+        # to setup
+        if not self.internal.allow_to_setup:
             e.code.CodingError(
                 msgs=[
-                    f"Widgets can only be supplied as a list to `items` field",
-                    f"Looks like that there are some dataclass fields which "
-                    f"hold instance of class {Widget}"
+                    f"You need to use a widget instance obtained via copy()",
+                    f"Check documentation for {Widget.copy}",
+                    {
+                        'parent id': parent.id, 'child name': name,
+                    }
                 ]
             )
 
-        # children here are elements in list
-        _ret = {}
-        for i, v in enumerate(self.items):
-            _ret[f"item[{i}]"] = v
+        # ---------------------------------------------------- 03
+        # check if already setup is done
+        if self.internal.is_setup_done:
+            e.code.CodingError(
+                msgs=[
+                    f"Widget `{self.internal.name}` is already setup with "
+                    f"parent `{self.internal.parent.id}`",
+                    f"So we cannot set it up with parent `{parent.id}`"
+                ]
+            )
 
-        # return
-        return _ret
+        # ---------------------------------------------------- 04
+        # check if already a static child
+        if parent is not None:
+            if name in parent.children.keys():
+                e.code.NotAllowed(
+                    msgs=[
+                        f"There is already a child with name {name} in parent "
+                        f"{parent.id}"
+                    ]
+                )
+            # else we can add it as child to parent
+            else:
+                parent.children[name] = self
+
+        # ---------------------------------------------------- 05
+        # setup self i.e. by updating internal
+        self.internal.is_setup_done = True
+        self.internal.name = name
+        if parent is not None:
+            self.internal.parent = parent
+
+        # ---------------------------------------------------- 06
+        # if there are any fields that are widget please set them up as well
+        # note that for add_child where we add widgets dynamically this is
+        # taken care in add_child anyways
+        for f in dataclasses.fields(self):
+            v = getattr(self, f.name)  # type: Widget
+            if isinstance(v, Widget):
+                # if Dashboard raise error
+                # -------------------------------------------- 06.01
+                if isinstance(v, Dashboard):
+                    e.code.CodingError(
+                        msgs=[
+                            f"Field {f.name} holds a instance for Dashboard. "
+                            f"Note the we do not allow field with Dashboard "
+                            f"instance ..."
+                        ]
+                    )
+
+                # -------------------------------------------- 06.02
+                # read documentation for copy()
+                # here we will first check if the instance is not allowed to
+                # setup as it is the one which is used while creating
+                if v.internal.allow_to_setup:
+                    e.code.CodingError(
+                        msgs=[
+                            f"We expect the child Widget which is not obtained "
+                            f"via copy ...",
+                            {
+                                'parent id': self.id, 'child name': f.name
+                            }
+                        ]
+                    )
+
+                # -------------------------------------------- 06.03
+                # hack internal __dict__ and replace it with copy ... we need
+                # to do this as frozen dataclass is not supposed to be
+                # updated but because of special requirement we still do it
+                v = v.copy()
+                self.__dict__[f.name] = v
+
+                # -------------------------------------------- 06.04
+                # setup
+                v.setup(name=f.name, parent=self)
+
+    def build_pre_runner(self, before: str = ""):
+        if self.internal.is_build_done:
+            e.code.CodingError(
+                msgs=[
+                    f"This widget `{self.id}` is already built.",
+                    f"You cannot build it again"
+                ]
+            )
+
+    @abc.abstractmethod
+    def build(self, before: str = ""):
+        ...
+
+    def build_children(self):
+        """
+        Here we decide how to build all children of this Widget which are
+        class fields. Note that add_child will just build newly added
+        components below the last child widget
+
+        Default behaviour is to just build all fields that are Widgets one
+        after other. You can of course override this to do more cosmetic
+        changes to UI
+        """
+        for k, w in self.children.items():
+            w.build()
+
+    def build_post_runner(
+        self, *, hooked_method_return_value: t.Any
+    ):
+        self.build_children()
+        self.internal.is_build_done = True
+
+    def add_child(self, name: str, widget: "Widget"):
+        # make sure that you are not adding Dashboard
+        if isinstance(widget, Dashboard):
+            e.code.CodingError(
+                msgs=[
+                    f"Note that you are not allowed to add Dashboard as child "
+                    f"to any Widget"
+                ]
+            )
+
+        # check if widget is already being allowed to setup
+        if widget.internal.allow_to_setup:
+            e.code.NotAllowed(
+                msgs=[
+                    f"The widget you are supplying is already allowed to be "
+                    f"setup or else it was obtained via `Widget.copy()` method",
+                    f"Please create a fresh copy of widget to be added as a "
+                    f"child ..."
+                ]
+            )
+
+        # make it possible for widget to be setup
+        # note that we do not want to use copy() as it will create a duplicate
+        # that also means the widget cannot be passed in multiple places as
+        # we do not perform auto copy.
+        widget.internal.allow_to_setup = True
+
+        # first setup the widget
+        widget.setup(name=name, parent=self)
+
+        # now lets build the widget
+        widget.build()
+
+    def preview(self):
+        """
+        You can see the preview of this widget without adding it to dashboard
+        """
+        _dash = Dashboard(
+            dash_id="preview",
+            title=f"PREVIEW: {self.__module__}:{self.__class__.__name__}",
+        )
+        _dash.add_child(
+            name="child", widget=self,
+        )
+        _dash.run()
 
 
 @dataclasses.dataclass(frozen=True)
-class Dashboard(Widget, abc.ABC):
+class Dashboard(Widget):
     """
-    Dashboard is nothing but window.
-
-    Note that `widget.Window` will be any window that will be inside the UI
+    Dashboard is nothing but specialized Window. While note that
+    `widget.Window` will be any window that will be inside the Dashboard.
 
     Refer:
-    >>> dpgs.window
+    >>> dpg.add_window
 
     Here we will take care of things like
     + screen resolution
@@ -285,45 +364,89 @@ class Dashboard(Widget, abc.ABC):
 
     Note that we make this as primary window when we start GUI
     """
-
-    name: str
-    label: str = ""
+    dash_id: str
+    title: str
 
     @property
     def id(self) -> str:
-        # for dashboard there is no parent so we have attribute name that
-        # will be the id of super parent
-        return self.name
+        return self.dash_id
 
-    # noinspection PyPropertyDefinition,PyTypeChecker
+    # noinspection PyTypeChecker,PyPropertyDefinition
     @property
     def parent_id(self) -> str:
         e.code.CodingError(
             msgs=[
-                f"Do not use this property for Dashboard as there exists no "
-                f"parent for it ..."
+                f"You need not use this property for dash baord"
             ]
         )
 
-    def make_gui(self):
-        with dpgs.window(
+    def init(self):
+        # call super
+        super().init()
+
+        # dashboards are always allowed to be setup and there is no need to
+        # make them via copy
+        self.internal.allow_to_setup = True
+
+        # setup
+        # the Dashboard will never be added via `add_child` method so we need
+        # to setup here in `init()`
+        # noinspection PyTypeChecker
+        self.setup(name=self.dash_id, parent=None)
+
+    # noinspection PyTypeChecker
+    def copy(self) -> "Dashboard":
+        e.code.CodingError(
+            msgs=[
+                f"this is dashboard and you need not use this method as "
+                f"already this instance is eligible to be setup ..."
+            ]
+        )
+
+    # noinspection PyMethodMayBeStatic
+    def build(self, before: str = ""):
+
+        # -------------------------------------------------- 01
+        if before != "":
+            e.code.NotAllowed(
+                msgs=[
+                    f"Widget {self.__class__} does not support before kwarg ..."
+                ]
+            )
+
+        # -------------------------------------------------- 02
+        # add window
+        dpg.add_window(
             name=self.id,
-            label=self.label,
+            label=self.title,
             on_close=self.on_close,
-        ):
-            # -------------------------------------------------- 01
-            # set the things for primary window
-            # dpgc.set_main_window_size(550, 550)
-            # dpgc.set_main_window_resizable(False)
-            dpgc.set_main_window_title(self.label)
+        )
 
-            # -------------------------------------------------- 02
-            # make gui for all children
-            self.make_children_gui()
+        # -------------------------------------------------- 03
+        # set the things for primary window
+        # dpgc.set_main_window_size(550, 550)
+        # dpgc.set_main_window_resizable(False)
+        dpg.set_main_window_title(self.title)
 
-    def run_gui(self):
+    def run(self):
+        # check if ui was built
+        if not self.internal.is_setup_done:
+            e.code.NotAllowed(
+                msgs=[
+                    f"looks like you missed to setup dashboard `{self.dash_id}`"
+                ]
+            )
+
+        # check if ui was built
+        if not self.internal.is_build_done:
+            e.code.NotAllowed(
+                msgs=[
+                    f"looks like you missed to build dashboard `{self.dash_id}`"
+                ]
+            )
+
         # dpgc.start_dearpygui()
-        dpgc.start_dearpygui(primary_window=self.id)
+        dpg.start_dearpygui(primary_window=self.id)
 
     def on_close(self, sender, data):
-        dpgc.delete_item(self.id)
+        self.delete()

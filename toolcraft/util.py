@@ -5,6 +5,7 @@ Module to hold simple utilities that can be built with minimal dependencies.
 
 import functools
 import typing as t
+import pyarrow as pa
 import numpy as np
 import sys
 import inspect
@@ -1918,6 +1919,10 @@ def compute_class_weights(
     _unique_labels_weight = sklearn.utils.compute_class_weight(
         'balanced', _unique_labels, _labels)
     return _unique_labels, _unique_labels_weight
+
+
+def pa_to_np(data: pa.ChunkedArray) -> np.ndarray:
+    return np.asarray(data.to_pylist())
 
 
 def one_hot_to_simple_labels(oh_label: pd.Series) -> pd.Series:

@@ -5,7 +5,7 @@ import typing as t
 
 from ... import error as e
 from ... import util
-from ..__base__ import Widget, Color, Dashboard
+from .. import Widget, Color, Dashboard, Callback
 
 
 @dataclasses.dataclass(frozen=True)
@@ -55,6 +55,8 @@ class Combo(Widget):
     # Display only a square arrow button
     no_preview: bool = False
 
+    callback: Callback = None
+
     @property
     def is_container(self) -> bool:
         return False
@@ -65,18 +67,12 @@ class Combo(Widget):
         parent: "Widget",
         before: t.Optional["Widget"] = None
     ):
-        # get what to use for callback
-        if Combo.callback != self.__class__.callback:
-            _callback = self.callback
-        else:
-            _callback = None
-
         # add_combo
         dpg.add_combo(
             **self.internal.dpg_kwargs,
             items=self.items,
             default_value=self.default_value,
-            callback=_callback,
+            callback=None if self.callback is None else self.callback.fn,
             # callback_data=self.callback_data,
             tip=self.tip,
             source=self.source,
@@ -92,9 +88,6 @@ class Combo(Widget):
             no_arrow_button=self.no_arrow_button,
             no_preview=self.no_preview,
         )
-
-    def callback(self, sender, data):
-        ...
 
 
 @dataclasses.dataclass(frozen=True)
@@ -117,10 +110,10 @@ class ChildWindow(Widget):
     border: bool = True
 
     # Autosize the window to fit it's items in the x.
-    autosize_x: bool = False
+    autosize_x: bool = True
 
     # Autosize the window to fit it's items in the y.
-    autosize_y: bool = False
+    autosize_y: bool = True
 
     # Disable scrollbars
     # (window can still scroll with mouse or programmatically)
@@ -216,6 +209,8 @@ class Window(Widget):
     # Collapse the window
     collapsed: bool = False
 
+    on_close: Callback = None
+
     @property
     def is_container(self) -> bool:
         return True
@@ -272,11 +267,8 @@ class Window(Widget):
             label=self.label,
             show=self.show,
             collapsed=self.collapsed,
-            on_close=self.on_close,
+            on_close=None if self.on_close is None else self.on_close.fn,
         )
-
-    def on_close(self, sender, data):
-        ...
 
 
 @dataclasses.dataclass(frozen=True)

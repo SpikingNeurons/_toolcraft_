@@ -7,18 +7,6 @@ from toolcraft import gui, util
 
 
 @dataclasses.dataclass(frozen=True)
-class ThemeSelector(gui.Combo):
-    items: t.List[str] = dataclasses.field(
-        default_factory=gui.helper.get_themes
-    )
-    default_value: str = "Dark Grey"
-
-    def callback(self, sender, data):
-        _theme = dpg.get_value(name=self.id)
-        dpg.set_theme(theme=_theme, )
-
-
-@dataclasses.dataclass(frozen=True)
 class Info(gui.CollapsingHeader):
 
     label: str = "Topic 1 - Text"
@@ -144,9 +132,9 @@ class ButtonAction(gui.CollapsingHeader):
 
     label: str = "Topic 3 - Button with threaded action"
 
-    button_window: gui.ChildWindow = gui.ChildWindow(height=800)
+    button_window: gui.ChildWindow = gui.ChildWindow()
 
-    display_window: gui.ChildWindow = gui.ChildWindow(height=800)
+    display_window: gui.ChildWindow = gui.ChildWindow()
 
     def build_children(self):
         _columns = gui.ManagedColumn(columns=2)
@@ -162,7 +150,7 @@ class ButtonAction(gui.CollapsingHeader):
 @dataclasses.dataclass(frozen=True)
 class MyDashboard(gui.Dashboard):
 
-    theme_selector: ThemeSelector = ThemeSelector()
+    theme_selector: gui.Combo = gui.callback.SetThemeCallback.get_combo_widget()
 
     welcome_msg: gui.Text = gui.Text(
         msgs=[

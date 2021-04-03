@@ -74,6 +74,40 @@ class Color(m.FrozenEnum, enum.Enum):
             )
 
 
+class CallbackInternal(m.Internal):
+    sender: "Widget"
+
+
+@dataclasses.dataclass(frozen=True)
+class Callback(m.HashableClass, abc.ABC):
+    """
+    Note that `Callback.fn` will as call back function.
+    But when it comes to callback data we need not worry as the fields
+    of this instance will serve as data ;)
+    """
+
+    @property
+    @util.CacheResult
+    def internal(self) -> "CallbackInternal":
+        return CallbackInternal(owner=self)
+
+    @property
+    @util.CacheResult
+    def sender(self) -> "Widget":
+        """
+        The owner i.e. the widget to which this callback was assigned
+        """
+        # noinspection PyTypeChecker
+        return self.internal.sender
+
+    def set_sender(self, sender: "Widget"):
+        self.internal.sender = sender
+
+    @abc.abstractmethod
+    def fn(self):
+        ...
+
+
 class WidgetInternal(m.Internal):
     name: str
     parent: t.Union["Dashboard", "Widget"]
@@ -143,49 +177,94 @@ class Widget(m.HashableClass, abc.ABC):
         # this will be populated when add_child is called
         return {}
 
-    def __getattribute__(self, item):
+    def init(self):
+        # ------------------------------------------------------- 01
+        # call super
+        super().init()
+
+        # ------------------------------------------------------- 02
+        # loop over fields
+        for f in dataclasses.fields(self):
+            # --------------------------------------------------- 02.01
+            # get value
+            v = getattr(self, f.name)
+
+            # --------------------------------------------------- 02.02
+            # bind field if Widget or Callback
+            if isinstance(v, (Widget, Callback)):
+                self.duplicate_field(field=f, value=v)
+
+    def duplicate_field(
+        self,
+        field: dataclasses.Field,
+        value: t.Union["Widget", Callback]
+    ):
         """
-        Here we trick dataclass to treat Widgets that were assigned as
-        default to be treated as non mutable ... this helps us avoid using
-        default_factory
+        To be called from init. Will be only called for fields that are
+        Widget or Callback
+
+        Purpose:
+        + When defaults are provided copy them to mimic immutability
+        + Each immutable field can have his own parent
+
+        Why is this needed??
+          Here we trick dataclass to treat some Hashable classes that were
+          assigned as default to be treated as non mutable ... this helps us
+          avoid using default_factory
+
+        Who is using it ??
+          + gui.Widget
+            Needed only while building UI to reuse UI components and keep code
+            readable. This will be in line with declarative syntax.
+          + gui.Callback
+            Although not needed we still allow this behaviour as it will be
+            used by users that build GUI and they might get to used to assigning
+            callbacks while defining class ... so just for convenience we allow
+            this to happen
+
+        Needed for fields that has default values
+          When a instance is assigned during class definition then it is not
+          longer usable with multiple instances of that classes. This applies in
+          case of UI components. But not needed for fields like prepared_data as
+          we actually might be interested to share that field with other
+          instances.
+
+          When such fields are bound for certain instance especially using the
+          property internal we might want an immutable duplicate made for each
+          instance.
+
+        todo: Dont be tempted to use this behaviour in other cases like
+          Model, HashableClass. Brainstorm if you think this needs
+          to be done. AVOID GENERALIZING THIS FUNCTION.
+
         """
 
-        # bypass all dunder method accesses
-        if item.startswith("__"):
-            return super().__getattribute__(item)
-
-        # first lets get value
-        v = super().__getattribute__(item)
-
-        # if item not a field name return as it is
-        if item not in self.__dataclass_fields__.keys():
-            return v
-
-        # if not widget return as it is
-        if not isinstance(v, Widget):
-            return v
-
-        # get the Field for this item
-        _field = self.__dataclass_fields__[item]
-
+        # ------------------------------------------------------ 01
         # get default value
-        _field_value = _field.default
+        _default_value = field.default
 
-        # if default is MISSING that means the value was supplied via
-        # constructor do the user will expect it to mutate
-        if _field_value == dataclasses.MISSING:
-            return v
-
-        # if _field_value and v are same that means we still have not tricked
-        # dataclass and this is the first time things are called so update
-        # __dict__ here
-        if id(_field_value) == id(v):
-            v = v.copy()
-            self.__dict__[item] = v
-            return v
-        # things are already update for this self so return as it is
-        else:
-            return v
+        # ------------------------------------------------------ 02
+        # if value and _default_value are same that means we still have
+        # not tricked dataclass and this is the first time things are
+        # called so update __dict__ here
+        # Note that the below code can also handle
+        # _default_value == dataclasses.MISSING
+        if id(_default_value) == id(value):
+            # this makes a shallow i.e. one level copy
+            # we assume that subsequent nested fields can make their own copies
+            _dict = {}
+            for f in dataclasses.fields(value):
+                v = getattr(value, f.name)
+                _dict[f.name] = v
+            value = value.__class__(**_dict)
+            # value = value.__class__(
+            #     **{
+            #         f.name: getattr(value, f.name)
+            #         for f in dataclasses.fields(value)
+            #     }
+            # )
+            # hack to override field value
+            self.__dict__[field.name] = value
 
     @classmethod
     def hook_up_methods(cls):
@@ -200,39 +279,6 @@ class Widget(m.HashableClass, abc.ABC):
             pre_method=cls.build_pre_runner,
             post_method=cls.build_post_runner,
         )
-
-    def copy(self) -> "Widget":
-        """
-        Note that Widgets can have widgets. Also widgets are mutable object.
-        We want default_factory so that the Widget when used with other
-        parent Widget make its copy and remains immutable when the instance
-        is shared across different widgets.
-
-        This simple allows us to avoid using default_factory option of
-        `dataclass.Field` while building UI.
-
-        We need this behaviour as we have internal property that needs to
-        have different info when Widget is used in different places. Also we
-        really do not want to send extra info i.e. `self.id` and
-        `self.parent_id` to update and add Ui components this extra copy
-        helps us in that.
-
-        Note on allow_to_build
-          This is useful variable. The actual copy will have this false and
-          hence will make the original copy unusable across UI. But the code
-          will make a copy and save it inside widgets as child in that case
-          we set allow_to_build.
-          In short only instances made using copy() can setup[ and build
-
-        Remember never do this in init only do it while build
-        """
-        _dict = {
-            f.name: getattr(self, f.name)
-            for f in dataclasses.fields(self)
-        }
-        # noinspection PyArgumentList
-        _ret = self.__class__(**_dict)  # type: Widget
-        return _ret
 
     def delete(self, children_only: bool = False):
         dpg.delete_item(item=self.id, children_only=children_only)
@@ -294,6 +340,14 @@ class Widget(m.HashableClass, abc.ABC):
     ):
         ...
 
+    def build_callback(self):
+        # set teh sender i.e. which UI widget will have control to call this
+        # callback
+        for f in dataclasses.fields(self):
+            v = getattr(self, f.name)
+            if isinstance(v, Callback):
+                v.set_sender(sender=self)
+
     def build_children(self):
         """
         Here we decide how to build all children of this Widget which are
@@ -318,6 +372,9 @@ class Widget(m.HashableClass, abc.ABC):
     def build_post_runner(
         self, *, hooked_method_return_value: t.Any
     ):
+        # build callback
+        self.build_callback()
+
         # build children that is fields that are widgets
         self.build_children()
 

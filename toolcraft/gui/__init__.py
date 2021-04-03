@@ -1,4 +1,6 @@
-from .__base__ import MANDATORY, Color, Widget, Dashboard
+from .__base__ import MANDATORY, Color, Widget, Dashboard, Callback
 from . import demo
-from .widget import *
+from . import callback
 from . import helper
+from .widget import *
+

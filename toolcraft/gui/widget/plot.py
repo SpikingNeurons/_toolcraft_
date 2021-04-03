@@ -8,7 +8,7 @@ import numpy as np
 from ... import error as e
 from ... import util
 from ... import marshalling as m
-from ..__base__ import Color, Widget
+from .. import Color, Widget, Callback
 
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 PLOT_LABEL_TYPE = t.Union[t.List[str], np.ndarray]
@@ -131,8 +131,6 @@ class Plot(Widget):
     Refer to
     >>> dpg.add_plot
     """
-
-    # the defaults supported by dearpygui
     label: str = ''
     x_axis_name: str = ''
     y_axis_name: str = ''
@@ -177,13 +175,9 @@ class Plot(Widget):
     y3axis_invert: bool = False
     y3axis_lock_min: bool = False
     y3axis_lock_max: bool = False
-    # Parent to add this item to. (runtime adding)
     parent: str = ''
     width: int = -1
     height: int = -1
-    # Callback ran when plot is queried. Should be of the form
-    # 'def Callback(sender, data)'
-    # Data is (x_min, x_max, y_min, y_max).
     show_color_scale: bool = False
     scale_min: float = 0.0
     scale_max: float = 1.0
@@ -192,12 +186,17 @@ class Plot(Widget):
     show_annotations: bool = True
     show_drag_lines: bool = True
     show_drag_points: bool = True
+    # Callback ran when plot is queried. Should be of the form
+    # 'def Callback(sender, data)'
+    # Data is (x_min, x_max, y_min, y_max).
+    query_callback: Callback = None
 
     @property
     def is_container(self) -> bool:
         return False
 
     def plot(self, plot_type: "PlotType"):
+        # check if self is built
         if not self.internal.is_build_done:
             e.code.NotAllowed(
                 msgs=[
@@ -205,6 +204,17 @@ class Plot(Widget):
                     f"Did you miss to call build() on dashboard ..."
                 ]
             )
+
+        # todo: Who should be sender widget of callbacks in PlotType?
+        #   Note that PlotType are not Widget so we cannot have them as
+        #   sender as they do not inherit `Widget.id` mechanism
+        # todo: We might need to do immutable copy for this callback similar
+        #  to Widget class
+        if isinstance(plot_type, (DragLine, DragPoint)):
+            if plot_type.callback is not None:
+                plot_type.callback.set_sender(sender=self)
+
+        # plot
         plot_type.plot(parent_id=self.id)
 
     def build(
@@ -213,14 +223,6 @@ class Plot(Widget):
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
-        # ------------------------------------------------ 01
-        # resolve if query callback overridden
-        if self.__class__.query_callback != Plot.query_callback:
-            _query_callback = self.query_callback
-        else:
-            _query_callback = None
-
-        # ------------------------------------------------ 02
         # call add plot
         dpg.add_plot(
             **self.internal.dpg_kwargs,
@@ -278,16 +280,8 @@ class Plot(Widget):
             show_annotations=self.show_annotations,
             show_drag_lines=self.show_drag_lines,
             show_drag_points=self.show_drag_points,
-            query_callback=_query_callback
-        )
-
-    # noinspection PyMethodMayBeStatic
-    def query_callback(self, sender, data):
-        e.code.CodingError(
-            msgs=[
-                f"Please override this method by subclassing the {Plot}, "
-                f"in case you want to use query_callback"
-            ]
+            query_callback=None if self.query_callback is None else
+            self.query_callback.fn
         )
 
     def get_plot_xlimits(self) -> t.Tuple[float, float]:
@@ -345,6 +339,20 @@ class PlotType(abc.ABC):
     >>> dpg.delete_series
     """
     label: str
+
+    def __post_init__(self):
+        """
+        We do it here as we cannot use HashableClass here as the fields can
+        have complex data that might not be possible to serialize as yaml
+        """
+        self.init_validate()
+        self.init()
+
+    def init_validate(self):
+        ...
+
+    def init(self):
+        ...
 
     @abc.abstractmethod
     def plot(self, parent_id: str):
@@ -489,12 +497,9 @@ class DragLine(PlotType):
     y_line: bool = False
     show_label: bool = True
     default_value: float = 0.0
+    callback: Callback = None
 
     def plot(self, parent_id: str):
-        # if overridden get the callback
-        _callback = None
-        if DragLine.callback != self.__class__.callback:
-            _callback = self.callback
 
         # add
         dpg.add_drag_line(
@@ -506,21 +511,13 @@ class DragLine(PlotType):
             y_line=self.y_line,
             show_label=self.show_label,
             default_value=self.default_value,
-            callback=_callback,
+            callback=None if self.callback is None else self.callback.fn,
         )
 
     def delete(self, children_only: bool = False):
         e.code.NotSupported(msgs=["figure it out"])
         dpg.delete_drag_line(
             plot=..., name=self.label
-        )
-
-    # noinspection PyMethodMayBeStatic
-    def callback(self, sender, data):
-        e.code.NotAllowed(
-            msgs=[
-                f"In case you want to use callback override this method"
-            ]
         )
 
 
@@ -536,12 +533,9 @@ class DragPoint(PlotType):
     show_label: bool = True
     default_x: float = 0.0
     default_y: float = 0.0
+    callback: Callback = None
 
     def plot(self, parent_id: str):
-        # if overridden get the callback
-        _callback = None
-        if DragLine.callback != self.__class__.callback:
-            _callback = self.callback
 
         # add
         dpg.add_drag_point(
@@ -553,21 +547,13 @@ class DragPoint(PlotType):
             show_label=self.show_label,
             default_x=self.default_x,
             default_y=self.default_y,
-            callback=_callback,
+            callback=None if self.callback is None else self.callback.fn,
         )
 
     def delete(self, children_only: bool = False):
         e.code.NotSupported(msgs=["figure it out"])
         dpg.delete_drag_point(
             plot=..., name=self.label
-        )
-
-    # noinspection PyMethodMayBeStatic
-    def callback(self, sender, data):
-        e.code.NotAllowed(
-            msgs=[
-                f"In case you want to use callback override this method"
-            ]
         )
 
 

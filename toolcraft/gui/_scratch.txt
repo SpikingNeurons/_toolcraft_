@@ -1,34 +1,46 @@
 
 
-    # Attempt to render
-    show: bool = True
 
-    # Adds a simple tooltip
-    tip: str = ''
+items: List[str]
 
-    # Parent to add this item to. (runtime adding)
-    parent: str = ''
+default_value: str = ''
 
-    # This item will be displayed before the specified item in the parent.
-    # (runtime adding)
-    before: str = ''
+callback: Callable = None
 
-    width: int = 0
+callback_data: Any = None
 
-    height: int = 0
+tip: str = ''
 
-    border: bool = True
+# Overrides 'name' as value storage key
+source: str = ''
 
-    # Autosize the window to fit it's items in the x.
-    autosize_x: bool = False
+# Display grayed out text so selectable cannot be selected
+enabled: bool = True
 
-    # Autosize the window to fit it's items in the y.
-    autosize_y: bool = False
+width: int = 0
 
-    # Disable scrollbars (window can still scroll with mouse or programmatically)
-    no_scrollbar: bool = False
+# Overrides 'name' as label
+label: str = ''
 
-    # Allow horizontal scrollbar to appear (off by default).
-    horizontal_scrollbar: bool = False
+show: bool = True
 
-    menubar: bool = False
+# Align the popup toward the left by default
+popup_align_left: bool = False
+
+# Max ~4 items visible
+height_small: bool = False
+
+# Max ~8 items visible (default)
+height_regular: bool = False
+
+# Max ~20 items visible
+height_large: bool = False
+
+# As many items visible as possible
+height_largest: bool = False
+
+# Display on the preview box without the square arrow button
+no_arrow_button: bool = False
+
+# Display only a square arrow button
+no_preview: bool = False

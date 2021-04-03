@@ -77,7 +77,6 @@ class Color(m.FrozenEnum, enum.Enum):
 class WidgetInternal(m.Internal):
     name: str
     parent: t.Union["Dashboard", "Widget"]
-    allow_to_build: bool = False
     before: t.Optional["Widget"] = None
     is_build_done: bool = False
 
@@ -96,7 +95,7 @@ class WidgetInternal(m.Internal):
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
         return super().vars_that_can_be_overwritten() + \
-               ['allow_to_build', 'before', 'is_build_done', ]
+               ['before', 'is_build_done', ]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -144,6 +143,50 @@ class Widget(m.HashableClass, abc.ABC):
         # this will be populated when add_child is called
         return {}
 
+    def __getattribute__(self, item):
+        """
+        Here we trick dataclass to treat Widgets that were assigned as
+        default to be treated as non mutable ... this helps us avoid using
+        default_factory
+        """
+
+        # bypass all dunder method accesses
+        if item.startswith("__"):
+            return super().__getattribute__(item)
+
+        # first lets get value
+        v = super().__getattribute__(item)
+
+        # if item not a field name return as it is
+        if item not in self.__dataclass_fields__.keys():
+            return v
+
+        # if not widget return as it is
+        if not isinstance(v, Widget):
+            return v
+
+        # get the Field for this item
+        _field = self.__dataclass_fields__[item]
+
+        # get default value
+        _field_value = _field.default
+
+        # if default is MISSING that means the value was supplied via
+        # constructor do the user will expect it to mutate
+        if _field_value == dataclasses.MISSING:
+            return v
+
+        # if _field_value and v are same that means we still have not tricked
+        # dataclass and this is the first time things are called so update
+        # __dict__ here
+        if id(_field_value) == id(v):
+            v = v.copy()
+            self.__dict__[item] = v
+            return v
+        # things are already update for this self so return as it is
+        else:
+            return v
+
     @classmethod
     def hook_up_methods(cls):
         # call super
@@ -157,64 +200,6 @@ class Widget(m.HashableClass, abc.ABC):
             pre_method=cls.build_pre_runner,
             post_method=cls.build_post_runner,
         )
-
-    def trigger_copies(self):
-        """
-        This method is called when dashboards build is called
-
-        This ensure that the fields that are widgets are duplicated so that
-        we can still afford to assign widget instances as defaults.
-
-        Also reference non copied instances can be used to template multiple
-        parts of UI
-
-        Also check documentation for copy.
-
-        Remember never do this in init only do it while build
-        """
-        # ---------------------------------------------------- 01
-        # if there are any fields that are widget please make a copy
-        # note that for add_child where we add widgets dynamically this is
-        # taken care in add_child anyways
-        for f in dataclasses.fields(self):
-            v = getattr(self, f.name)  # type: Widget
-            if isinstance(v, Widget):
-                # -------------------------------------------- 01.01
-                # if Dashboard raise error
-                if isinstance(v, Dashboard):
-                    e.code.CodingError(
-                        msgs=[
-                            f"Field {f.name} holds a instance for Dashboard. "
-                            f"Note the we do not allow field with Dashboard "
-                            f"instance ..."
-                        ]
-                    )
-
-                # -------------------------------------------- 01.02
-                # read documentation for copy()
-                # here we will first check if the instance is not allowed to
-                # setup as it is the one which is used while creating
-                if v.internal.allow_to_build:
-                    e.code.CodingError(
-                        msgs=[
-                            f"We expect the child Widget which is not obtained "
-                            f"via copy ...",
-                            {
-                                'parent id': self.id, 'child name': f.name
-                            }
-                        ]
-                    )
-
-                # -------------------------------------------- 01.03
-                # hack internal __dict__ and replace it with copy ... we need
-                # to do this as frozen dataclass is not supposed to be
-                # updated but because of special requirement we still do it
-                v = v.copy()
-                self.__dict__[f.name] = v
-
-                # -------------------------------------------- 01.04
-                # trigger to make copies of children of this child
-                v.trigger_copies()
 
     def copy(self) -> "Widget":
         """
@@ -247,7 +232,6 @@ class Widget(m.HashableClass, abc.ABC):
         }
         # noinspection PyArgumentList
         _ret = self.__class__(**_dict)  # type: Widget
-        _ret.internal.allow_to_build = True
         return _ret
 
     def delete(self, children_only: bool = False):
@@ -259,33 +243,26 @@ class Widget(m.HashableClass, abc.ABC):
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
+
         # ---------------------------------------------------- 01
-        # check if instance is made via copy() method i.e. if it is allowed
-        # to setup
-        if not self.internal.allow_to_build:
+        # check if already built
+        if self.internal.is_build_done:
             e.code.CodingError(
                 msgs=[
-                    f"You need to use a widget instance obtained via copy()",
-                    f"Check documentation for {Widget.copy}",
+                    f"Widget is already registered with:",
                     {
-                        'parent id': "" if parent is None else parent.id,
-                        'child name': name,
+                        'parent': self.internal.parent.id,
+                        'with name': self.internal.name
+                    },
+                    f"While you are requesting to register with:",
+                    {
+                        'parent': parent.id,
+                        'with name': name,
                     }
                 ]
             )
 
         # ---------------------------------------------------- 02
-        # check if already built
-        if self.internal.is_build_done:
-            e.code.CodingError(
-                msgs=[
-                    f"Widget `{self.internal.name}` is already setup with "
-                    f"parent `{self.internal.parent.id}`",
-                    f"So we cannot set it up with parent `{parent.id}`"
-                ]
-            )
-
-        # ---------------------------------------------------- 04
         # check if already a child i.e. is the name taken
         if parent is not None:
             if name in parent.children.keys():
@@ -299,7 +276,7 @@ class Widget(m.HashableClass, abc.ABC):
             else:
                 parent.children[name] = self
 
-        # ---------------------------------------------------- 05
+        # ---------------------------------------------------- 03
         # setup self i.e. by updating internal
         self.internal.is_build_done = True
         self.internal.name = name
@@ -369,17 +346,6 @@ class Widget(m.HashableClass, abc.ABC):
                     f"Make sure you have build the parent"
                 ]
             )
-
-        # the widget to add can be newly created widget or may be it is child
-        # to some Widget class
-        # if it is child to some widget this will be already set if not we
-        # set it here
-        if not widget.internal.allow_to_build:
-            widget.internal.allow_to_build = True
-
-            # make copies of children and their children so that we have
-            # default_factory behaviour i.e. we get immutability
-            widget.trigger_copies()
 
         # now lets build the widget
         widget.build(name=name, parent=self, before=before)
@@ -468,14 +434,6 @@ class Dashboard(Widget):
 
     # noinspection PyMethodOverriding
     def build_pre_runner(self):
-
-        # dashboards are always allowed to be setup and there is no need to
-        # make them via copy
-        self.internal.allow_to_build = True
-
-        # trigger making copies
-        self.trigger_copies()
-
         # call super
         # noinspection PyTypeChecker
         super().build_pre_runner(name=self.dash_id, parent=None, before=None)
@@ -508,6 +466,7 @@ class Dashboard(Widget):
             )
 
         # dpgc.start_dearpygui()
+        dpg.set_theme(theme="Dark Grey")
         dpg.start_dearpygui(primary_window=self.id)
 
     def on_close(self, sender, data):

@@ -9,6 +9,95 @@ from ..__base__ import Widget, Color, Dashboard
 
 
 @dataclasses.dataclass(frozen=True)
+class Combo(Widget):
+    """
+    Refer to
+    >>> dpg.add_combo
+    """
+
+    items: t.List[str]
+
+    default_value: str = ''
+
+    tip: str = ''
+
+    # Overrides 'name' as value storage key
+    source: str = ''
+
+    # Display grayed out text so selectable cannot be selected
+    enabled: bool = True
+
+    width: int = 0
+
+    # Overrides 'name' as label
+    label: str = ''
+
+    show: bool = True
+
+    # Align the popup toward the left by default
+    popup_align_left: bool = False
+
+    # Max ~4 items visible
+    height_small: bool = False
+
+    # Max ~8 items visible (default)
+    height_regular: bool = False
+
+    # Max ~20 items visible
+    height_large: bool = False
+
+    # As many items visible as possible
+    height_largest: bool = False
+
+    # Display on the preview box without the square arrow button
+    no_arrow_button: bool = False
+
+    # Display only a square arrow button
+    no_preview: bool = False
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None
+    ):
+        # get what to use for callback
+        if Combo.callback != self.__class__.callback:
+            _callback = self.callback
+        else:
+            _callback = None
+
+        # add_combo
+        dpg.add_combo(
+            **self.internal.dpg_kwargs,
+            items=self.items,
+            default_value=self.default_value,
+            callback=_callback,
+            # callback_data=self.callback_data,
+            tip=self.tip,
+            source=self.source,
+            enabled=self.enabled,
+            width=self.width,
+            label=self.label,
+            show=self.show,
+            popup_align_left=self.popup_align_left,
+            height_small=self.height_small,
+            height_regular=self.height_regular,
+            height_large=self.height_large,
+            height_largest=self.height_largest,
+            no_arrow_button=self.no_arrow_button,
+            no_preview=self.no_preview,
+        )
+
+    def callback(self, sender, data):
+        ...
+
+
+@dataclasses.dataclass(frozen=True)
 class ChildWindow(Widget):
     """
     Refer to

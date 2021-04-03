@@ -1,7 +1,21 @@
 import dataclasses
 import numpy as np
+import typing as t
+from dearpygui import core as dpg
 
 from toolcraft import gui, util
+
+
+@dataclasses.dataclass(frozen=True)
+class ThemeSelector(gui.Combo):
+    items: t.List[str] = dataclasses.field(
+        default_factory=gui.helper.get_themes
+    )
+    default_value: str = "Dark Grey"
+
+    def callback(self, sender, data):
+        _theme = dpg.get_value(name=self.id)
+        dpg.set_theme(theme=_theme, )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -130,24 +144,25 @@ class ButtonAction(gui.CollapsingHeader):
 
     label: str = "Topic 3 - Button with threaded action"
 
-    columns: gui.ManagedColumn = gui.ManagedColumn(
-        columns=2
-    )
+    button_window: gui.ChildWindow = gui.ChildWindow(height=800)
 
-    w: gui.ChildWindow = gui.ChildWindow(height=800)
+    display_window: gui.ChildWindow = gui.ChildWindow(height=800)
 
     def build_children(self):
-        self.columns.build(name="columns", parent=self)
-        self.columns.add_child(
-            name="child1", widget=self.w
+        _columns = gui.ManagedColumn(columns=2)
+        _columns.build(name="columns", parent=self)
+        _columns.add_child(
+            name="button_window", widget=self.button_window
         )
-        self.columns.add_child(
-            name="child2", widget=gui.ChildWindow(height=800)
+        _columns.add_child(
+            name="display_window", widget=self.display_window
         )
 
 
 @dataclasses.dataclass(frozen=True)
 class MyDashboard(gui.Dashboard):
+
+    theme_selector: ThemeSelector = ThemeSelector()
 
     welcome_msg: gui.Text = gui.Text(
         msgs=[
@@ -163,6 +178,9 @@ class MyDashboard(gui.Dashboard):
     topic3: ButtonAction = ButtonAction()
 
     def build_children(self):
+        self.theme_selector.build(
+            name='theme_selector', parent=self
+        )
         self.welcome_msg.build(
             name='welcome_msg', parent=self
         )

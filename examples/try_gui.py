@@ -134,13 +134,15 @@ class ButtonAction(gui.CollapsingHeader):
         columns=2
     )
 
+    w: gui.ChildWindow = gui.ChildWindow(height=800)
+
     def build_children(self):
-        self.columns.build()
+        self.columns.build(name="columns", parent=self)
         self.columns.add_child(
-            name="child1", widget=gui.Text(msgs="This is child 1")
+            name="child1", widget=self.w
         )
         self.columns.add_child(
-            name="child2", widget=gui.Text(msgs="This is child 2")
+            name="child2", widget=gui.ChildWindow(height=800)
         )
 
 
@@ -161,10 +163,19 @@ class MyDashboard(gui.Dashboard):
     topic3: ButtonAction = ButtonAction()
 
     def build_children(self):
-        self.welcome_msg.build()
-        self.topic2.build()
-        self.topic1.build(before=self.topic2.id)
-        self.topic3.build()
+        self.welcome_msg.build(
+            name='welcome_msg', parent=self
+        )
+        self.topic2.build(
+            name='topic2', parent=self
+        )
+        self.topic1.build(
+            name='topic1', parent=self,
+            before=self.topic2
+        )
+        self.topic3.build(
+            name='topic3', parent=self
+        )
 
 
 def basic_dashboard():

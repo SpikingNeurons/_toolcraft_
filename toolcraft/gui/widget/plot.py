@@ -99,21 +99,24 @@ class _SimplePlot(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self, before: str = ""):
+    def build(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None,
+    ):
         # there is nothing to do here as it will happen when you call plot()
         ...
 
     def plot(self, value: PLOT_DATA_TYPE, before: str = ""):
         dpg.add_simple_plot(
-            name=self.id,
-            parent=self.parent_id,
+            **self.internal.dpg_kwargs,
             value=value,
             overlay=self.overlay,
             minscale=self.minscale,
             maxscale=self.maxscale,
             histogram=self.histogram,
             tip=self.tip,
-            before=before,
             width=self.width,
             height=self.height,
             source=self.source,
@@ -195,9 +198,21 @@ class Plot(Widget):
         return False
 
     def plot(self, plot_type: "PlotType"):
+        if not self.internal.is_build_done:
+            e.code.NotAllowed(
+                msgs=[
+                    f"Looks like the widgets are not built.",
+                    f"Did you miss to call build() on dashboard ..."
+                ]
+            )
         plot_type.plot(parent_id=self.id)
 
-    def build(self, before: str = ""):
+    def build(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None,
+    ):
         # ------------------------------------------------ 01
         # resolve if query callback overridden
         if self.__class__.query_callback != Plot.query_callback:
@@ -208,9 +223,7 @@ class Plot(Widget):
         # ------------------------------------------------ 02
         # call add plot
         dpg.add_plot(
-            name=self.id,
-            parent=self.parent_id,
-            before=before,
+            **self.internal.dpg_kwargs,
             x_axis_name=self.x_axis_name,
             y_axis_name=self.y_axis_name,
             no_legend=self.no_legend,

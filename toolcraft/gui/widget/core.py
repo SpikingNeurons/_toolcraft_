@@ -5,7 +5,66 @@ import typing as t
 
 from ... import error as e
 from ... import util
-from ..__base__ import Widget, Color
+from ..__base__ import Widget, Color, Dashboard
+
+
+@dataclasses.dataclass(frozen=True)
+class ChildWindow(Widget):
+    """
+    Refer to
+    >>> dpg.add_child
+    """
+
+    # Attempt to render
+    show: bool = True
+
+    # Adds a simple tooltip
+    tip: str = ''
+
+    width: int = 0
+
+    height: int = 0
+
+    border: bool = True
+
+    # Autosize the window to fit it's items in the x.
+    autosize_x: bool = False
+
+    # Autosize the window to fit it's items in the y.
+    autosize_y: bool = False
+
+    # Disable scrollbars
+    # (window can still scroll with mouse or programmatically)
+    no_scrollbar: bool = False
+
+    # Allow horizontal scrollbar to appear (off by default).
+    horizontal_scrollbar: bool = False
+
+    menubar: bool = False
+
+    @property
+    def is_container(self) -> bool:
+        return True
+
+    def build(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None,
+    ):
+        dpg.add_child(
+            **self.internal.dpg_kwargs,
+            show=self.show,
+            tip=self.tip,
+            width=self.width,
+            height=self.height,
+            border=self.border,
+            autosize_x=self.autosize_x,
+            autosize_y=self.autosize_y,
+            no_scrollbar=self.no_scrollbar,
+            horizontal_scrollbar=self.horizontal_scrollbar,
+            menubar=self.menubar,
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -72,14 +131,36 @@ class Window(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self, before: str = ""):
+    def build_pre_runner(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None,
+    ):
 
-        if before != "":
+        if before is not None:
             e.code.NotAllowed(
                 msgs=[
                     f"Widget {self.__class__} does not support before kwarg ..."
                 ]
             )
+
+        if not isinstance(parent, Dashboard):
+            e.code.NotAllowed(
+                msgs=[
+                    F"Window widget can be a child only to a Dashboard",
+                    f"This is because add_widow does not have parent kwarg"
+                ]
+            )
+
+        super().build_pre_runner(name=name, parent=parent, before=before)
+
+    def build(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None,
+    ):
 
         dpg.add_window(
             name=self.id,
@@ -128,20 +209,25 @@ class Text(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self, before: str = ""):
+    def build(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None,
+    ):
+        _dpg_kwargs = self.internal.dpg_kwargs
         _msgs = self.msgs if isinstance(self.msgs, list) else [self.msgs]
         for _msg in _msgs:
+            _dpg_kwargs['name'] = _msg
             dpg.add_text(
-                name=_msg,
+                **_dpg_kwargs,
                 wrap=self.wrap,
                 color=self.color.dpg_value,
                 bullet=self.bullet,
                 tip=self.tip,
-                before=before,
                 source=self.source,
                 default_value=self.default_value,
                 show=self.show,
-                parent=self.parent_id,
             )
 
 
@@ -165,14 +251,17 @@ class CollapsingHeader(Widget, abc.ABC):
     def is_container(self) -> bool:
         return True
 
-    def build(self, before: str = ""):
+    def build(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None,
+    ):
         dpg.add_collapsing_header(
-            name=self.id,
-            parent=self.parent_id,
+            **self.internal.dpg_kwargs,
             label=self.label,
             show=self.show,
             tip=self.tip,
-            before=before,
             closable=self.closable,
             default_open=self.default_open,
             open_on_double_click=self.open_on_double_click,
@@ -208,15 +297,18 @@ class ManagedColumn(Widget):
                     ]
                 )
 
-    def build(self, before: str = ""):
+    def build(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None,
+    ):
         # add ui component
         dpg.add_managed_columns(
-            name=self.id,
-            parent=self.parent_id,
+            **self.internal.dpg_kwargs,
             columns=self.columns,
             border=self.border,
             show=self.show,
-            before=before,
         )
 
         # set column widths

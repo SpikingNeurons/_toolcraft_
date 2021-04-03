@@ -1,55 +1,34 @@
 
 
-width: int = -1
+    # Attempt to render
+    show: bool = True
 
-height: int = -1
+    # Adds a simple tooltip
+    tip: str = ''
 
-# x position the window will start at
-x_pos: int = 200
+    # Parent to add this item to. (runtime adding)
+    parent: str = ''
 
-# y position the window will start at
-y_pos: int = 200
+    # This item will be displayed before the specified item in the parent.
+    # (runtime adding)
+    before: str = ''
 
-# Autosized the window to fit it's items.
-autosize: bool = False
+    width: int = 0
 
-# Allows for the window size to be changed or fixed
-no_resize: bool = False
+    height: int = 0
 
-# Title name for the title bar of the window
-no_title_bar: bool = False
+    border: bool = True
 
-# Allows for the window's position to be changed or fixed
-no_move: bool = False
+    # Autosize the window to fit it's items in the x.
+    autosize_x: bool = False
 
-# Disable scrollbars (window can still scroll with mouse or programmatically)
-no_scrollbar: bool = False
+    # Autosize the window to fit it's items in the y.
+    autosize_y: bool = False
 
-# Disable user collapsing window by double-clicking on it
-no_collapse: bool = False
+    # Disable scrollbars (window can still scroll with mouse or programmatically)
+    no_scrollbar: bool = False
 
-# Allow horizontal scrollbar to appear (off by default).
-horizontal_scrollbar: bool = False
+    # Allow horizontal scrollbar to appear (off by default).
+    horizontal_scrollbar: bool = False
 
-# Disable taking focus when transitioning from hidden to visible state
-no_focus_on_appearing: bool = False
-
-# Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)
-no_bring_to_front_on_focus: bool = False
-
-menubar: bool = False
-
-no_close: bool = False
-
-no_background: bool = False
-
-label: str = ''
-
-# Attempt to render
-show: bool = True
-
-# Collapse the window
-collapsed: bool = False
-
-# Callback ran when window is closed
-on_close: Callable = None
+    menubar: bool = False

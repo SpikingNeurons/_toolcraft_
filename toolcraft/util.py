@@ -1752,17 +1752,21 @@ class HookUp:
 
         # -----------------------------------------------------------02
         # bake title
-        _kwargs_str = []
-        for k, v in kwargs.items():
-            if isinstance(v, list):
-                if len(v) == 1 or len(v) == 2:
-                    v = f"{v}"
-                else:
-                    v = f"[{v[0]}, ..., {v[-1]}]"
-            _kwargs_str.append(
-                f"{k}={v}"
-            )
-        _kwargs_str = ", ".join(_kwargs_str)
+        # _kwargs_str = []
+        # for k, v in kwargs.items():
+        #     if isinstance(v, list):
+        #         if len(v) == 1 or len(v) == 2:
+        #             v = f"{v}"
+        #         else:
+        #             v = f"[{v[0]}, ..., {v[-1]}]"
+        #     _kwargs_str.append(
+        #         f"{k}={v}"
+        #     )
+        # _kwargs_str = ", ".join(_kwargs_str)
+        if bool(kwargs):
+            _kwargs_str = "..."
+        else:
+            _kwargs_str = ""
         _title = f"{self.cls.__name__}.{self.method.__name__}" \
                  f"({_kwargs_str})"
         # _title = logger.replace_with_emoji(_title)

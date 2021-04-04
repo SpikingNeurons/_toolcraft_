@@ -88,6 +88,15 @@ class Callback(m.HashableClass, abc.ABC):
 
     @property
     def name(self) -> str:
+        """
+        This is basically using only senders info to build unique name
+        Currently we assume there will be only one Callback per widget so we
+        need not worry.
+
+        todo: If there are multiple callbacks for widget we might need to
+          update this code, where we need to accept extra unique token like
+          guid and add it as mandatory field for this class
+        """
         return f"[{self.yaml_tag()}]{self.sender.name}"
 
     @property

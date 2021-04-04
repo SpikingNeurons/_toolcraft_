@@ -53,7 +53,4 @@ class CloseWidgetCallback(Callback):
         )
 
     def fn(self):
-        _sender = self.sender
-        _sender_parent = _sender.parent
-        del _sender_parent.parent.children[_sender_parent.guid]
-        _sender_parent.delete()
+        self.sender.parent.delete()

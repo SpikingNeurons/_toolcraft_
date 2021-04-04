@@ -335,8 +335,11 @@ class Widget(m.HashableClass, abc.ABC):
             post_method=cls.build_post_runner,
         )
 
-    def delete(self, children_only: bool = False):
-        dpg.delete_item(item=self.name, children_only=children_only)
+    def delete(self):
+        # delete self from parents children
+        del self.parent.children[self.guid]
+        # delete the UI counterpart
+        dpg.delete_item(item=self.name, children_only=False)
 
     def build_pre_runner(
         self,

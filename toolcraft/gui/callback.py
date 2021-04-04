@@ -35,5 +35,25 @@ class SetThemeCallback(Callback):
         )
 
     def fn(self):
-        _theme = dpg.get_value(name=self.sender.id)
+        _theme = dpg.get_value(name=self.sender.name)
         dpg.set_theme(theme=_theme)
+
+
+@dataclasses.dataclass(frozen=True)
+class CloseWidgetCallback(Callback):
+    """
+    This callback will be added to a Button that will delete its Parent
+    """
+
+    @classmethod
+    def get_button_widget(cls) -> widget.Button:
+        return widget.Button(
+            label="Close [X]",
+            callback=cls()
+        )
+
+    def fn(self):
+        _sender = self.sender
+        _sender_parent = _sender.parent
+        del _sender_parent.parent.children[_sender_parent.guid]
+        _sender_parent.delete()

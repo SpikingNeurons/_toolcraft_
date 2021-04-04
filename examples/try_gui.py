@@ -151,13 +151,17 @@ class ButtonPlotCallback(gui.Callback):
                 widget=_collapsing_header
             )
 
-            # make plot
+            # make close button and add it collapsing header
+            _close_button = gui.callback.CloseWidgetCallback.get_button_widget()
+            _collapsing_header.add_child(
+                guid="close_button", widget=_close_button
+            )
+
+            # make plot and add to collapsing header
             _plot = gui.Plot(
                 label=f"This is plot for {_sender.label} ...",
                 height=200,
             )
-
-            # add plot to collapsing header
             _collapsing_header.add_child(
                 guid="plot", widget=_plot
             )

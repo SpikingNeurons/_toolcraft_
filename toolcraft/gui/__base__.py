@@ -210,6 +210,15 @@ class Widget(m.HashableClass, abc.ABC):
     @property
     @util.CacheResult
     def children(self) -> t.Dict[str, "Widget"]:
+        # if not container raise error
+        if not self.is_container:
+            e.code.NotAllowed(
+                msgs=[
+                    f"This property is not available for Widgets that do not "
+                    f"support containers",
+                    f"Please check class {self.__class__}"
+                ]
+            )
         # this will be populated when add_child is called
         return {}
 

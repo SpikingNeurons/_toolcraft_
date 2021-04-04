@@ -97,6 +97,12 @@ class Info(StateFile):
 
 @dataclasses.dataclass
 class Config(StateFile):
+    """
+    todo: update to replace LOCK_ACCESS_FLAG mechanism with internal property
+      + move even all below thing sto internal property
+        LOCK_ACCESS_FLAG
+        BACKUP_YAML_STR_KEY
+    """
 
     # note that created on refers to hashable class of which config is a
     # property ... but we cannot have that field in there as it will affect
@@ -114,7 +120,6 @@ class Config(StateFile):
         # helper vars for instance Config StateFile
         # we add this attribute to self to lock access in get and set methods
         LOCK_ACCESS_FLAG = "__lock_access__"
-        HASHABLE_FIELDS_LIST_KEY = "__hashable_fields__"
         BACKUP_YAML_STR_KEY = "__backup_yaml_str__"
 
     @property
@@ -125,17 +130,8 @@ class Config(StateFile):
         """
         __post_init__ is allowed as it is not m.HashableClass
         """
-        # ------------------------------------------------------------ 01
-        # get the possible field names that will be hashed
-        setattr(
-            self, Config.LITERAL.HASHABLE_FIELDS_LIST_KEY,
-            [
-                f.name for f in dataclasses.fields(self)
-                if f.name not in ["hashable", "root_dir_str"]
-            ]
-        )
 
-        # ------------------------------------------------------------ 02
+        # ------------------------------------------------------------ 01
         # if path exists load data dict from it
         if self.path.exists():
             _hashable_dict_from_disk = \
@@ -145,7 +141,7 @@ class Config(StateFile):
                 _hashable_dict_from_disk.get()
             )
 
-        # ------------------------------------------------------------ 03
+        # ------------------------------------------------------------ 02
         # now backup yaml str
         setattr(
             self,
@@ -153,7 +149,7 @@ class Config(StateFile):
             self.make_yaml_str_from_current_state(),
         )
 
-        # ------------------------------------------------------------ 04
+        # ------------------------------------------------------------ 03
         # this locks future accesses
         setattr(self, Config.LITERAL.LOCK_ACCESS_FLAG, True)
 
@@ -163,12 +159,8 @@ class Config(StateFile):
         if item.startswith("__"):
             return super().__getattribute__(item)
 
-        # note that the list is available only after __post_init__
-        _hashable_fields = getattr(
-            self, Config.LITERAL.HASHABLE_FIELDS_LIST_KEY, [])
-
         # if not a hashable field call super
-        if item not in _hashable_fields:
+        if item not in self.dataclass_field_names:
             return super().__getattribute__(item)
 
         # check if there is no lock
@@ -191,12 +183,8 @@ class Config(StateFile):
         if key.startswith("__") and key.endswith("__"):
             return super().__setattr__(key, value)
 
-        # note that the list is available only after __post_init__
-        _hashable_fields = getattr(
-            self, Config.LITERAL.HASHABLE_FIELDS_LIST_KEY, [])
-
         # if not a hashable field call super
-        if key not in _hashable_fields:
+        if key not in self.dataclass_field_names:
             return super().__setattr__(key, value)
 
         # check if there is no lock
@@ -349,7 +337,7 @@ class Config(StateFile):
         return m.FrozenDict(
             item={
                 f: getattr(self, f)
-                for f in getattr(self, Config.LITERAL.HASHABLE_FIELDS_LIST_KEY)
+                for f in self.dataclass_field_names
             }
         ).yaml()
 

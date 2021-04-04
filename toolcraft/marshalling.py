@@ -73,6 +73,9 @@ class Internal:
 
     # we set this in __call__ so that with context has access to kwargs
     # passes in __call__ method
+    # todo: make this a class so that strings are not used to get members. We
+    #  know that typing support is difficult to achieve. But we can override
+    #  __getitem__ to throw custom error indicating on call kwargs have changed
     on_call_kwargs: t.Union[t.Dict[str, t.Any]] = None
 
     class LITERAL:
@@ -222,6 +225,11 @@ class Tracker:
         context or while iterating
         """
         return self.internal.on_call_kwargs is not None
+
+    @property
+    @util.CacheResult
+    def dataclass_field_names(self) -> t.List[str]:
+        return list(self.__dataclass_fields__.keys())
 
     def __getattribute__(self, item):
 
@@ -1265,8 +1273,8 @@ class HashableClass(YamlRepr, abc.ABC):
         self
     ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
-        for f in dataclasses.fields(self):
-            _ret[f.name] = getattr(self, f.name)
+        for f_name in self.dataclass_field_names:
+            _ret[f_name] = getattr(self, f_name)
         return _ret
 
     def init_validate(self):
@@ -1278,10 +1286,10 @@ class HashableClass(YamlRepr, abc.ABC):
 
         # --------------------------------------------------------------01
         # loop over field values to validate them
-        for f in dataclasses.fields(self):
+        for f_name in self.dataclass_field_names:
             # ----------------------------------------------------------01.01
             # get value for the field
-            v = getattr(self, f.name)
+            v = getattr(self, f_name)
             # ----------------------------------------------------------01.02
             # raise error to inform to use FrozenDict
             if isinstance(v, dict):
@@ -1297,7 +1305,7 @@ class HashableClass(YamlRepr, abc.ABC):
             elif isinstance(v, FrozenKeras.LITERAL.SUPPORTED_KERAS_OBJECTS):
                 e.validation.NotAllowed(
                     msgs=[
-                        f"Please set the field `{f.name}` where the `keras` "
+                        f"Please set the field `{f_name}` where the `keras` "
                         f"object is wrapped with `{FrozenKeras.__name__}` ... "
                         f"check class {self.__class__}"
                     ]
@@ -1307,7 +1315,7 @@ class HashableClass(YamlRepr, abc.ABC):
             elif isinstance(v, list):
                 self.can_be_frozen(
                     item=v,
-                    key_or_index=f"{self.name}.{f.name}::",
+                    key_or_index=f"{self.name}.{f_name}::",
                     allowed_nesting=True,
                     allowed_types=SUPPORTED_HASHABLE_OBJECTS,
                 )
@@ -1317,7 +1325,7 @@ class HashableClass(YamlRepr, abc.ABC):
                 e.validation.ShouldBeInstanceOf(
                     value=v, value_types=SUPPORTED_HASHABLE_OBJECTS,
                     msgs=[
-                        f"Check value of field `{f.name}` for class "
+                        f"Check value of field `{f_name}` for class "
                         f"{self.__class__}"
                     ]
                 )

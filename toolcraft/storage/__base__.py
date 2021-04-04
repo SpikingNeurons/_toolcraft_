@@ -470,13 +470,13 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
                 # crosscheck all fields
                 _mismatched_fields = {}
-                for f in dataclasses.fields(_current_info):
+                for f_name in _current_info.dataclass_field_names:
 
                     # compare
-                    _backup_v = getattr(_backup_info, f.name)
-                    _current_v = getattr(_current_info, f.name)
+                    _backup_v = getattr(_backup_info, f_name)
+                    _current_v = getattr(_current_info, f_name)
                     if _backup_v != _current_v:
-                        _mismatched_fields[f.name] = {
+                        _mismatched_fields[f_name] = {
                             "current": _current_v,
                             "backup": _backup_v
                         }

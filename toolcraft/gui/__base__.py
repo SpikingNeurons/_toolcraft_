@@ -184,19 +184,19 @@ class Widget(m.HashableClass, abc.ABC):
 
         # ------------------------------------------------------- 02
         # loop over fields
-        for f in dataclasses.fields(self):
+        for f_name in self.dataclass_field_names:
             # --------------------------------------------------- 02.01
             # get value
-            v = getattr(self, f.name)
+            v = getattr(self, f_name)
 
             # --------------------------------------------------- 02.02
             # bind field if Widget or Callback
             if isinstance(v, (Widget, Callback)):
-                self.duplicate_field(field=f, value=v)
+                self.duplicate_field(field_name=f_name, value=v)
 
     def duplicate_field(
         self,
-        field: dataclasses.Field,
+        field_name: str,
         value: t.Union["Widget", Callback]
     ):
         """
@@ -240,8 +240,9 @@ class Widget(m.HashableClass, abc.ABC):
         """
 
         # ------------------------------------------------------ 01
-        # get default value
-        _default_value = field.default
+        # get field and its default value
+        _field = self.__dataclass_fields__[field_name]
+        _default_value = _field.default
 
         # ------------------------------------------------------ 02
         # if value and _default_value are same that means we still have
@@ -253,18 +254,12 @@ class Widget(m.HashableClass, abc.ABC):
             # this makes a shallow i.e. one level copy
             # we assume that subsequent nested fields can make their own copies
             _dict = {}
-            for f in dataclasses.fields(value):
-                v = getattr(value, f.name)
-                _dict[f.name] = v
+            for f_name in value.dataclass_field_names:
+                v = getattr(value, f_name)
+                _dict[f_name] = v
             value = value.__class__(**_dict)
-            # value = value.__class__(
-            #     **{
-            #         f.name: getattr(value, f.name)
-            #         for f in dataclasses.fields(value)
-            #     }
-            # )
             # hack to override field value
-            self.__dict__[field.name] = value
+            self.__dict__[field_name] = value
 
     @classmethod
     def hook_up_methods(cls):
@@ -343,8 +338,8 @@ class Widget(m.HashableClass, abc.ABC):
     def build_callback(self):
         # set teh sender i.e. which UI widget will have control to call this
         # callback
-        for f in dataclasses.fields(self):
-            v = getattr(self, f.name)
+        for f_name in self.dataclass_field_names:
+            v = getattr(self, f_name)
             if isinstance(v, Callback):
                 v.set_sender(sender=self)
 
@@ -364,10 +359,10 @@ class Widget(m.HashableClass, abc.ABC):
         this class. This also helps when we override this method where we
         need not add widget to `parent.children`
         """
-        for f in dataclasses.fields(self):
-            v = getattr(self, f.name)
+        for f_name in self.dataclass_field_names:
+            v = getattr(self, f_name)
             if isinstance(v, Widget):
-                v.build(name=f.name, parent=self, before=None)
+                v.build(name=f_name, parent=self, before=None)
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Any

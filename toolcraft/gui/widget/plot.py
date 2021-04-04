@@ -195,29 +195,61 @@ class Plot(Widget):
     def is_container(self) -> bool:
         return False
 
-    def plot(self, plot_type: "PlotType"):
-        # check if self is built
-        if not self.internal.is_build_done:
-            e.code.NotAllowed(
-                msgs=[
-                    f"Looks like the Plot widget is not built.",
-                    f"Did you miss to call `build()` on dashboard ...",
-                    f"In case you created Plot widget dynamically you need to "
-                    f"call `build()` on it explicitly before calling `plot()`"
-                ]
-            )
+    @property
+    @util.CacheResult
+    def items(self) -> t.Dict[str, "PlotItem"]:
+        return {}
 
-        # todo: Who should be sender widget of callbacks in PlotType?
-        #   Note that PlotType are not Widget so we cannot have them as
-        #   sender as they do not inherit `Widget.id` mechanism
-        # todo: We might need to do immutable copy for this callback similar
-        #  to Widget class
-        if isinstance(plot_type, (DragLine, DragPoint)):
-            if plot_type.callback is not None:
-                plot_type.callback.set_sender(sender=self)
+    def delete_items(self, items: t.Union[str, t.List[str]]):
+        """
+        Here we delete PlotItem in items
+        """
+        # make it list if needed
+        if not isinstance(items, list):
+            items = [items]
 
-        # plot
-        plot_type.plot(parent_plot=self)
+        # loop over items
+        for item in items:
+            self.items[item].delete()
+
+    def add_items(self, items: t.Union["PlotItem", t.List["PlotItem"]]):
+        # make it list if needed
+        if not isinstance(items, list):
+            items = [items]
+
+        # loop over items
+        for item in items:
+
+            # todo: Who should be sender widget of callbacks in PlotType?
+            #   Note that PlotType are not Widget so we cannot have them as
+            #   sender as they do not inherit `Widget.id` mechanism
+            # todo: We might need to do immutable copy for this callback similar
+            #  to Widget class
+            # todo: may be this needs to go in build_pre_runner or build
+            if isinstance(item, (DragLine, DragPoint)):
+                if item.callback is not None:
+                    e.code.NotSupported(
+                        msgs=[
+                            f"We are yet to figure this out. That is how to "
+                            f"handle Callback in PlotType which is not a Widget"
+                        ]
+                    )
+                    item.callback.set_sender(sender=self)
+
+            # if item not in items add it else raise error
+            if item.label in self.items.keys():
+                e.code.NotAllowed(
+                    msgs=[
+                        f"Looks like you have already added item with "
+                        f"label {item.label}"
+                    ]
+                )
+            else:
+                self.items[item.label] = item
+
+            # if the self is already built then we need to plot this item
+            if self.internal.is_build_done:
+                item.plot(parent_plot=self)
 
     def build(
         self,
@@ -286,6 +318,11 @@ class Plot(Widget):
             self.query_callback.fn
         )
 
+        # if there are items plot them as we will not do that during
+        # add_items if the self is not built
+        for item in self.items.values():
+            item.plot(parent_plot=self)
+
     def get_plot_xlimits(self) -> t.Tuple[float, float]:
         _ = dpg.get_plot_xlimits(plot=self.id)
         return _[0], _[1]
@@ -333,13 +370,18 @@ class Plot(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class PlotType(abc.ABC):
+class PlotItem(abc.ABC):
     """
     Note that this is not a Widget nor a m.HashableClass as this will reprent
     data that we will plot and there is no need to serialize it.
     todo: Need to implement delete for all Series. Check below method:
     >>> dpg.delete_series
     """
+    # This basically behaves like guid but we keep it as label so that users
+    # can even add spaces or special characters inside label
+    # Note that unlike guid they will be displayed in plot.
+    # Also may be we can directly get latex expressions here :)
+    # So guid for PlotItem is not sensible
     label: str
 
     def __post_init__(self):
@@ -360,13 +402,13 @@ class PlotType(abc.ABC):
     def plot(self, parent_plot: Plot):
         ...
 
-    def delete(self, children_only: bool = False):
+    def delete(self):
         e.code.NotSupported(
             msgs=[f"please implement delete for {self.__class__}"])
 
 
 @dataclasses.dataclass(frozen=True)
-class Annotation(PlotType):
+class Annotation(PlotItem):
     """
     Refer to
     >>> dpg.add_annotation
@@ -395,7 +437,7 @@ class Annotation(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class AreaSeries(PlotType):
+class AreaSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_area_series
@@ -424,7 +466,7 @@ class AreaSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class BarSeries(PlotType):
+class BarSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_bar_series
@@ -451,7 +493,7 @@ class BarSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class CandleSeries(PlotType):
+class CandleSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_candle_series
@@ -488,7 +530,7 @@ class CandleSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class DragLine(PlotType):
+class DragLine(PlotItem):
     """
     Refer to
     >>> dpg.add_drag_line
@@ -516,7 +558,7 @@ class DragLine(PlotType):
             callback=None if self.callback is None else self.callback.fn,
         )
 
-    def delete(self, children_only: bool = False):
+    def delete(self):
         e.code.NotSupported(msgs=["figure it out"])
         dpg.delete_drag_line(
             plot=..., name=self.label
@@ -524,7 +566,7 @@ class DragLine(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class DragPoint(PlotType):
+class DragPoint(PlotItem):
     """
     Refer to
     >>> dpg.add_drag_point
@@ -552,7 +594,7 @@ class DragPoint(PlotType):
             callback=None if self.callback is None else self.callback.fn,
         )
 
-    def delete(self, children_only: bool = False):
+    def delete(self):
         e.code.NotSupported(msgs=["figure it out"])
         dpg.delete_drag_point(
             plot=..., name=self.label
@@ -560,7 +602,7 @@ class DragPoint(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class ErrorSeries(PlotType):
+class ErrorSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_error_series
@@ -591,7 +633,7 @@ class ErrorSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class HeatSeries(PlotType):
+class HeatSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_heat_series
@@ -627,7 +669,7 @@ class HeatSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class HorizLineSeries(PlotType):
+class HorizLineSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_hline_series
@@ -651,7 +693,7 @@ class HorizLineSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class ImageSeries(PlotType):
+class ImageSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_image_series
@@ -685,7 +727,7 @@ class ImageSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class LineSeries(PlotType):
+class LineSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_line_series
@@ -776,7 +818,7 @@ class LineSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class PieSeries(PlotType):
+class PieSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_pie_series
@@ -811,7 +853,7 @@ class PieSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class ScatterSeries(PlotType):
+class ScatterSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_scatter_series
@@ -918,7 +960,7 @@ class ScatterSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class ShadeSeries(PlotType):
+class ShadeSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_shade_series
@@ -949,7 +991,7 @@ class ShadeSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class StairSeries(PlotType):
+class StairSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_stair_series
@@ -976,7 +1018,7 @@ class StairSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class StemSeries(PlotType):
+class StemSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_stem_series
@@ -1009,7 +1051,7 @@ class StemSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class TextPoint(PlotType):
+class TextPoint(PlotItem):
     """
     Refer to
     >>> dpg.add_text_point
@@ -1037,7 +1079,7 @@ class TextPoint(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class VertLineSeries(PlotType):
+class VertLineSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_vline_series

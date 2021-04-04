@@ -81,8 +81,7 @@ class Plotting(gui.CollapsingHeader):
             ],
             label=[f"line {i}" for i in range(3, 3+5)]
         )
-        for _i in _line_plot_items:
-            _line_plot.plot(plot_type=_i)
+        _line_plot.add_items(items=_line_plot_items)
 
         # ------------------------------------------------------- 03
         _scatter_plot = self.scatter_plot
@@ -103,8 +102,7 @@ class Plotting(gui.CollapsingHeader):
             label=np.random.randint(3, 3+5, 500),
             label_formatter="scatter {label}"
         )
-        for _i in _scatter_plot_items:
-            _scatter_plot.plot(plot_type=_i)
+        _scatter_plot.add_items(items=_scatter_plot_items)
 
         # ------------------------------------------------------- 04
         _subplot = self.subplot
@@ -113,19 +111,19 @@ class Plotting(gui.CollapsingHeader):
             _subplot.add_child(
                 guid=f"plot_{i}", widget=_plot
             )
-            _plot.plot(
-                gui.LineSeries(
-                    label="line 1",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100)
-                )
-            )
-            _plot.plot(
-                gui.LineSeries(
-                    label="line 2",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100)
-                )
+            _plot.add_items(
+                items=[
+                    gui.LineSeries(
+                        label="line 1",
+                        x=np.arange(100),
+                        y=np.random.normal(0.0, scale=2.0, size=100)
+                    ),
+                    gui.LineSeries(
+                        label="line 2",
+                        x=np.arange(100),
+                        y=np.random.normal(0.0, scale=2.0, size=100)
+                    ),
+                ]
             )
 
 
@@ -165,14 +163,15 @@ class ButtonPlotCallback(gui.Callback):
             )
 
             # add some data
-            for line_series in gui.LineSeries.generate_from_npy(
-                data=[
-                    np.random.normal(0.0, scale=1.5, size=100)
-                    for _ in range(5)
-                ],
-                label=[f"line {i}" for i in range(3, 3+5)]
-            ):
-                _plot.plot(plot_type=line_series)
+            _plot.add_items(
+                items=gui.LineSeries.generate_from_npy(
+                    data=[
+                        np.random.normal(0.0, scale=1.5, size=100)
+                        for _ in range(5)
+                    ],
+                    label=[f"line {i}" for i in range(3, 3+5)]
+                )
+            )
 
         # else we do nothing as things are already plotted
         else:

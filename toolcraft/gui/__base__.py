@@ -432,6 +432,15 @@ class Widget(m.HashableClass, abc.ABC):
         self.internal.is_build_done = True
 
     def add_child(self, guid: str, widget: "Widget", before: "Widget" = None):
+        # if not container we cannot add widgets
+        if not self.is_container:
+            e.code.CodingError(
+                msgs=[
+                    f"Widget {self.__class__} is not of container type. We "
+                    f"do not support adding widget as child"
+                ]
+            )
+
         # make sure that you are not adding Dashboard
         if isinstance(widget, Dashboard):
             e.code.CodingError(

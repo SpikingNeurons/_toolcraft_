@@ -1742,6 +1742,11 @@ def compute_class_weights(
 
 
 def pa_to_np(data: pa.ChunkedArray) -> np.ndarray:
+    """
+    Note that we convert to list as there is problem with dearpygui to
+    sometimes read numpy arrays
+    todo: fix this after testing with new releases of dearpygui
+    """
     return np.asarray(data.to_pylist())
 
 

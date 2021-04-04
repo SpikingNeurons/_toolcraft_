@@ -1,5 +1,7 @@
 import dataclasses
 import numpy as np
+import time
+import datetime
 import typing as t
 from dearpygui import core as dpg
 
@@ -128,7 +130,61 @@ class Plotting(gui.CollapsingHeader):
 
 
 @dataclasses.dataclass(frozen=True)
-class ButtonAction(gui.CollapsingHeader):
+class ButtonPlotCallback(gui.Callback):
+
+    receiver: gui.Widget
+
+    def fn(self):
+        # get sender
+        # noinspection PyTypeChecker
+        _sender = self.sender  # type: gui.Button
+
+        # display to receiver i.e. add_child if not there
+        if _sender.label not in self.receiver.children.keys():
+
+            # make collapsing header
+            _collapsing_header = gui.CollapsingHeader(
+                label=_sender.label, closable=False, default_open=True,
+            )
+
+            # add child to receiver
+            self.receiver.add_child(
+                name=_sender.label,
+                widget=_collapsing_header
+            )
+
+            # make plot
+            _plot = gui.Plot(
+                label=f"This is plot for {_sender.label} ...",
+                height=200,
+            )
+
+            # add plot to collapsing header
+            _collapsing_header.add_child(
+                name="plot", widget=_plot
+            )
+
+            # add some data
+            for line_series in gui.LineSeries.generate_from_npy(
+                data=[
+                    np.random.normal(0.0, scale=1.5, size=100)
+                    for _ in range(5)
+                ],
+                label=[f"line {i}" for i in range(3, 3+5)]
+            ):
+                _plot.plot(plot_type=line_series)
+
+        # else we do nothing as things are already plotted
+        else:
+            # in case user has close collapsable header we can attempt to
+            # show it again
+            # _collapsable_header = self.receiver.children[_sender.label]
+            # _collapsable_header.show()
+            ...
+
+
+@dataclasses.dataclass(frozen=True)
+class ButtonPlot(gui.CollapsingHeader):
 
     label: str = "Topic 3 - Button with threaded action"
 
@@ -145,6 +201,18 @@ class ButtonAction(gui.CollapsingHeader):
         _columns.add_child(
             name="display_window", widget=self.display_window
         )
+        for i in range(5):
+            _uid = f"Button {i}"
+            self.button_window.add_child(
+                name=_uid,
+                widget=gui.Button(
+                    width=300,
+                    label=_uid,
+                    callback=ButtonPlotCallback(
+                        receiver=self.display_window
+                    )
+                ),
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -163,7 +231,7 @@ class MyDashboard(gui.Dashboard):
 
     topic2: Plotting = Plotting()
 
-    topic3: ButtonAction = ButtonAction()
+    topic3: ButtonPlot = ButtonPlot()
 
     def build_children(self):
         self.theme_selector.build(

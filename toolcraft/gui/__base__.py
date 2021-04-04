@@ -100,6 +100,21 @@ class Callback(m.HashableClass, abc.ABC):
         # noinspection PyTypeChecker
         return self.internal.sender
 
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # check for MANDATORY
+        for f_name in self.dataclass_field_names:
+            v = getattr(self, f_name)
+            if v == MANDATORY:
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"Please supply value for mandatory field {f_name} "
+                        f"of class {self.__class__}"
+                    ]
+                )
+
     def set_sender(self, sender: "Widget"):
         self.internal.sender = sender
 
@@ -176,6 +191,21 @@ class Widget(m.HashableClass, abc.ABC):
     def children(self) -> t.Dict[str, "Widget"]:
         # this will be populated when add_child is called
         return {}
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # check for MANDATORY
+        for f_name in self.dataclass_field_names:
+            v = getattr(self, f_name)
+            if v == MANDATORY:
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"Please supply value for mandatory field {f_name} "
+                        f"of class {self.__class__}"
+                    ]
+                )
 
     def init(self):
         # ------------------------------------------------------- 01
@@ -401,6 +431,22 @@ class Widget(m.HashableClass, abc.ABC):
 
         # now lets build the widget
         widget.build(name=name, parent=self, before=before)
+
+    def hide(self, children_only: bool = False):
+        # todo: needs testing
+        if children_only:
+            for child in dpg.get_item_children(item=self.id):
+                dpg.configure_item(item=child, show=False)
+        else:
+            dpg.configure_item(item=self.id, show=False)
+
+    def show(self, children_only: bool = False):
+        # todo: needs testing
+        if children_only:
+            for child in dpg.get_item_children(item=self.id):
+                dpg.configure_item(item=child, show=True)
+        else:
+            dpg.configure_item(item=self.id, show=True)
 
     def preview(self):
         """

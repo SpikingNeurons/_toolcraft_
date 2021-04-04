@@ -9,6 +9,66 @@ from .. import Widget, Color, Dashboard, Callback
 
 
 @dataclasses.dataclass(frozen=True)
+class Button(Widget):
+    """
+    Refer to
+    >>> dpg.add_button
+    """
+
+    # Small button, useful for embedding in text.
+    small: bool = False
+
+    # Arrow button, must use with direction
+    arrow: bool = False
+
+    # A cardinal direction
+    direction: int = 0
+
+    tip: str = ''
+
+    width: int = 0
+
+    height: int = 0
+
+    # Overrides 'name' as label
+    label: str = ''
+
+    show: bool = True
+
+    enabled: bool = True
+
+    callback: Callback = None
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(
+        self,
+        name: str,
+        parent: "Widget",
+        before: t.Optional["Widget"] = None
+    ):
+
+        # add_button
+        dpg.add_button(
+            **self.internal.dpg_kwargs,
+            small=self.small,
+            arrow=self.arrow,
+            direction=self.direction,
+            tip=self.tip,
+            width=self.width,
+            height=self.height,
+            # note that name is taken and used by self.id which is very long
+            label=self.label,
+            show=self.show,
+            enabled=self.enabled,
+            callback=None if self.callback is None else self.callback.fn,
+            # callback_data=self.callback_data,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
 class Combo(Widget):
     """
     Refer to

@@ -1,46 +1,25 @@
 
 
+# Small button, useful for embedding in text.
+small: bool = False
 
-items: List[str]
+# Arrow button, must use with direction
+arrow: bool = False
 
-default_value: str = ''
+# A cardinal direction
+direction: int = 0
 
-callback: Callable = None
-
-callback_data: Any = None
+callback: Callback = None
 
 tip: str = ''
 
-# Overrides 'name' as value storage key
-source: str = ''
-
-# Display grayed out text so selectable cannot be selected
-enabled: bool = True
-
 width: int = 0
+
+height: int = 0
 
 # Overrides 'name' as label
 label: str = ''
 
 show: bool = True
 
-# Align the popup toward the left by default
-popup_align_left: bool = False
-
-# Max ~4 items visible
-height_small: bool = False
-
-# Max ~8 items visible (default)
-height_regular: bool = False
-
-# Max ~20 items visible
-height_large: bool = False
-
-# As many items visible as possible
-height_largest: bool = False
-
-# Display on the preview box without the square arrow button
-no_arrow_button: bool = False
-
-# Display only a square arrow button
-no_preview: bool = False
+enabled: bool = True

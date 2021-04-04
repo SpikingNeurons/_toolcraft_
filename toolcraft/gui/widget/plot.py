@@ -200,8 +200,10 @@ class Plot(Widget):
         if not self.internal.is_build_done:
             e.code.NotAllowed(
                 msgs=[
-                    f"Looks like the widgets are not built.",
-                    f"Did you miss to call build() on dashboard ..."
+                    f"Looks like the Plot widget is not built.",
+                    f"Did you miss to call `build()` on dashboard ...",
+                    f"In case you created Plot widget dynamically you need to "
+                    f"call `build()` on it explicitly before calling `plot()`"
                 ]
             )
 

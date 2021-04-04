@@ -54,3 +54,45 @@ class CloseWidgetCallback(Callback):
 
     def fn(self):
         self.sender.parent.delete()
+
+
+@dataclasses.dataclass(frozen=True)
+class HashableMethodRunnerCallback(Callback):
+    """
+    This callback can call a method of HashableClass.
+
+    The method is expected to return a Widget which then will be added to
+    receiver Widget as a child
+
+    Note that method triggers only when button is clicked.
+    """
+    hashable: m.HashableClass
+    callable_name: str
+    receiver: Widget
+    callable_kwargs: t.Dict[str, t.Any] = None
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # check if receiver can accept child
+        if not self.receiver.is_container:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"We expect a receiver that can accept children..."
+                ]
+            )
+
+    def fn(self):
+        _callable_kwargs = \
+            {} if self.callable_kwargs is None else self.callable_kwargs
+
+        _result = getattr(
+            self.hashable, self.callable_name
+        )(**_callable_kwargs)
+
+        self.receiver.add_child(
+            # note that this does not take into account `self.callable_kwargs`
+            guid=self.callable_name,
+            widget=_result
+        )

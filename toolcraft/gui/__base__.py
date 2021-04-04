@@ -87,6 +87,10 @@ class Callback(m.HashableClass, abc.ABC):
     """
 
     @property
+    def name(self) -> str:
+        return f"[{self.yaml_tag()}]{self.sender.name}"
+
+    @property
     @util.CacheResult
     def internal(self) -> "CallbackInternal":
         return CallbackInternal(owner=self)
@@ -99,6 +103,10 @@ class Callback(m.HashableClass, abc.ABC):
         """
         # noinspection PyTypeChecker
         return self.internal.sender
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!{cls.__name__}"
 
     def init_validate(self):
         # call super
@@ -124,22 +132,21 @@ class Callback(m.HashableClass, abc.ABC):
 
 
 class WidgetInternal(m.Internal):
-    name: str
+    guid: str
     parent: t.Union["Dashboard", "Widget"]
     before: t.Optional["Widget"] = None
     is_build_done: bool = False
 
     @property
-    @util.CacheResult
-    def id(self) -> str:
-        return f"{self.parent.id}.{self.name}"
+    def name(self) -> str:
+        return f"{self.parent.name}.{self.guid}"
 
     @property
     def dpg_kwargs(self) -> t.Dict[str, t.Any]:
         return dict(
-            name=self.id,
-            parent=self.parent.id,
-            before="" if self.before is None else self.before.id
+            name=self.name,
+            parent=self.parent.name,
+            before="" if self.before is None else self.before.name
         )
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
@@ -151,8 +158,13 @@ class WidgetInternal(m.Internal):
 class Widget(m.HashableClass, abc.ABC):
 
     @property
-    def id(self) -> str:
-        return self.internal.id
+    def guid(self) -> str:
+        return self.internal.guid
+
+    @property
+    def name(self) -> str:
+        _internal = self.internal
+        return f"{_internal.parent.name}.{_internal.guid}"
 
     @property
     def parent(self) -> "Widget":
@@ -306,11 +318,11 @@ class Widget(m.HashableClass, abc.ABC):
         )
 
     def delete(self, children_only: bool = False):
-        dpg.delete_item(item=self.id, children_only=children_only)
+        dpg.delete_item(item=self.name, children_only=children_only)
 
     def build_pre_runner(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
@@ -322,13 +334,13 @@ class Widget(m.HashableClass, abc.ABC):
                 msgs=[
                     f"Widget is already registered with:",
                     {
-                        'parent': self.internal.parent.id,
-                        'with name': self.internal.name
+                        'parent': self.internal.parent.name,
+                        'with guid': self.guid
                     },
                     f"While you are requesting to register with:",
                     {
-                        'parent': parent.id,
-                        'with name': name,
+                        'parent': parent.name,
+                        'with guid': guid,
                     }
                 ]
             )
@@ -336,21 +348,21 @@ class Widget(m.HashableClass, abc.ABC):
         # ---------------------------------------------------- 02
         # check if already a child i.e. is the name taken
         if parent is not None:
-            if name in parent.children.keys():
+            if guid in parent.children.keys():
                 e.code.NotAllowed(
                     msgs=[
-                        f"There is already a child with name `{name}` "
-                        f"in parent `{parent.id}`"
+                        f"There is already a child with guid `{guid}` "
+                        f"in parent `{parent.name}`"
                     ]
                 )
             # else we can add it as child to parent
             else:
-                parent.children[name] = self
+                parent.children[guid] = self
 
         # ---------------------------------------------------- 03
         # setup self i.e. by updating internal
         self.internal.is_build_done = True
-        self.internal.name = name
+        self.internal.guid = guid
         if parent is not None:
             self.internal.parent = parent
         if before is not None:
@@ -359,7 +371,7 @@ class Widget(m.HashableClass, abc.ABC):
     @abc.abstractmethod
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
@@ -392,7 +404,7 @@ class Widget(m.HashableClass, abc.ABC):
         for f_name in self.dataclass_field_names:
             v = getattr(self, f_name)
             if isinstance(v, Widget):
-                v.build(name=f_name, parent=self, before=None)
+                v.build(guid=f_name, parent=self, before=None)
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Any
@@ -410,7 +422,7 @@ class Widget(m.HashableClass, abc.ABC):
         # set flag to indicate build is done
         self.internal.is_build_done = True
 
-    def add_child(self, name: str, widget: "Widget", before: "Widget" = None):
+    def add_child(self, guid: str, widget: "Widget", before: "Widget" = None):
         # make sure that you are not adding Dashboard
         if isinstance(widget, Dashboard):
             e.code.CodingError(
@@ -430,7 +442,7 @@ class Widget(m.HashableClass, abc.ABC):
             )
 
         # now lets build the widget
-        widget.build(name=name, parent=self, before=before)
+        widget.build(guid=guid, parent=self, before=before)
 
     def hide(self, children_only: bool = False):
         # todo: needs testing
@@ -453,7 +465,7 @@ class Widget(m.HashableClass, abc.ABC):
         You can see the preview of this widget without adding it to dashboard
         """
         _dash = Dashboard(
-            dash_id="preview",
+            dash_guid="preview",
             title=f"PREVIEW: {self.__module__}:{self.__class__.__name__}",
         )
         _dash.build()
@@ -481,12 +493,12 @@ class Dashboard(Widget):
 
     Note that we make this as primary window when we start GUI
     """
-    dash_id: str
+    dash_guid: str
     title: str
 
     @property
-    def id(self) -> str:
-        return self.dash_id
+    def name(self) -> str:
+        return self.dash_guid
 
     # noinspection PyTypeChecker,PyPropertyDefinition
     @property
@@ -521,7 +533,7 @@ class Dashboard(Widget):
             for k, v in self.children.items() if isinstance(v, Window)
         }
 
-    # noinspection PyTypeChecker
+    # noinspection PyTypeChecker,PyMethodMayBeStatic
     def copy(self) -> "Dashboard":
         e.code.CodingError(
             msgs=[
@@ -534,7 +546,7 @@ class Dashboard(Widget):
     def build_pre_runner(self):
         # call super
         # noinspection PyTypeChecker
-        super().build_pre_runner(name=self.dash_id, parent=None, before=None)
+        super().build_pre_runner(guid=self.dash_guid, parent=None, before=None)
 
     # noinspection PyMethodMayBeStatic,PyMethodOverriding
     def build(self):
@@ -542,7 +554,7 @@ class Dashboard(Widget):
         # -------------------------------------------------- 01
         # add window
         dpg.add_window(
-            name=self.id,
+            name=self.name,
             label=self.title,
             on_close=self.on_close,
         )
@@ -559,13 +571,14 @@ class Dashboard(Widget):
         if not self.internal.is_build_done:
             e.code.NotAllowed(
                 msgs=[
-                    f"looks like you missed to build dashboard `{self.dash_id}`"
+                    f"looks like you missed to build dashboard "
+                    f"`{self.name}`"
                 ]
             )
 
         # dpgc.start_dearpygui()
         dpg.set_theme(theme="Dark Grey")
-        dpg.start_dearpygui(primary_window=self.id)
+        dpg.start_dearpygui(primary_window=self.name)
 
     def on_close(self, sender, data):
         self.delete()

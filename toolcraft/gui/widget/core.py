@@ -45,7 +45,7 @@ class Button(Widget):
 
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None
     ):
@@ -123,7 +123,7 @@ class Combo(Widget):
 
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None
     ):
@@ -190,7 +190,7 @@ class ChildWindow(Widget):
 
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
@@ -277,7 +277,7 @@ class Window(Widget):
 
     def build_pre_runner(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
@@ -297,11 +297,11 @@ class Window(Widget):
                 ]
             )
 
-        super().build_pre_runner(name=name, parent=parent, before=before)
+        super().build_pre_runner(guid=guid, parent=parent, before=before)
 
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
@@ -352,7 +352,7 @@ class Text(Widget):
 
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
@@ -394,7 +394,7 @@ class CollapsingHeader(Widget, abc.ABC):
 
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
@@ -440,7 +440,7 @@ class ManagedColumn(Widget):
 
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):

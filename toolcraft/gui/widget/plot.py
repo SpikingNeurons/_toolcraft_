@@ -101,7 +101,7 @@ class _SimplePlot(Widget):
 
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
@@ -217,11 +217,11 @@ class Plot(Widget):
                 plot_type.callback.set_sender(sender=self)
 
         # plot
-        plot_type.plot(parent_id=self.id)
+        plot_type.plot(parent_plot=self)
 
     def build(
         self,
-        name: str,
+        guid: str,
         parent: "Widget",
         before: t.Optional["Widget"] = None,
     ):
@@ -357,7 +357,7 @@ class PlotType(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         ...
 
     def delete(self, children_only: bool = False):
@@ -379,9 +379,9 @@ class Annotation(PlotType):
     color: Color = Color.DEFAULT
     clamped: bool = True
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_annotation(
-            plot=parent_id,
+            plot=parent_plot.name,
             text=self.text,
             x=self.x,
             y=self.y,
@@ -409,9 +409,9 @@ class AreaSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_area_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -437,9 +437,9 @@ class BarSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_bar_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -469,9 +469,9 @@ class CandleSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_candle_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             date=self.date,
             opens=self.opens,
@@ -501,11 +501,11 @@ class DragLine(PlotType):
     default_value: float = 0.0
     callback: Callback = None
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
 
         # add
         dpg.add_drag_line(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             source=self.source,
             color=self.color.dpg_value,
@@ -537,11 +537,11 @@ class DragPoint(PlotType):
     default_y: float = 0.0
     callback: Callback = None
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
 
         # add
         dpg.add_drag_point(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             source=self.source,
             color=self.color.dpg_value,
@@ -575,9 +575,9 @@ class ErrorSeries(PlotType):
     color: Color = Color.DEFAULT
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_error_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -608,10 +608,10 @@ class HeatSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         # noinspection PyTypeChecker
         dpg.add_heat_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             values=self.values,
             rows=self.rows,
@@ -638,9 +638,9 @@ class HorizLineSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_hline_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             color=self.color.dpg_value,
@@ -670,9 +670,9 @@ class ImageSeries(PlotType):
     axis: int = 0
 
     # noinspection PyTypeChecker
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_image_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             value=self.value,
             bounds_min=self.bounds_min,
@@ -698,9 +698,9 @@ class LineSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_line_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -793,9 +793,9 @@ class PieSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_pie_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             values=self.values,
             labels=self.labels,
@@ -829,9 +829,9 @@ class ScatterSeries(PlotType):
     xy_data_format: bool = False
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_scatter_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -933,9 +933,9 @@ class ShadeSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_shade_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y1=self.y1,
@@ -962,9 +962,9 @@ class StairSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_stair_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -992,9 +992,9 @@ class StemSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_stem_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -1023,9 +1023,9 @@ class TextPoint(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_text_point(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -1048,9 +1048,9 @@ class VertLineSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_vline_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             color=self.color.dpg_value,

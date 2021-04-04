@@ -111,7 +111,7 @@ class Plotting(gui.CollapsingHeader):
         for i in range(4):
             _plot = gui.Plot(height=200)
             _subplot.add_child(
-                name=f"plot_{i}", widget=_plot
+                guid=f"plot_{i}", widget=_plot
             )
             _plot.plot(
                 gui.LineSeries(
@@ -140,7 +140,7 @@ class ButtonPlotCallback(gui.Callback):
         _sender = self.sender  # type: gui.Button
 
         # display to receiver i.e. add_child if not there
-        if _sender.label not in self.receiver.children.keys():
+        if _sender.guid not in self.receiver.children.keys():
 
             # make collapsing header
             _collapsing_header = gui.CollapsingHeader(
@@ -149,7 +149,7 @@ class ButtonPlotCallback(gui.Callback):
 
             # add child to receiver
             self.receiver.add_child(
-                name=_sender.label,
+                guid=_sender.guid,
                 widget=_collapsing_header
             )
 
@@ -161,7 +161,7 @@ class ButtonPlotCallback(gui.Callback):
 
             # add plot to collapsing header
             _collapsing_header.add_child(
-                name="plot", widget=_plot
+                guid="plot", widget=_plot
             )
 
             # add some data
@@ -194,20 +194,19 @@ class ButtonPlot(gui.CollapsingHeader):
 
     def build_children(self):
         _columns = gui.ManagedColumn(columns=2)
-        _columns.build(name="columns", parent=self)
+        _columns.build(guid="columns", parent=self)
         _columns.add_child(
-            name="button_window", widget=self.button_window
+            guid="button_window", widget=self.button_window
         )
         _columns.add_child(
-            name="display_window", widget=self.display_window
+            guid="display_window", widget=self.display_window
         )
         for i in range(5):
-            _uid = f"Button {i}"
             self.button_window.add_child(
-                name=_uid,
+                guid=f"button{i}",
                 widget=gui.Button(
                     width=300,
-                    label=_uid,
+                    label=f"Button {i}",
                     callback=ButtonPlotCallback(
                         receiver=self.display_window
                     )
@@ -235,25 +234,24 @@ class MyDashboard(gui.Dashboard):
 
     def build_children(self):
         self.theme_selector.build(
-            name='theme_selector', parent=self
+            guid='theme_selector', parent=self
         )
         self.welcome_msg.build(
-            name='welcome_msg', parent=self
+            guid='welcome_msg', parent=self
         )
         self.topic2.build(
-            name='topic2', parent=self
+            guid='topic2', parent=self
         )
         self.topic1.build(
-            name='topic1', parent=self,
-            before=self.topic2
+            guid='topic1', parent=self, before=self.topic2
         )
         self.topic3.build(
-            name='topic3', parent=self
+            guid='topic3', parent=self
         )
 
 
 def basic_dashboard():
-    _dash = MyDashboard(dash_id="my_dashboard", title="My Dashboard")
+    _dash = MyDashboard(dash_guid="my_dashboard", title="My Dashboard")
     _dash.build()
     _dash.topic2.plot_some_examples()
     _dash.run()

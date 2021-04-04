@@ -1201,14 +1201,12 @@ class HashableClass(YamlRepr, abc.ABC):
             _LOGGER.info(
                 msg=f"Init "
                     f"{self.__class__.__module__}."
-                    f"{self.__class__.__name__}:"
-                    f"{self.name}")
+                    f"{self.__class__.__name__}")
         else:
             _spinner.info(
                 msg=f"Init "
                     f"{self.__class__.__module__}."
-                    f"{self.__class__.__name__}:"
-                    f"{self.name}")
+                    f"{self.__class__.__name__}")
 
     def __str__(self) -> str:
         """
@@ -1315,7 +1313,7 @@ class HashableClass(YamlRepr, abc.ABC):
             elif isinstance(v, list):
                 self.can_be_frozen(
                     item=v,
-                    key_or_index=f"{self.name}.{f_name}::",
+                    key_or_index=f"{f_name}::",
                     allowed_nesting=True,
                     allowed_types=SUPPORTED_HASHABLE_OBJECTS,
                 )

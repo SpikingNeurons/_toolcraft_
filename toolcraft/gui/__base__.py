@@ -143,8 +143,8 @@ class Callback(m.HashableClass, abc.ABC):
 class WidgetInternal(m.Internal):
     guid: str
     parent: t.Union["Dashboard", "Widget"]
-    before: t.Optional["Widget"] = None
-    is_build_done: bool = False
+    before: t.Optional["Widget"]
+    is_build_done: bool
 
     @property
     def name(self) -> str:
@@ -157,10 +157,6 @@ class WidgetInternal(m.Internal):
             parent=self.parent.name,
             before="" if self.before is None else self.before.name
         )
-
-    def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + \
-               ['before', 'is_build_done', ]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -185,14 +181,18 @@ class Widget(m.HashableClass, abc.ABC):
         return WidgetInternal(owner=self)
 
     @property
+    def is_built(self) -> bool:
+        return self.internal.has(item="is_build_done")
+
+    @property
     @abc.abstractmethod
     def is_container(self) -> bool:
         """
         If the dpg component needs a call to end
         Needed when the component is container and is used in with context
-        Tou figure out which component is container refer to
+        To figure out which component is container refer to
         >>> from dearpygui import simple
-        And check which methods decorated with `#contextmanager` are making
+        And check which methods decorated with `@contextmanager` are making
         call to `end()`
         """
         ...
@@ -341,109 +341,133 @@ class Widget(m.HashableClass, abc.ABC):
         # delete the UI counterpart
         dpg.delete_item(item=self.name, children_only=False)
 
-    def build_pre_runner(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
+    def layout(self):
+        """
+        Here we decide how to layout all children of this Widget which are
+        class fields.
+
+        Note that any widgets that are added dynamically apart from widget
+        class fields with add_child later will just build newly added
+        components below the last child widget. This can be controlled via
+        `parent` and `before` argument anyways/
+
+        Default behaviour is to just build all fields that are Widgets one
+        after other. You can of course override this to do more cosmetic
+        changes to UI
+
+        Note that we cannot simply loop over children dict because
+        + if add_child was called before build() then there will be some
+          items in dict
+        + the widgets that are fields of this class are not yet added to
+          children
+        + before calling layout we keep a copy of items that are added in
+          children dict and clear the dict. So dict will be empty here
+        """
+        # ----------------------------------------------------- 01
+        # make sure that children dict is empty
+        # this is needed because layout will decide the order of children and
+        # about rendering them
+        if bool(self.children):
+            e.code.CodingError(
+                msgs=[
+                    f"Note that children dict is not empty",
+                    "If you have performed add_child before build the code "
+                    "before call to layout should back them up and clear "
+                    "children dict"
+                ]
+            )
+
+        # ----------------------------------------------------- 02
+        # if there is a widget which is field of this widget then add it
+        for f_name in self.dataclass_field_names:
+            v = getattr(self, f_name)
+            if isinstance(v, Widget):
+                self.add_child(guid=f_name, widget=v, before=None)
+
+    def build_pre_runner(self):
 
         # ---------------------------------------------------- 01
         # check if already built
-        if self.internal.is_build_done:
+        if self.is_built:
             e.code.CodingError(
                 msgs=[
-                    f"Widget is already registered with:",
+                    f"Widget is already built and registered with:",
                     {
                         'parent': self.internal.parent.name,
-                        'with guid': self.guid
+                        'guid': self.guid
                     },
-                    f"While you are requesting to register with:",
-                    {
-                        'parent': parent.name,
-                        'with guid': guid,
-                    }
                 ]
             )
 
         # ---------------------------------------------------- 02
-        # check if already a child i.e. is the name taken
-        if parent is not None:
-            if guid in parent.children.keys():
-                e.code.NotAllowed(
-                    msgs=[
-                        f"There is already a child with guid `{guid}` "
-                        f"in parent `{parent.name}`"
-                    ]
-                )
-            # else we can add it as child to parent
-            else:
-                parent.children[guid] = self
-
-        # ---------------------------------------------------- 03
-        # setup self i.e. by updating internal
-        self.internal.is_build_done = True
-        self.internal.guid = guid
-        if parent is not None:
-            self.internal.parent = parent
-        if before is not None:
-            self.internal.before = before
-
-    @abc.abstractmethod
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
-        ...
-
-    def build_callback(self):
-        # set teh sender i.e. which UI widget will have control to call this
+        # set the sender i.e. which UI widget will have control to call this
         # callback
         for f_name in self.dataclass_field_names:
             v = getattr(self, f_name)
             if isinstance(v, Callback):
                 v.set_sender(sender=self)
 
-    def build_children(self):
-        """
-        Here we decide how to build all children of this Widget which are
-        class fields. Note that add_child will just build newly added
-        components below the last child widget
+        # ---------------------------------------------------- 03
+        # layout ... only done for widgets that are containers
+        if self.is_container:
+            # ------------------------------------------------ 03.01
+            # backup children dict before clearing it
+            # this si needed because in some cases there will be add_child
+            # performed before build, but we need to give preference to layout
+            # method and then again append the backed up elements
+            _backup_children = {
+                k: v for k, v in self.children.items()
+            }
+            # ------------------------------------------------ 03.02
+            # clear the children dict
+            self.children.clear()
+            # ------------------------------------------------ 03.03
+            # call layout it will add some widgets if any
+            self.layout()
+            # ------------------------------------------------ 03.04
+            # update children with backup
+            for k, v in _backup_children.items():
+                if k in self.children.keys():
+                    e.code.CodingError(
+                        msgs=[
+                            f"The `layout()` method has added child with guid "
+                            f"`{k}` which was already added before `build()` "
+                            f"was called"
+                        ]
+                    )
+                self.children[k] = v
 
-        Default behaviour is to just build all fields that are Widgets one
-        after other. You can of course override this to do more cosmetic
-        changes to UI
-
-        Note that `self.children` will be empty. Calling build on children
-        of this widget will add it to the parent we pass. So we cannot loop
-        over `self.children` instead we call build by scanning fields of
-        this class. This also helps when we override this method where we
-        need not add widget to `parent.children`
-        """
-        for f_name in self.dataclass_field_names:
-            v = getattr(self, f_name)
-            if isinstance(v, Widget):
-                v.build(guid=f_name, parent=self, before=None)
+    @abc.abstractmethod
+    def build(self):
+        ...
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Any
     ):
-        # build callback
-        self.build_callback()
 
-        # build children that is fields that are widgets
-        self.build_children()
-
-        # if container close it
+        # if container build children
         if self.is_container:
+
+            # now as layout is completed and build for this widget is completed,
+            # now it is time to render children
+            for child in self.children.values():
+                child.build()
+
+            # also close the dpg based end as we do not use with context
             dpg.end()
 
         # set flag to indicate build is done
         self.internal.is_build_done = True
 
-    def add_child(self, guid: str, widget: "Widget", before: "Widget" = None):
+    def add_child(
+        self,
+        guid: str,
+        widget: "Widget",
+        before: "Widget" = None,
+    ):
+        # -------------------------------------------------- 01
+        # validations
+        # -------------------------------------------------- 01.01
         # if not container we cannot add widgets
         if not self.is_container:
             e.code.CodingError(
@@ -452,7 +476,7 @@ class Widget(m.HashableClass, abc.ABC):
                     f"do not support adding widget as child"
                 ]
             )
-
+        # -------------------------------------------------- 01.02
         # make sure that you are not adding Dashboard
         if isinstance(widget, Dashboard):
             e.code.CodingError(
@@ -462,17 +486,32 @@ class Widget(m.HashableClass, abc.ABC):
                 ]
             )
 
-        # you can add child to parent i.e. self only when it is built
-        if not self.internal.is_build_done:
-            e.code.NotAllowed(
+        # -------------------------------------------------- 02
+        # if guid in children raise error
+        if guid in self.children.keys():
+            e.validation.NotAllowed(
                 msgs=[
-                    f"You cannot add chile to parent i.e. not built",
-                    f"Make sure you have build the parent"
+                    f"Looks like the widget with guid `{guid}` is already "
+                    f"added to parent."
                 ]
             )
 
-        # now lets build the widget
-        widget.build(guid=guid, parent=self, before=before)
+        # -------------------------------------------------- 03
+        # set internals
+        widget.internal.guid = guid
+        widget.internal.parent = self
+        widget.internal.before = before
+
+        # -------------------------------------------------- 04
+        # we can now store widget to children
+        # Note that guid is used as it is for dict key
+        self.children[guid] = widget
+
+        # -------------------------------------------------- 05
+        # if this widget is already built we need to build this widget here
+        # else it will be built when build() on super parent is called
+        if self.is_built:
+            widget.build()
 
     def hide(self, children_only: bool = False):
         # todo: needs testing
@@ -571,12 +610,6 @@ class Dashboard(Widget):
                 f"already this instance is eligible to be setup ..."
             ]
         )
-
-    # noinspection PyMethodOverriding
-    def build_pre_runner(self):
-        # call super
-        # noinspection PyTypeChecker
-        super().build_pre_runner(guid=self.dash_guid, parent=None, before=None)
 
     # noinspection PyMethodMayBeStatic,PyMethodOverriding
     def build(self):

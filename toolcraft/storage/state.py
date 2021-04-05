@@ -95,6 +95,14 @@ class Info(StateFile):
         self.path.unlink()
 
 
+class ConfigInternal(m.Internal):
+
+    start_syncing: bool = False
+
+    def vars_that_can_be_overwritten(self) -> t.List[str]:
+        return super().vars_that_can_be_overwritten() + ['start_syncing']
+
+
 @dataclasses.dataclass
 class Config(StateFile):
     """
@@ -117,14 +125,22 @@ class Config(StateFile):
     class LITERAL(StateFile.LITERAL):
         config_updated_on_list_limit = 10
 
-        # helper vars for instance Config StateFile
-        # we add this attribute to self to lock access in get and set methods
-        LOCK_ACCESS_FLAG = "__lock_access__"
-        BACKUP_YAML_STR_KEY = "__backup_yaml_str__"
+    @property
+    @util.CacheResult
+    def internal(self) -> ConfigInternal:
+        return ConfigInternal(owner=self)
 
     @property
     def suffix(self) -> str:
         return Suffix.config
+
+    @property
+    @util.CacheResult
+    def dataclass_field_names(self) -> t.List[str]:
+        return [
+            f_name for f_name in super().dataclass_field_names
+            if f_name not in ["hashable", "root_dir_str"]
+        ]
 
     def __post_init__(self):
         """
@@ -133,6 +149,7 @@ class Config(StateFile):
 
         # ------------------------------------------------------------ 01
         # if path exists load data dict from it
+        # that is sync with contents on disk
         if self.path.exists():
             _hashable_dict_from_disk = \
                 m.FrozenDict.from_yaml(self.path.read_text())
@@ -142,243 +159,86 @@ class Config(StateFile):
             )
 
         # ------------------------------------------------------------ 02
-        # now backup yaml str
-        setattr(
-            self,
-            Config.LITERAL.BACKUP_YAML_STR_KEY,
-            self.make_yaml_str_from_current_state(),
-        )
-
-        # ------------------------------------------------------------ 03
-        # this locks future accesses
-        setattr(self, Config.LITERAL.LOCK_ACCESS_FLAG, True)
-
-    def __getattribute__(self, item):
-
-        # bypass all dunder method accesses
-        if item.startswith("__"):
-            return super().__getattribute__(item)
-
-        # if not a hashable field call super
-        if item not in self.dataclass_field_names:
-            return super().__getattribute__(item)
-
-        # check if there is no lock
-        if hasattr(self, Config.LITERAL.LOCK_ACCESS_FLAG):
-            e.code.CodingError(
-                msgs=[
-                    f"There is a lock on config state file ... to access "
-                    f"fields in this class make sure to use the instance using "
-                    f"`with` statement ...",
-                    f"Error while access attribute `{item}`",
-                ]
-            )
-
-        # call super and return
-        return super().__getattribute__(item)
+        # start syncing i.e. any updates via __setattr__ will be synced
+        # to disc
+        self.internal.start_syncing = True
 
     def __setattr__(self, key, value):
 
-        # bypass all dunder method accesses
-        if key.startswith("__") and key.endswith("__"):
-            return super().__setattr__(key, value)
+        # for key in dataclass field names then if any of it is list or dict
+        # make them special notifier based proxy list and dict
+        if key in self.dataclass_field_names:
+            if value.__class__ == list:
+                # noinspection PyPep8Naming
+                NotifierList = \
+                    util.notifying_list_dict_class_factory(list, self.sync)
+                value = NotifierList(value)
+            elif value.__class__ == dict:
+                # noinspection PyPep8Naming
+                NotifierDict = \
+                    util.notifying_list_dict_class_factory(dict, self.sync)
+                value = NotifierDict(value)
+            else:
+                ...
 
-        # if not a hashable field call super
-        if key not in self.dataclass_field_names:
-            return super().__setattr__(key, value)
+        # call super to set things
+        super().__setattr__(key, value)
 
-        # check if there is no lock
-        if hasattr(self, Config.LITERAL.LOCK_ACCESS_FLAG):
-            e.code.CodingError(
-                msgs=[
-                    f"There is a lock on config state file ... to access "
-                    f"fields in this class make sure to use the instance using "
-                    f"`with` statement ..."
-                    f"Error while access attribute `{key}`",
-                ]
-            )
+        # We call sync always as this will occur less frequently compared to
+        # __getattribute__
+        # Note that list and dict updates will be automatically handled by
+        # notifier version
+        if self.internal.start_syncing:
+            self.sync()
 
-        # call super and return
-        return super().__setattr__(key, value)
-
-    def __del__(self):
-        """
-        todo: raising errors in __del__ will pollute logs ... but for now we
-          keep this probable redundant code for extra check to test if we
-          are syncing properly
-        """
-
-        with self():
-            _backup_yaml_str = getattr(self, Config.LITERAL.BACKUP_YAML_STR_KEY)
-            _current_yaml_str = self.make_yaml_str_from_current_state()
-            if _backup_yaml_str != _current_yaml_str:
-                e.code.CodingError(
-                    msgs=[
-                        f"You should make sure that you are using `with` "
-                        f"statement while using config. Looks like you have "
-                        f"updates hashable fields from outside with context.",
-                        f"Also make sure that you are not nesting with "
-                        f"statements",
-                        {
-                            "_backup_yaml_str": _backup_yaml_str,
-                            "_current_yaml_str": _current_yaml_str
-                        }
-                    ]
-                )
-
-    def __call__(
-        self, do_not_save: bool = False
-    ) -> "Config":
-        # noinspection PyTypeChecker
-        return super().__call__(do_not_save=do_not_save)
-
-    def on_enter(self) -> "Config":
-        # call super
-        super().on_enter()
-
-        # get kwargs
-        do_not_save: bool = self.internal.on_call_kwargs['do_not_save']
-
-        # if do_not_save is True then we expect the config file not to be
-        # present on disc ...
-        if do_not_save:
-            if self.path.is_file():
-                e.code.CodingError(
-                    msgs=[
-                        f"You do not want to save any updates to config file "
-                        f"as so_not_save=True",
-                        f"In that case we expect that there should be no "
-                        f"stale state present on disk as we assume you will "
-                        f"sync config later ..."
-                    ]
-                )
-
-        # we expect the lock to be always there
-        if not hasattr(self, Config.LITERAL.LOCK_ACCESS_FLAG):
-            e.code.CodingError(
-                msgs=[
-                    f"For config we expect the lock to be always there.",
-                    f"Make sure you always use `with` statement to access or "
-                    f"update fields of the config state file.",
-                    f"Also check if you are nesting with statements as that "
-                    f"will lead to same error."
-                ]
-            )
-
-        # now remove lock so that we can access or update things
-        delattr(self, Config.LITERAL.LOCK_ACCESS_FLAG)
-
-        # check if serializable state is mutated outside with context
-        _backup_yaml_str = getattr(self, Config.LITERAL.BACKUP_YAML_STR_KEY)
-        _current_yaml_str = self.make_yaml_str_from_current_state()
-        if _backup_yaml_str != _current_yaml_str:
-            e.code.CodingError(
-                msgs=[
-                    f"You should make sure that you are using `with` "
-                    f"statement while using config. Looks like you have "
-                    f"updates hashable fields from outside with context.",
-                    f"Also make sure that you are not nesting with statements",
-                    {
-                        "_backup_yaml_str": _backup_yaml_str,
-                        "_current_yaml_str": _current_yaml_str
-                    }
-                ]
-            )
-
-        # return
-        return self
-
-    def on_exit(self):
-
-        # get kwargs
-        do_not_save: bool = self.internal.on_call_kwargs['do_not_save']
-
-        # if something was changed inside with statement that it should not
-        # match with backed up yaml str
-        _backup_yaml_str = getattr(self, Config.LITERAL.BACKUP_YAML_STR_KEY)
-
-        # now let us get current yaml str
-        _current_yaml_str = self.make_yaml_str_from_current_state()
-
-        # if something changed then call write to disk
-        if _backup_yaml_str != _current_yaml_str:
-            # before updating let us update the config_updated_on
-            # this can never happen
-            if len(self.config_updated_on) > \
-                    self.LITERAL.config_updated_on_list_limit:
-                e.code.CodingError(
-                    msgs=[
-                        f"This should never happens ... did you try to append "
-                        f"last_updated_on list multiple times"
-                    ]
-                )
-            # limit the list
-            if len(self.config_updated_on) == \
-                    self.LITERAL.config_updated_on_list_limit:
-                self.config_updated_on = self.config_updated_on[1:]
-            # append time
-            self.config_updated_on.append(datetime.datetime.now())
-            # after update to self.config_updated_on we need to generate
-            # again new yaml str
-            _current_yaml_str = self.make_yaml_str_from_current_state()
-            # now write the updates
-            if not do_not_save:
-                self.path.write_text(_current_yaml_str)
-            # also update the _backup_yaml_str
-            setattr(self, Config.LITERAL.BACKUP_YAML_STR_KEY, _current_yaml_str)
-
-        # since we are exiting put back the lock
-        setattr(self, Config.LITERAL.LOCK_ACCESS_FLAG, True)
-
-        # call super
-        super().on_exit()
+    def __call__(self) -> "Config":
+        # todo: remove this
+        raise Exception("NO LONGER SUPPORTED")
 
     def make_yaml_str_from_current_state(self) -> str:
-        return m.FrozenDict(
-            item={
-                f: getattr(self, f)
-                for f in self.dataclass_field_names
-            }
-        ).yaml()
+        # here we convert proxy notifier list and dict back to normal python
+        # builtins
+        _dict = {}
+        for f_name in self.dataclass_field_names:
+            value = getattr(self, f_name)
+            if isinstance(value, list):
+                value = list(value)
+            if isinstance(value, dict):
+                value = dict(value)
+            _dict[f_name] = value
+
+        # noinspection PyTypeChecker
+        return m.FrozenDict(item=_dict).yaml()
 
     def sync(self):
-        """
-        Note that __enter__ and __exit__ will take care of always updating
-        the state. SO instead here we will validate if state on disk matches
-        our serializable.
-        """
-        # if no config file the update created_on and with statement will
-        # sync and also add time stamp to config_update_on
-        if not self.path.exists():
-            # with statement helps in sync
-            with self():
-                # ... self.config.created_on must be None as created_on
-                # can be only modified here
-                if self.created_on is not None:
-                    e.code.CodingError(
-                        msgs=[
-                            f"We expect this to be None as info file is not "
-                            f"yet written to disk"
-                        ]
-                    )
-                # ... update config to store info for when info file was created
-                self.created_on = datetime.datetime.now()
-        # else read the config and match it
-        else:
-            with self():
-                _current_state = self.make_yaml_str_from_current_state()
-                _disk_state = self.path.read_text()
-                if _current_state != _disk_state:
-                    e.code.CodingError(
-                        msgs=[
-                            f"We expect the state on disk to same to internal "
-                            f"state for config",
-                            {
-                                "_current_state": _current_state,
-                                "_disk_state": _disk_state
-                            }
-                        ]
-                    )
+        # -------------------------------------------------- 01
+        # get current state
+        _current_state = self.make_yaml_str_from_current_state()
+
+        # -------------------------------------------------- 02
+        # if file exists on the disk then check if the contents are different
+        # this helps us catch unexpected syncs
+        # if the contents are same then we raise error as nothing is there to
+        # update
+        if self.path.exists():
+            _disk_state = self.path.read_text()
+            if _current_state == _disk_state:
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect the state on disk to be different to "
+                        f"internal state for config ...",
+                        {
+                            "_current_state": _current_state,
+                            "_disk_state": _disk_state
+                        },
+                        f"This looks like unexpected sync as nothing has "
+                        f"changed in config"
+                    ]
+                )
+
+        # -------------------------------------------------- 04
+        # write to disk
+        self.path.write_text(_current_state)
 
     def delete(self):
         # delete associated file on the disk
@@ -390,9 +250,13 @@ class Config(StateFile):
         # `util.WipeCacheResult("config", self.hashable)` but that will not
         # help as this object itself is cached
         # noinspection PyArgumentList
+        # The below code will trigger __post_init__ so list and dict will be
+        # converted to Notifier proxies anyways
         _default_config = self.__class__(
             hashable=self.hashable, root_dir_str=self.root_dir_str
         )
+
+        # Note that this will not trigger __setattr__
         self.__dict__.update(
             _default_config.__dict__
         )
@@ -479,7 +343,5 @@ class StateManager(m.Tracker):
         # + else will create file
         self.info.sync()
         # ----------------------------------------------------------- 02
-        # just call sync
-        # + if present will check the file on disk with internal state
-        # + else will create file
-        self.config.sync()
+        # just update created_on it will auto sync
+        self.config.created_on = datetime.datetime.now()

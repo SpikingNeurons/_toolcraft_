@@ -43,12 +43,7 @@ class Button(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None
-    ):
+    def build(self):
 
         # add_button
         dpg.add_button(
@@ -121,12 +116,7 @@ class Combo(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None
-    ):
+    def build(self):
         # add_combo
         dpg.add_combo(
             **self.internal.dpg_kwargs,
@@ -188,12 +178,7 @@ class ChildWindow(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
+    def build(self):
         dpg.add_child(
             **self.internal.dpg_kwargs,
             show=self.show,
@@ -299,12 +284,7 @@ class Window(Widget):
 
         super().build_pre_runner(guid=guid, parent=parent, before=before)
 
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
+    def build(self):
 
         dpg.add_window(
             name=self.id,
@@ -350,12 +330,7 @@ class Text(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
+    def build(self):
         _dpg_kwargs = self.internal.dpg_kwargs
         _msgs = self.msgs if isinstance(self.msgs, list) else [self.msgs]
         for _msg in _msgs:
@@ -392,12 +367,7 @@ class CollapsingHeader(Widget, abc.ABC):
     def is_container(self) -> bool:
         return True
 
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
+    def build(self):
         dpg.add_collapsing_header(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -438,12 +408,7 @@ class ManagedColumn(Widget):
                     ]
                 )
 
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
+    def build(self):
         # add ui component
         dpg.add_managed_columns(
             **self.internal.dpg_kwargs,

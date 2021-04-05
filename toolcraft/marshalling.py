@@ -29,16 +29,10 @@ _LOGGER = logger.get_logger()
 ALL_TRACKERS = None  # type: t.List[t.Type[YamlRepr]]
 YAML_TAG_MAPPING = {}
 
-LITERAL_CLASS_NAME = "LITERAL"
-BACKUP_YAML = '__backup_yaml__'
-ALLOW_ACCESS = '__allow_access__'
-
 
 # use this as default value for kwargs in HashableClass.__call__ to indicate
 # that kwarg was not provided
 NOT_PROVIDED = '__NOT_PROVIDED__'
-
-_MAKE_ME_USELESS = "make_me_useless"
 
 # todo: come up with more appropriate file extensions if needed like
 #  model.info, dataset.info, file_group.info,
@@ -65,11 +59,6 @@ class Internal:
       As Hashable dataclass is Frozen we need to have some way of storing
       variables that can be updated and not part of serialization process
     """
-
-    # this flag will be added with message about why this class can no
-    # longer be accessed ... once this is set the getattribute will throw
-    # errors when someone tries to use this instance
-    make_me_useless: t.List[str]
 
     # we set this in __call__ so that with context has access to kwargs
     # passes in __call__ method
@@ -178,7 +167,7 @@ class Internal:
 
     # noinspection PyMethodMayBeStatic
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return ['on_call_kwargs']
+        return ['on_call_kwargs', "make_me_useless"]
 
     def has(self, item: str) -> bool:
         if item not in self.__variable_names__:
@@ -229,39 +218,8 @@ class Tracker:
     @property
     @util.CacheResult
     def dataclass_field_names(self) -> t.List[str]:
+        # noinspection PyUnresolvedReferences
         return list(self.__dataclass_fields__.keys())
-
-    def __getattribute__(self, item):
-
-        # --------------------------------------------------------- 01
-        # bypass all dunder method accesses
-        # todo: come up with regex matching for efficiency ... needed
-        #  especially if the check here will have lot of conditions
-        # The things we bypass
-        #  + __* (for dunder)
-        #  + internal (for internal property)
-        #  + INTERNAL (for store_key in which Internal instance is saved)
-        # todo: can the internal be bypassed in more easy way ... can we
-        #  optimize this if needed?? Any ideas are not known as of now ??
-        if item.startswith("__") or item == "internal" or item == "INTERNAL":
-            return super().__getattribute__(item)
-
-        # --------------------------------------------------------- 02
-        # if locked raise error
-        if self.internal.has(_MAKE_ME_USELESS):
-            _msgs = self.internal.make_me_useless
-            e.code.CodingError(
-                msgs=[
-                    f"You no longer can use this instance as you have blocked "
-                    f"access by calling make_me_useless() method.",
-                    f"This feature helps us avoid memory leaks",
-                    *_msgs
-                ]
-            )
-
-        # --------------------------------------------------------- 03
-        # return value
-        return super().__getattribute__(item)
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -419,25 +377,6 @@ class Tracker:
         Alternative to avoid using dunder method __init_subclass__
         """
         ...
-
-    def make_me_useless(self, make_me_useless_msg: t.List[str]):
-        """
-        Once this method is called this instance becomes useless as no can
-        read its attributes
-
-        this flag will be added with message about why this class can no
-        longer be accessed ... once this is set the getattribute will throw
-        errors when someone tries to use this instance
-
-        """
-        if not self.internal.has(_MAKE_ME_USELESS):
-            self.internal.make_me_useless = make_me_useless_msg
-        else:
-            e.code.ShouldNeverHappen(
-                msgs=[
-                    "Not possible to have this already set"
-                ]
-            )
 
     @classmethod
     def available_concrete_sub_classes(cls) -> t.List[

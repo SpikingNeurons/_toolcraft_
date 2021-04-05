@@ -69,7 +69,7 @@ class HashableMethodRunnerCallback(Callback):
     hashable: m.HashableClass
     callable_name: str
     receiver: Widget
-    callable_kwargs: t.Dict[str, t.Any] = None
+    callable_kwargs: m.FrozenDict = None
 
     def init_validate(self):
         # call super
@@ -85,7 +85,7 @@ class HashableMethodRunnerCallback(Callback):
 
     def fn(self):
         _callable_kwargs = \
-            {} if self.callable_kwargs is None else self.callable_kwargs
+            {} if self.callable_kwargs is None else self.callable_kwargs.get()
 
         _result = getattr(
             self.hashable, self.callable_name

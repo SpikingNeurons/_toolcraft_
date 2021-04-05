@@ -99,12 +99,7 @@ class _SimplePlot(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
+    def build(self):
         # there is nothing to do here as it will happen when you call plot()
         ...
 
@@ -248,15 +243,10 @@ class Plot(Widget):
                 self.items[item.label] = item
 
             # if the self is already built then we need to plot this item
-            if self.internal.is_build_done:
+            if self.is_built:
                 item.plot(parent_plot=self)
 
-    def build(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
+    def build(self):
         # call add plot
         dpg.add_plot(
             **self.internal.dpg_kwargs,

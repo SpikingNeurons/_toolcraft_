@@ -1791,6 +1791,35 @@ def one_hot_to_simple_labels(oh_label: pd.Series) -> pd.Series:
 #         )
 
 
+_changer_methods = set(
+    "__setitem__ __setslice__ __delitem__ update append extend add insert "
+    "pop popitem remove setdefault __iadd__".split()
+)
+
+
+def _proxy_decorator(func, callback):
+    def wrapper(*args, **kw):
+        _res = func(*args, **kw)
+        callback()
+        return _res
+    wrapper.__name__ = func.__name__
+    return wrapper
+
+
+def notifying_list_dict_class_factory(cls, callback):
+    """
+    Inspired from
+    https://stackoverflow.com/questions/9871169
+    """
+    new_dct = cls.__dict__.copy()
+    for key, value in new_dct.items():
+        if key in _changer_methods:
+            new_dct[key] = _proxy_decorator(
+                value, callback
+            )
+    return type("proxy_" + cls.__name__, (cls,), new_dct)
+
+
 # noinspection PyProtectedMember
 @dataclasses.dataclass
 class Process:

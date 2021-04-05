@@ -195,9 +195,8 @@ class ButtonPlot(gui.CollapsingHeader):
 
     display_window: gui.ChildWindow = gui.ChildWindow()
 
-    def build_children(self):
+    def layout(self):
         _columns = gui.ManagedColumn(columns=2)
-        _columns.build(guid="columns", parent=self)
         _columns.add_child(
             guid="button_window", widget=self.button_window
         )
@@ -215,6 +214,7 @@ class ButtonPlot(gui.CollapsingHeader):
                     )
                 ),
             )
+        self.add_child(guid="columns", widget=_columns)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -235,21 +235,21 @@ class MyDashboard(gui.Dashboard):
 
     topic3: ButtonPlot = ButtonPlot()
 
-    def build_children(self):
-        self.theme_selector.build(
-            guid='theme_selector', parent=self
+    def layout(self):
+        self.add_child(
+            guid='theme_selector', widget=self.theme_selector
         )
-        self.welcome_msg.build(
-            guid='welcome_msg', parent=self
+        self.add_child(
+            guid='welcome_msg', widget=self.welcome_msg
         )
-        self.topic2.build(
-            guid='topic2', parent=self
+        self.add_child(
+            guid='topic2', widget=self.topic2
         )
-        self.topic1.build(
-            guid='topic1', parent=self, before=self.topic2
+        self.add_child(
+            guid='topic1', widget=self.topic1, before=self.topic2
         )
-        self.topic3.build(
-            guid='topic3', parent=self
+        self.add_child(
+            guid='topic3', widget=self.topic3
         )
 
 

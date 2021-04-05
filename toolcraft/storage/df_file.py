@@ -275,7 +275,7 @@ def _read_table(
     #     _table
     # ).sort_index(axis=0)
     return _table
-        
+
 
 def _write_table(
     df_file: "DfFile",
@@ -341,68 +341,68 @@ class DfFileInternal(StorageHashableInternal):
         and in that case if data exists on disk then we load schema from config
         on disk. Else we set things to None
         """
-        with self.owner.config() as _c:
-            # schema from config
-            _schema_in_config = _c.schema.get()
+        # schema from config
+        _c = self.owner.config
+        _schema_in_config = _c.schema.get()
 
-            # if table is provided that means either validate schema if schema
-            # in config or else infer schema from table and sync that to
-            # config to disk for future use
-            if table is not None:
-                # check if table has all the partition columns ... this needs
-                # to be checked when the returned table by decorated method
-                # misses out on certain columns that are needed for partitions
-                _tables_cols = [_.name for _ in table.schema]
-                _partition_cols = _c.partition_cols
-                if _partition_cols is None:
-                    _partition_cols = []
-                for _col in _partition_cols:
-                    if _col not in _tables_cols:
-                        e.code.CodingError(
-                            msgs=[
-                                f"While returning pa.Table from the decorated "
-                                f"method you missed to add important partition "
-                                f"column `{_col}`"
-                            ]
-                        )
-
-                # if table_schema none estimate from first table and write it
-                # back to config
-                if _schema_in_config is None:
-                    _c.schema = m.FrozenSchema(table.schema)
-                # if table_schema available then validate
-                else:
-                    if _schema_in_config != table.schema:
-                        e.code.CodingError(
-                            msgs=[
-                                f"The yielded/returned table schema is "
-                                f"not valid",
-                                {
-                                    "expected": _schema_in_config,
-                                    "found": table.schema
-                                }
-                            ]
-                        )
-            # if table is None and this method is called we expect the schema to
-            # be available in config file ... check for config file and raise
-            # error if table schema not available
-            else:
-                # if table schema in config is none raise error
-                if _schema_in_config is None:
+        # if table is provided that means either validate schema if schema
+        # in config or else infer schema from table and sync that to
+        # config to disk for future use
+        if table is not None:
+            # check if table has all the partition columns ... this needs
+            # to be checked when the returned table by decorated method
+            # misses out on certain columns that are needed for partitions
+            _tables_cols = [_.name for _ in table.schema]
+            _partition_cols = _c.partition_cols
+            if _partition_cols is None:
+                _partition_cols = []
+            for _col in _partition_cols:
+                if _col not in _tables_cols:
                     e.code.CodingError(
                         msgs=[
-                            f"We cannot update internals as you have not "
-                            f"supplied table nor there is schema definition "
-                            f"available in config which should be either "
-                            f"supplied by user via StoreField decorator or "
-                            f"inferred from table written on the disk."
+                            f"While returning pa.Table from the decorated "
+                            f"method you missed to add important partition "
+                            f"column `{_col}`"
                         ]
                     )
 
-            # update internal for faster access later
-            self.partitioning = _c.get_partitioning()
-            self.schema = _c.schema.get()
-            self.partition_cols = _c.partition_cols
+            # if table_schema none estimate from first table and write it
+            # back to config
+            if _schema_in_config is None:
+                _c.schema = m.FrozenSchema(table.schema)
+            # if table_schema available then validate
+            else:
+                if _schema_in_config != table.schema:
+                    e.code.CodingError(
+                        msgs=[
+                            f"The yielded/returned table schema is "
+                            f"not valid",
+                            {
+                                "expected": _schema_in_config,
+                                "found": table.schema
+                            }
+                        ]
+                    )
+        # if table is None and this method is called we expect the schema to
+        # be available in config file ... check for config file and raise
+        # error if table schema not available
+        else:
+            # if table schema in config is none raise error
+            if _schema_in_config is None:
+                e.code.CodingError(
+                    msgs=[
+                        f"We cannot update internals as you have not "
+                        f"supplied table nor there is schema definition "
+                        f"available in config which should be either "
+                        f"supplied by user via StoreField decorator or "
+                        f"inferred from table written on the disk."
+                    ]
+                )
+
+        # update internal for faster access later
+        self.partitioning = _c.get_partitioning()
+        self.schema = _c.schema.get()
+        self.partition_cols = _c.partition_cols
 
 
 @dataclasses.dataclass
@@ -443,11 +443,11 @@ class DfFile(Folder):
       partitioning. And we treat this folder as Dataframe file. Where the root
       folder has our *.info file and *.config file where we store more
       information about Dataframe and its schema.
-    
+
     Note that file_df.py combines the power of file_system.py plus
     additional things like write append read exists with filters etc ;)
     specifically designed to achieve modern columnar storage requirements.
-    
+
     todo: While file_group.py is for blob storage. In future we can enable it to
       use file_system.py (with no need for write, append filters like
       database features). This will nicely handle blob storage requirements as
@@ -458,7 +458,7 @@ class DfFile(Folder):
       move data on internal servers rather than moving data on cloud for
       analytics. But we can think of scenarios where we might push big files
       on cloud storage.
-          
+
     Note:
         Have a strong reason to override file_system related methods or read
         write exists based file methods to be overriden in child class of
@@ -488,7 +488,7 @@ class DfFile(Folder):
         # we know that the DfFile folder will have unmanageable content
         # managed by pyarrow
         return None
-    
+
     @property
     def file_system(self) -> t.Union[
         pafs.FileSystem,
@@ -526,11 +526,10 @@ class DfFile(Folder):
         # decorator we still infer schema on first write and store it in
         # *.config file ... Here if it is available from previous writes on
         # disk we can fetch it
-        with self.config() as _c:
-            _s = _c.schema
-            if _s is not None:
-                _s = _s.get()
-            _schema_present = _s is not None
+        _s = self.config.schema
+        if _s is not None:
+            _s = _s.get()
+        _schema_present = _s is not None
         if _schema_present:
             self.internal.update_from_table_or_config(table=None)
 
@@ -546,10 +545,10 @@ class DfFile(Folder):
         easily avoid using already fetched tables by casting them using
         bool(...) ... Note that is is not possible to use filters without
         actually reading data.
-        
+
         While filters are not provide and if something present we return True
         and not the Table.
-        
+
         When filters=None we will get simple exists check ... i.e. True or
         False will be returned and no data on the disk will be read ;)
         """
@@ -804,7 +803,7 @@ class DfFile(Folder):
         # return True ... anyways when it reaches till here
         # _is_something_deleted will be True
         return _is_something_deleted
-        
+
     def read(
         self,
         columns: t.List[str],
@@ -821,7 +820,7 @@ class DfFile(Folder):
             partitioning=_partitioning,
             table_schema=_schema
         )
-        
+
         # extra check
         if len(_table) == 0:
             e.code.ShouldNeverHappen(
@@ -834,7 +833,7 @@ class DfFile(Folder):
                     f"Check path {self.path}"
                 ]
             )
-        
+
         # return
         return _table
 
@@ -845,7 +844,7 @@ class DfFile(Folder):
     ) -> bool:
         # is value a generator type
         _is_generator_type = isinstance(value, types.GeneratorType)
-        
+
         # check if yields value should be generator
         if yields:
             if not _is_generator_type:
@@ -863,7 +862,7 @@ class DfFile(Folder):
                         f"We expect you to return"
                     ]
                 )
-            
+
         # check if partition columns exist in table that is to be
         # written to disk
         # todo: this check is inefficient especially for append writes
@@ -879,7 +878,7 @@ class DfFile(Folder):
         #                     f"`{pc}` in the returned/yielded pyarrow table."
         #                 ]
         #             )
-        
+
         # if not generator make it iterator so that looping happens once
         if not _is_generator_type:
             # todo: Is this efficient ???
@@ -916,7 +915,7 @@ class DfFile(Folder):
         # now write remaining
         for _table in _iterator:
             _write_table(self, _table, _partitioning)
-    
+
         # we do not return what we just wrote
         # for append and write we return True to avoid huge reads ....
         # just use read Mode to get the values

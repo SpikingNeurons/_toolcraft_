@@ -67,22 +67,21 @@ class StorageHashableConfig(state.Config):
 
     # noinspection DuplicatedCode
     def append_last_accessed_on(self):
-        with self():
-            # this can never happen
-            if len(self.accessed_on) > \
-                    self.LITERAL.accessed_on_list_limit:
-                e.code.CodingError(
-                    msgs=[
-                        f"This should never happens ... did you try to append "
-                        f"last_accessed_on list multiple times"
-                    ]
-                )
-            # limit the list
-            if len(self.accessed_on) == \
-                    self.LITERAL.accessed_on_list_limit:
-                self.accessed_on = self.accessed_on[1:]
-            # append time
-            self.accessed_on.append(datetime.datetime.now())
+        # this can never happen
+        if len(self.accessed_on) > \
+                self.LITERAL.accessed_on_list_limit:
+            e.code.CodingError(
+                msgs=[
+                    f"This should never happens ... did you try to append "
+                    f"last_accessed_on list multiple times"
+                ]
+            )
+        # limit the list
+        if len(self.accessed_on) == \
+                self.LITERAL.accessed_on_list_limit:
+            self.accessed_on = self.accessed_on[1:]
+        # append time
+        self.accessed_on.append(datetime.datetime.now())
 
 
 class StorageHashableInternal(m.Internal):
@@ -588,21 +587,8 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # dict ... let us make this instance useless as files are deleted
         # hence we want to make sure any other references will fail to use
         # this instance ...
-        # todo: for cached properties we do not need to do this as it is
-        #  highly unlikely that we will use them as standalone variables ...
-        #  mostly we will end up using them as local variables ... so as a
-        #  workaround we can provide a flag to indicate if we will call
-        #  make_me_useless method on it or not ... DO IT ON NEED TO USE BASIS
-        self.make_me_useless(
-            make_me_useless_msg=[
-                f"The files/folders for StorageHashable `{self.name}` are "
-                f"deleted and it is also removed from items dict of "
-                f"parent_folder.",
-                f"So any other references to this instance will not work as "
-                f"the instance is meaningless.",
-                f"The only solution is to stop using them or del them in python"
-            ]
-        )
+        # To achieve this we just clear out the internal __dict__
+        self.__dict__.clear()
 
 
 @dataclasses.dataclass(frozen=True)

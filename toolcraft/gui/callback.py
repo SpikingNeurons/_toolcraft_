@@ -7,6 +7,7 @@ import typing as t
 from .. import util
 from .. import marshalling as m
 from .. import storage as s
+from .. import gui
 from .. import error as e
 from . import Widget, Callback, widget
 
@@ -69,7 +70,6 @@ class HashableMethodRunnerCallback(Callback):
     hashable: m.HashableClass
     callable_name: str
     receiver: Widget
-    callable_kwargs: m.FrozenDict = None
 
     def init_validate(self):
         # call super
@@ -84,15 +84,44 @@ class HashableMethodRunnerCallback(Callback):
             )
 
     def fn(self):
-        _callable_kwargs = \
-            {} if self.callable_kwargs is None else self.callable_kwargs.get()
 
-        _result = getattr(
-            self.hashable, self.callable_name
-        )(**_callable_kwargs)
+        # get some vars
+        # as the unique widget will be collapsing header
+        _h = self.hashable
+        _unique_guid = self.hashable.hex_hash + "_ch"
+        _sender = self.sender
 
-        self.receiver.add_child(
-            # note that this does not take into account `self.callable_kwargs`
-            guid=self.callable_name,
-            widget=_result
-        )
+        # if not added add
+        if _unique_guid not in self.receiver.children.keys():
+
+            # make collapsing header
+            _collapsing_header = gui.CollapsingHeader(
+                label=self.hashable.group_by_name,
+                closable=False,
+                default_open=True,
+            )
+
+            # add child to receiver
+            self.receiver.add_child(
+                guid=_unique_guid,
+                widget=_collapsing_header
+            )
+
+            # make close button and add it collapsing header
+            _close_button = gui.callback.CloseWidgetCallback.get_button_widget()
+            _collapsing_header.add_child(
+                guid="close_button", widget=_close_button
+            )
+
+            # # create plot
+            _plot = getattr(
+                self.hashable, self.callable_name
+            )()
+
+            # add plot to collapsing header
+            _collapsing_header.add_child(
+                guid="plot", widget=_plot, before=_close_button
+            )
+
+
+

@@ -170,7 +170,6 @@ class Plot(Widget):
     y3axis_invert: bool = False
     y3axis_lock_min: bool = False
     y3axis_lock_max: bool = False
-    parent: str = ''
     width: int = -1
     height: int = -1
     show_color_scale: bool = False
@@ -314,49 +313,49 @@ class Plot(Widget):
             item.plot(parent_plot=self)
 
     def get_plot_xlimits(self) -> t.Tuple[float, float]:
-        _ = dpg.get_plot_xlimits(plot=self.id)
+        _ = dpg.get_plot_xlimits(plot=self.name)
         return _[0], _[1]
 
     def get_plot_ylimits(self) -> t.Tuple[float, float]:
-        _ = dpg.get_plot_ylimits(plot=self.id)
+        _ = dpg.get_plot_ylimits(plot=self.name)
         return _[0], _[1]
 
     def set_plot_xlimits(self, xmin: float, xmax: float):
-        dpg.set_plot_xlimits(plot=self.id, xmin=xmin, xmax=xmax)
+        dpg.set_plot_xlimits(plot=self.name, xmin=xmin, xmax=xmax)
 
     def set_plot_ylimits(self, ymin: float, ymax: float):
-        dpg.set_plot_ylimits(plot=self.id, ymin=ymin, ymax=ymax)
+        dpg.set_plot_ylimits(plot=self.name, ymin=ymin, ymax=ymax)
 
     def set_plot_xlimits_auto(self):
-        dpg.set_plot_xlimits_auto(plot=self.id)
+        dpg.set_plot_xlimits_auto(plot=self.name)
 
     def set_plot_ylimits_auto(self):
-        dpg.set_plot_ylimits_auto(plot=self.id)
+        dpg.set_plot_ylimits_auto(plot=self.name)
 
     def set_xticks(self, label_pairs: t.List[t.Tuple[str, float]]):
-        dpg.set_xticks(plot=self.id, label_pairs=label_pairs)
+        dpg.set_xticks(plot=self.name, label_pairs=label_pairs)
 
     def set_yticks(self, label_pairs: t.List[t.Tuple[str, float]]):
-        dpg.set_yticks(plot=self.id, label_pairs=label_pairs)
+        dpg.set_yticks(plot=self.name, label_pairs=label_pairs)
 
     def reset_xticks(self):
-        dpg.reset_xticks(plot=self.id)
+        dpg.reset_xticks(plot=self.name)
 
     def reset_yticks(self):
-        dpg.reset_yticks(plot=self.id)
+        dpg.reset_yticks(plot=self.name)
 
     def clear(self):
-        dpg.clear_plot(plot=self.id)
+        dpg.clear_plot(plot=self.name)
 
     def is_plot_queried(self) -> bool:
-        return dpg.is_plot_queried(plot=self.id)
+        return dpg.is_plot_queried(plot=self.name)
 
     def set_color_map(self, color_map: PlotColorMap):
-        dpg.set_color_map(plot=self.id, map=color_map.dpg_value)
+        dpg.set_color_map(plot=self.name, map=color_map.dpg_value)
 
     def get_plot_query_area(self) -> t.Tuple[float, float, float, float]:
         # noinspection PyTypeChecker
-        return dpg.get_plot_query_area(plot=self.id)
+        return dpg.get_plot_query_area(plot=self.name)
 
 
 @dataclasses.dataclass(frozen=True)

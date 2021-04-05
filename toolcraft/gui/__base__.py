@@ -173,6 +173,8 @@ class Widget(m.HashableClass, abc.ABC):
 
     @property
     def parent(self) -> "Widget":
+        if isinstance(self.internal.parent, str):
+            raise Exception(self.internal.parent)
         return self.internal.parent
 
     @property
@@ -483,6 +485,24 @@ class Widget(m.HashableClass, abc.ABC):
                 msgs=[
                     f"Note that you are not allowed to add Dashboard as child "
                     f"to any Widget"
+                ]
+            )
+
+        # -------------------------------------------------- 02
+        # if widget is already built then raise error
+        if widget.is_built:
+            e.code.NotAllowed(
+                msgs=[
+                    f"The widget is already built with:",
+                    {
+                        'parent': widget.parent.name,
+                        'guid': widget.guid
+                    },
+                    f"You are now attempting to build it again with",
+                    {
+                        'parent': self.name,
+                        'guid': guid
+                    }
                 ]
             )
 

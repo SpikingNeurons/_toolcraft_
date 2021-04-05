@@ -4,7 +4,6 @@ import dearpygui.core as dpg
 import typing as t
 
 from ... import error as e
-from ... import util
 from .. import Widget, Color, Dashboard, Callback
 
 
@@ -260,21 +259,16 @@ class Window(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build_pre_runner(
-        self,
-        guid: str,
-        parent: "Widget",
-        before: t.Optional["Widget"] = None,
-    ):
+    def build_pre_runner(self):
 
-        if before is not None:
+        if self.internal.before is not None:
             e.code.NotAllowed(
                 msgs=[
                     f"Widget {self.__class__} does not support before kwarg ..."
                 ]
             )
 
-        if not isinstance(parent, Dashboard):
+        if not isinstance(self.internal.parent, Dashboard):
             e.code.NotAllowed(
                 msgs=[
                     F"Window widget can be a child only to a Dashboard",
@@ -282,12 +276,12 @@ class Window(Widget):
                 ]
             )
 
-        super().build_pre_runner(guid=guid, parent=parent, before=before)
+        super().build_pre_runner()
 
     def build(self):
 
         dpg.add_window(
-            name=self.id,
+            name=self.name,
             width=self.width,
             height=self.height,
             x_pos=self.x_pos,
@@ -423,7 +417,7 @@ class ManagedColumn(Widget):
         if self.widths is not None:
             for i in range(self.columns):
                 dpg.set_managed_column_width(
-                    item=self.id, column=i, width=self.widths[i]
+                    item=self.name, column=i, width=self.widths[i]
                 )
 
 

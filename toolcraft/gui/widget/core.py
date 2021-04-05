@@ -116,7 +116,6 @@ class Tab(Widget):
         return True
 
     def build(self):
-        print("LLLLLLLLLLLLLLLLLL", self.internal.dpg_kwargs)
         # add_button
         dpg.add_tab(
             **self.internal.dpg_kwargs,

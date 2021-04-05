@@ -63,8 +63,9 @@ def check_things_to_be_cached(
     to_check: dict = None
 ):
     _THINGS_TO_BE_CACHED = {
+        Tracker: ['internal', ],
         HashableClass: [
-            'hex_hash', 'internal', 'store_fields_folder'
+            'hex_hash', 'store_fields_folder'
         ],
         StorageHashable: [
             'config',

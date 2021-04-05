@@ -8,7 +8,7 @@ import numpy as np
 from ... import error as e
 from ... import util
 from ... import marshalling as m
-from ..__base__ import Color, Widget
+from .. import Color, Widget, Callback
 
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 PLOT_LABEL_TYPE = t.Union[t.List[str], np.ndarray]
@@ -99,21 +99,19 @@ class _SimplePlot(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self, before: str = ""):
+    def build(self):
         # there is nothing to do here as it will happen when you call plot()
         ...
 
     def plot(self, value: PLOT_DATA_TYPE, before: str = ""):
         dpg.add_simple_plot(
-            name=self.id,
-            parent=self.parent_id,
+            **self.internal.dpg_kwargs,
             value=value,
             overlay=self.overlay,
             minscale=self.minscale,
             maxscale=self.maxscale,
             histogram=self.histogram,
             tip=self.tip,
-            before=before,
             width=self.width,
             height=self.height,
             source=self.source,
@@ -128,8 +126,6 @@ class Plot(Widget):
     Refer to
     >>> dpg.add_plot
     """
-
-    # the defaults supported by dearpygui
     label: str = ''
     x_axis_name: str = ''
     y_axis_name: str = ''
@@ -174,13 +170,8 @@ class Plot(Widget):
     y3axis_invert: bool = False
     y3axis_lock_min: bool = False
     y3axis_lock_max: bool = False
-    # Parent to add this item to. (runtime adding)
-    parent: str = ''
     width: int = -1
     height: int = -1
-    # Callback ran when plot is queried. Should be of the form
-    # 'def Callback(sender, data)'
-    # Data is (x_min, x_max, y_min, y_max).
     show_color_scale: bool = False
     scale_min: float = 0.0
     scale_max: float = 1.0
@@ -189,28 +180,75 @@ class Plot(Widget):
     show_annotations: bool = True
     show_drag_lines: bool = True
     show_drag_points: bool = True
+    # Callback ran when plot is queried. Should be of the form
+    # 'def Callback(sender, data)'
+    # Data is (x_min, x_max, y_min, y_max).
+    query_callback: Callback = None
 
     @property
     def is_container(self) -> bool:
         return False
 
-    def plot(self, plot_type: "PlotType"):
-        plot_type.plot(parent_id=self.id)
+    @property
+    @util.CacheResult
+    def items(self) -> t.Dict[str, "PlotItem"]:
+        return {}
 
-    def build(self, before: str = ""):
-        # ------------------------------------------------ 01
-        # resolve if query callback overridden
-        if self.__class__.query_callback != Plot.query_callback:
-            _query_callback = self.query_callback
-        else:
-            _query_callback = None
+    def delete_items(self, items: t.Union[str, t.List[str]]):
+        """
+        Here we delete PlotItem in items
+        """
+        # make it list if needed
+        if not isinstance(items, list):
+            items = [items]
 
-        # ------------------------------------------------ 02
+        # loop over items
+        for item in items:
+            self.items[item].delete()
+
+    def add_items(self, items: t.Union["PlotItem", t.List["PlotItem"]]):
+        # make it list if needed
+        if not isinstance(items, list):
+            items = [items]
+
+        # loop over items
+        for item in items:
+
+            # todo: Who should be sender widget of callbacks in PlotType?
+            #   Note that PlotType are not Widget so we cannot have them as
+            #   sender as they do not inherit `Widget.id` mechanism
+            # todo: We might need to do immutable copy for this callback similar
+            #  to Widget class
+            # todo: may be this needs to go in build_pre_runner or build
+            if isinstance(item, (DragLine, DragPoint)):
+                if item.callback is not None:
+                    e.code.NotSupported(
+                        msgs=[
+                            f"We are yet to figure this out. That is how to "
+                            f"handle Callback in PlotType which is not a Widget"
+                        ]
+                    )
+                    item.callback.set_sender(sender=self)
+
+            # if item not in items add it else raise error
+            if item.label in self.items.keys():
+                e.code.NotAllowed(
+                    msgs=[
+                        f"Looks like you have already added item with "
+                        f"label {item.label}"
+                    ]
+                )
+            else:
+                self.items[item.label] = item
+
+            # if the self is already built then we need to plot this item
+            if self.is_built:
+                item.plot(parent_plot=self)
+
+    def build(self):
         # call add plot
         dpg.add_plot(
-            name=self.id,
-            parent=self.parent_id,
-            before=before,
+            **self.internal.dpg_kwargs,
             x_axis_name=self.x_axis_name,
             y_axis_name=self.y_axis_name,
             no_legend=self.no_legend,
@@ -265,85 +303,101 @@ class Plot(Widget):
             show_annotations=self.show_annotations,
             show_drag_lines=self.show_drag_lines,
             show_drag_points=self.show_drag_points,
-            query_callback=_query_callback
+            query_callback=None if self.query_callback is None else
+            self.query_callback.fn
         )
 
-    # noinspection PyMethodMayBeStatic
-    def query_callback(self, sender, data):
-        e.code.CodingError(
-            msgs=[
-                f"Please override this method by subclassing the {Plot}, "
-                f"in case you want to use query_callback"
-            ]
-        )
+        # if there are items plot them as we will not do that during
+        # add_items if the self is not built
+        for item in self.items.values():
+            item.plot(parent_plot=self)
 
     def get_plot_xlimits(self) -> t.Tuple[float, float]:
-        _ = dpg.get_plot_xlimits(plot=self.id)
+        _ = dpg.get_plot_xlimits(plot=self.name)
         return _[0], _[1]
 
     def get_plot_ylimits(self) -> t.Tuple[float, float]:
-        _ = dpg.get_plot_ylimits(plot=self.id)
+        _ = dpg.get_plot_ylimits(plot=self.name)
         return _[0], _[1]
 
     def set_plot_xlimits(self, xmin: float, xmax: float):
-        dpg.set_plot_xlimits(plot=self.id, xmin=xmin, xmax=xmax)
+        dpg.set_plot_xlimits(plot=self.name, xmin=xmin, xmax=xmax)
 
     def set_plot_ylimits(self, ymin: float, ymax: float):
-        dpg.set_plot_ylimits(plot=self.id, ymin=ymin, ymax=ymax)
+        dpg.set_plot_ylimits(plot=self.name, ymin=ymin, ymax=ymax)
 
     def set_plot_xlimits_auto(self):
-        dpg.set_plot_xlimits_auto(plot=self.id)
+        dpg.set_plot_xlimits_auto(plot=self.name)
 
     def set_plot_ylimits_auto(self):
-        dpg.set_plot_ylimits_auto(plot=self.id)
+        dpg.set_plot_ylimits_auto(plot=self.name)
 
     def set_xticks(self, label_pairs: t.List[t.Tuple[str, float]]):
-        dpg.set_xticks(plot=self.id, label_pairs=label_pairs)
+        dpg.set_xticks(plot=self.name, label_pairs=label_pairs)
 
     def set_yticks(self, label_pairs: t.List[t.Tuple[str, float]]):
-        dpg.set_yticks(plot=self.id, label_pairs=label_pairs)
+        dpg.set_yticks(plot=self.name, label_pairs=label_pairs)
 
     def reset_xticks(self):
-        dpg.reset_xticks(plot=self.id)
+        dpg.reset_xticks(plot=self.name)
 
     def reset_yticks(self):
-        dpg.reset_yticks(plot=self.id)
+        dpg.reset_yticks(plot=self.name)
 
     def clear(self):
-        dpg.clear_plot(plot=self.id)
+        dpg.clear_plot(plot=self.name)
 
     def is_plot_queried(self) -> bool:
-        return dpg.is_plot_queried(plot=self.id)
+        return dpg.is_plot_queried(plot=self.name)
 
     def set_color_map(self, color_map: PlotColorMap):
-        dpg.set_color_map(plot=self.id, map=color_map.dpg_value)
+        dpg.set_color_map(plot=self.name, map=color_map.dpg_value)
 
     def get_plot_query_area(self) -> t.Tuple[float, float, float, float]:
         # noinspection PyTypeChecker
-        return dpg.get_plot_query_area(plot=self.id)
+        return dpg.get_plot_query_area(plot=self.name)
 
 
 @dataclasses.dataclass(frozen=True)
-class PlotType(abc.ABC):
+class PlotItem(abc.ABC):
     """
     Note that this is not a Widget nor a m.HashableClass as this will reprent
     data that we will plot and there is no need to serialize it.
     todo: Need to implement delete for all Series. Check below method:
     >>> dpg.delete_series
     """
+    # This basically behaves like guid but we keep it as label so that users
+    # can even add spaces or special characters inside label
+    # Note that unlike guid they will be displayed in plot.
+    # Also may be we can directly get latex expressions here :)
+    # So guid for PlotItem is not sensible
     label: str
 
-    @abc.abstractmethod
-    def plot(self, parent_id: str):
+    def __post_init__(self):
+        """
+        We do it here as we cannot use HashableClass here as the fields can
+        have complex data that might not be possible to serialize as yaml
+        """
+        self.init_validate()
+        self.init()
+
+    def init_validate(self):
         ...
 
-    def delete(self, children_only: bool = False):
+    def init(self):
+        ...
+
+    @abc.abstractmethod
+    def plot(self, parent_plot: Plot):
+        ...
+
+    def delete(self):
         e.code.NotSupported(
             msgs=[f"please implement delete for {self.__class__}"])
 
 
 @dataclasses.dataclass(frozen=True)
-class Annotation(PlotType):
+class Annotation(PlotItem):
     """
     Refer to
     >>> dpg.add_annotation
@@ -356,9 +410,9 @@ class Annotation(PlotType):
     color: Color = Color.DEFAULT
     clamped: bool = True
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_annotation(
-            plot=parent_id,
+            plot=parent_plot.name,
             text=self.text,
             x=self.x,
             y=self.y,
@@ -372,7 +426,7 @@ class Annotation(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class AreaSeries(PlotType):
+class AreaSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_area_series
@@ -386,9 +440,9 @@ class AreaSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_area_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -401,7 +455,7 @@ class AreaSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class BarSeries(PlotType):
+class BarSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_bar_series
@@ -414,9 +468,9 @@ class BarSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_bar_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -428,7 +482,7 @@ class BarSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class CandleSeries(PlotType):
+class CandleSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_candle_series
@@ -446,9 +500,9 @@ class CandleSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_candle_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             date=self.date,
             opens=self.opens,
@@ -465,7 +519,7 @@ class CandleSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class DragLine(PlotType):
+class DragLine(PlotItem):
     """
     Refer to
     >>> dpg.add_drag_line
@@ -476,16 +530,13 @@ class DragLine(PlotType):
     y_line: bool = False
     show_label: bool = True
     default_value: float = 0.0
+    callback: Callback = None
 
-    def plot(self, parent_id: str):
-        # if overridden get the callback
-        _callback = None
-        if DragLine.callback != self.__class__.callback:
-            _callback = self.callback
+    def plot(self, parent_plot: Plot):
 
         # add
         dpg.add_drag_line(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             source=self.source,
             color=self.color.dpg_value,
@@ -493,26 +544,18 @@ class DragLine(PlotType):
             y_line=self.y_line,
             show_label=self.show_label,
             default_value=self.default_value,
-            callback=_callback,
+            callback=None if self.callback is None else self.callback.fn,
         )
 
-    def delete(self, children_only: bool = False):
+    def delete(self):
         e.code.NotSupported(msgs=["figure it out"])
         dpg.delete_drag_line(
             plot=..., name=self.label
         )
 
-    # noinspection PyMethodMayBeStatic
-    def callback(self, sender, data):
-        e.code.NotAllowed(
-            msgs=[
-                f"In case you want to use callback override this method"
-            ]
-        )
-
 
 @dataclasses.dataclass(frozen=True)
-class DragPoint(PlotType):
+class DragPoint(PlotItem):
     """
     Refer to
     >>> dpg.add_drag_point
@@ -523,16 +566,13 @@ class DragPoint(PlotType):
     show_label: bool = True
     default_x: float = 0.0
     default_y: float = 0.0
+    callback: Callback = None
 
-    def plot(self, parent_id: str):
-        # if overridden get the callback
-        _callback = None
-        if DragLine.callback != self.__class__.callback:
-            _callback = self.callback
+    def plot(self, parent_plot: Plot):
 
         # add
         dpg.add_drag_point(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             source=self.source,
             color=self.color.dpg_value,
@@ -540,26 +580,18 @@ class DragPoint(PlotType):
             show_label=self.show_label,
             default_x=self.default_x,
             default_y=self.default_y,
-            callback=_callback,
+            callback=None if self.callback is None else self.callback.fn,
         )
 
-    def delete(self, children_only: bool = False):
+    def delete(self):
         e.code.NotSupported(msgs=["figure it out"])
         dpg.delete_drag_point(
             plot=..., name=self.label
         )
 
-    # noinspection PyMethodMayBeStatic
-    def callback(self, sender, data):
-        e.code.NotAllowed(
-            msgs=[
-                f"In case you want to use callback override this method"
-            ]
-        )
-
 
 @dataclasses.dataclass(frozen=True)
-class ErrorSeries(PlotType):
+class ErrorSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_error_series
@@ -574,9 +606,9 @@ class ErrorSeries(PlotType):
     color: Color = Color.DEFAULT
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_error_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -590,7 +622,7 @@ class ErrorSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class HeatSeries(PlotType):
+class HeatSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_heat_series
@@ -607,10 +639,10 @@ class HeatSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         # noinspection PyTypeChecker
         dpg.add_heat_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             values=self.values,
             rows=self.rows,
@@ -626,7 +658,7 @@ class HeatSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class HorizLineSeries(PlotType):
+class HorizLineSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_hline_series
@@ -637,9 +669,9 @@ class HorizLineSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_hline_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             color=self.color.dpg_value,
@@ -650,7 +682,7 @@ class HorizLineSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class ImageSeries(PlotType):
+class ImageSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_image_series
@@ -669,9 +701,9 @@ class ImageSeries(PlotType):
     axis: int = 0
 
     # noinspection PyTypeChecker
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_image_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             value=self.value,
             bounds_min=self.bounds_min,
@@ -684,7 +716,7 @@ class ImageSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class LineSeries(PlotType):
+class LineSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_line_series
@@ -697,9 +729,9 @@ class LineSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_line_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -775,7 +807,7 @@ class LineSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class PieSeries(PlotType):
+class PieSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_pie_series
@@ -792,9 +824,9 @@ class PieSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_pie_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             values=self.values,
             labels=self.labels,
@@ -810,7 +842,7 @@ class PieSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class ScatterSeries(PlotType):
+class ScatterSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_scatter_series
@@ -828,9 +860,9 @@ class ScatterSeries(PlotType):
     xy_data_format: bool = False
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_scatter_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -917,7 +949,7 @@ class ScatterSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class ShadeSeries(PlotType):
+class ShadeSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_shade_series
@@ -932,9 +964,9 @@ class ShadeSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_shade_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y1=self.y1,
@@ -948,7 +980,7 @@ class ShadeSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class StairSeries(PlotType):
+class StairSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_stair_series
@@ -961,9 +993,9 @@ class StairSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_stair_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -975,7 +1007,7 @@ class StairSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class StemSeries(PlotType):
+class StemSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_stem_series
@@ -991,9 +1023,9 @@ class StemSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_stem_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -1008,7 +1040,7 @@ class StemSeries(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class TextPoint(PlotType):
+class TextPoint(PlotItem):
     """
     Refer to
     >>> dpg.add_text_point
@@ -1022,9 +1054,9 @@ class TextPoint(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_text_point(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             y=self.y,
@@ -1036,7 +1068,7 @@ class TextPoint(PlotType):
 
 
 @dataclasses.dataclass(frozen=True)
-class VertLineSeries(PlotType):
+class VertLineSeries(PlotItem):
     """
     Refer to
     >>> dpg.add_vline_series
@@ -1047,9 +1079,9 @@ class VertLineSeries(PlotType):
     update_bounds: bool = True
     axis: int = 0
 
-    def plot(self, parent_id: str):
+    def plot(self, parent_plot: Plot):
         dpg.add_vline_series(
-            plot=parent_id,
+            plot=parent_plot.name,
             name=self.label,
             x=self.x,
             color=self.color.dpg_value,

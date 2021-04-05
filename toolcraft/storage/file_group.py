@@ -112,20 +112,19 @@ class FileGroupConfig(StorageHashableConfig):
 
     # noinspection DuplicatedCode
     def append_checked_on(self):
-        with self():
-            # this can never happen
-            if len(self.checked_on) > self.LITERAL.checked_on_list_limit:
-                e.code.CodingError(
-                    msgs=[
-                        f"This should never happens ... did you try to append "
-                        f"checked_on list multiple times"
-                    ]
-                )
-            # limit the list
-            if len(self.checked_on) == self.LITERAL.checked_on_list_limit:
-                self.checked_on = self.checked_on[1:]
-            # append time
-            self.checked_on.append(datetime.datetime.now())
+        # this can never happen
+        if len(self.checked_on) > self.LITERAL.checked_on_list_limit:
+            e.code.CodingError(
+                msgs=[
+                    f"This should never happens ... did you try to append "
+                    f"checked_on list multiple times"
+                ]
+            )
+        # limit the list
+        if len(self.checked_on) == self.LITERAL.checked_on_list_limit:
+            self.checked_on = self.checked_on[1:]
+        # append time
+        self.checked_on.append(datetime.datetime.now())
 
 
 @dataclasses.dataclass(frozen=True)
@@ -289,8 +288,7 @@ class FileGroup(StorageHashable, abc.ABC):
             )
 
         # return
-        with self.config() as _c:
-            return _c.periodic_check_needed
+        return self.config.periodic_check_needed
 
     @property
     def is_outdated(self) -> bool:
@@ -329,17 +327,16 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
 
-            with self.config() as _c:
-                # check if auto_hashes present
-                if _c.auto_hashes is None:
-                    e.code.CodingError(
-                        msgs=[
-                            f"We expect that auto_hashes will be set by now"
-                        ]
-                    )
+            # check if auto_hashes present
+            if self.config.auto_hashes is None:
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect that auto_hashes will be set by now"
+                    ]
+                )
 
-                # return
-                return _c.auto_hashes.get()
+            # return
+            return self.config.auto_hashes.get()
 
         # if not auto hash then raise error to inform to override this method
         else:
@@ -880,19 +877,18 @@ class FileGroup(StorageHashable, abc.ABC):
         # Note we call super before this so that config is created with sync
         # method then we perform updates to auto hash dict
         if self.is_auto_hash:
-            with self.config() as _c:
-                if _c.auto_hashes is not None:
-                    e.code.CodingError(
-                        msgs=[
-                            f"We just generated files so we do not expect auto "
-                            f"hashes to be present in the config"
-                        ]
-                    )
-                _auto_hashes = {}
-                for k in self.file_keys:
-                    _fg = self.path_from_file_key(k)
-                    _auto_hashes[k] = util.compute_hashes(_fg)
-                _c.auto_hashes = HashesDict(_auto_hashes)
+            if self.config.auto_hashes is not None:
+                e.code.CodingError(
+                    msgs=[
+                        f"We just generated files so we do not expect auto "
+                        f"hashes to be present in the config"
+                    ]
+                )
+            _auto_hashes = {}
+            for k in self.file_keys:
+                _fg = self.path_from_file_key(k)
+                _auto_hashes[k] = util.compute_hashes(_fg)
+            self.config.auto_hashes = HashesDict(_auto_hashes)
 
         # ----------------------------------------------------------------06
         # return
@@ -1498,7 +1494,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         }
 
     def __call__(
-        self,
+        self, *,
         shuffle_seed: SHUFFLE_SEED_TYPE,
     ) -> "NpyFileGroup":
         # call super

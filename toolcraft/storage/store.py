@@ -432,10 +432,11 @@ class StoreField:
                 for_hashable=_item, parent_folder=_folder
             )
             # we need to update config for partition_cols and table_schema
-            with _df_file.config() as _c:
-                _c.schema = m.FrozenSchema(
-                    table_schema=self.table_schema,
-                )
+            _c = _df_file.config
+            _c.schema = m.FrozenSchema(
+                table_schema=self.table_schema,
+            )
+            if _c.partition_cols != self.partition_cols:
                 _c.partition_cols = self.partition_cols
             # track using _folder
             _folder.add_item(hashable=_df_file)

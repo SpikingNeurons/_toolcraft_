@@ -29,10 +29,6 @@ _LOGGER = logger.get_logger()
 ALL_TRACKERS = None  # type: t.List[t.Type[YamlRepr]]
 YAML_TAG_MAPPING = {}
 
-LITERAL_CLASS_NAME = "LITERAL"
-BACKUP_YAML = '__backup_yaml__'
-ALLOW_ACCESS = '__allow_access__'
-
 
 # use this as default value for kwargs in HashableClass.__call__ to indicate
 # that kwarg was not provided
@@ -63,8 +59,12 @@ class Internal:
       As Hashable dataclass is Frozen we need to have some way of storing
       variables that can be updated and not part of serialization process
     """
+
     # we set this in __call__ so that with context has access to kwargs
     # passes in __call__ method
+    # todo: make this a class so that strings are not used to get members. We
+    #  know that typing support is difficult to achieve. But we can override
+    #  __getitem__ to throw custom error indicating on call kwargs have changed
     on_call_kwargs: t.Union[t.Dict[str, t.Any]] = None
 
     class LITERAL:
@@ -73,10 +73,6 @@ class Internal:
     @property
     def owner(self) -> "Tracker":
         return self.__owner__
-
-    # noinspection PyMethodMayBeStatic
-    def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return ['on_call_kwargs']
 
     @property
     @util.CacheResult
@@ -169,6 +165,10 @@ class Internal:
         # return
         return super().__getattribute__(item)
 
+    # noinspection PyMethodMayBeStatic
+    def vars_that_can_be_overwritten(self) -> t.List[str]:
+        return ['on_call_kwargs', "make_me_useless"]
+
     def has(self, item: str) -> bool:
         if item not in self.__variable_names__:
             e.code.CodingError(
@@ -188,15 +188,10 @@ class Tracker:
     todo: for on_enter on_exit on_call we need to explore use of contextlib
       + https://docs.python.org/3/library/contextlib.html#contextlib.ContextDecorator
       + this library is builtin and hence justifies usage for same
-      + it also as async context support so check it out
+      + it also has async context support so check it out
     """
 
     class LITERAL(metaclass=_ReadOnlyClass):
-
-        # this flag will be added with message about why this class can no
-        # longer be accessed ... once this is set the getattribute will throw
-        # errors when someone tries to use this instance
-        MAKE_ME_USELESS = "__MAKE_ME_USELESS__"
 
         def __new__(cls, *args, **kwargs):
             e.code.NotAllowed(
@@ -220,26 +215,11 @@ class Tracker:
         """
         return self.internal.on_call_kwargs is not None
 
-    def __getattribute__(self, item):
-
-        # bypass all dunder method accesses
-        if item.startswith("__"):
-            return super().__getattribute__(item)
-
-        # if locked raise error
-        if hasattr(self, Tracker.LITERAL.MAKE_ME_USELESS):
-            _msgs = getattr(self, Tracker.LITERAL.MAKE_ME_USELESS)
-            e.code.CodingError(
-                msgs=[
-                    f"You no longer can use this instance as you have blocked "
-                    f"access by calling make_me_useless() method.",
-                    f"This feature helps us avoid memory leaks",
-                    *_msgs
-                ]
-            )
-        # else do regular calls
-        else:
-            return super().__getattribute__(item)
+    @property
+    @util.CacheResult
+    def dataclass_field_names(self) -> t.List[str]:
+        # noinspection PyUnresolvedReferences
+        return list(self.__dataclass_fields__.keys())
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -397,21 +377,6 @@ class Tracker:
         Alternative to avoid using dunder method __init_subclass__
         """
         ...
-
-    def make_me_useless(self, make_me_useless_msg: t.List[str]):
-        if not hasattr(self, Tracker.LITERAL.MAKE_ME_USELESS):
-            try:
-                setattr(
-                    self, Tracker.LITERAL.MAKE_ME_USELESS, make_me_useless_msg
-                )
-            except dataclasses.FrozenInstanceError:
-                # hack for modifying frozen dataclasses
-                self.__dict__[Tracker.LITERAL.MAKE_ME_USELESS] = \
-                    make_me_useless_msg
-        else:
-            e.code.ShouldNeverHappen(
-                msgs=["Not possible to have this attribute"]
-            )
 
     @classmethod
     def available_concrete_sub_classes(cls) -> t.List[
@@ -1175,14 +1140,12 @@ class HashableClass(YamlRepr, abc.ABC):
             _LOGGER.info(
                 msg=f"Init "
                     f"{self.__class__.__module__}."
-                    f"{self.__class__.__name__}:"
-                    f"{self.name}")
+                    f"{self.__class__.__name__}")
         else:
             _spinner.info(
                 msg=f"Init "
                     f"{self.__class__.__module__}."
-                    f"{self.__class__.__name__}:"
-                    f"{self.name}")
+                    f"{self.__class__.__name__}")
 
     def __str__(self) -> str:
         """
@@ -1247,8 +1210,8 @@ class HashableClass(YamlRepr, abc.ABC):
         self
     ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
-        for f in dataclasses.fields(self):
-            _ret[f.name] = getattr(self, f.name)
+        for f_name in self.dataclass_field_names:
+            _ret[f_name] = getattr(self, f_name)
         return _ret
 
     def init_validate(self):
@@ -1260,10 +1223,10 @@ class HashableClass(YamlRepr, abc.ABC):
 
         # --------------------------------------------------------------01
         # loop over field values to validate them
-        for f in dataclasses.fields(self):
+        for f_name in self.dataclass_field_names:
             # ----------------------------------------------------------01.01
             # get value for the field
-            v = getattr(self, f.name)
+            v = getattr(self, f_name)
             # ----------------------------------------------------------01.02
             # raise error to inform to use FrozenDict
             if isinstance(v, dict):
@@ -1279,7 +1242,7 @@ class HashableClass(YamlRepr, abc.ABC):
             elif isinstance(v, FrozenKeras.LITERAL.SUPPORTED_KERAS_OBJECTS):
                 e.validation.NotAllowed(
                     msgs=[
-                        f"Please set the field `{f.name}` where the `keras` "
+                        f"Please set the field `{f_name}` where the `keras` "
                         f"object is wrapped with `{FrozenKeras.__name__}` ... "
                         f"check class {self.__class__}"
                     ]
@@ -1289,7 +1252,7 @@ class HashableClass(YamlRepr, abc.ABC):
             elif isinstance(v, list):
                 self.can_be_frozen(
                     item=v,
-                    key_or_index=f"{self.name}.{f.name}::",
+                    key_or_index=f"{f_name}::",
                     allowed_nesting=True,
                     allowed_types=SUPPORTED_HASHABLE_OBJECTS,
                 )
@@ -1299,7 +1262,7 @@ class HashableClass(YamlRepr, abc.ABC):
                 e.validation.ShouldBeInstanceOf(
                     value=v, value_types=SUPPORTED_HASHABLE_OBJECTS,
                     msgs=[
-                        f"Check value of field `{f.name}` for class "
+                        f"Check value of field `{f_name}` for class "
                         f"{self.__class__}"
                     ]
                 )

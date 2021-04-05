@@ -191,9 +191,9 @@ class ButtonPlot(gui.CollapsingHeader):
 
     label: str = "Topic 3 - Button with threaded action"
 
-    button_window: gui.ChildWindow = gui.ChildWindow()
+    button_window: gui.Child = gui.Child()
 
-    display_window: gui.ChildWindow = gui.ChildWindow()
+    display_window: gui.Child = gui.Child()
 
     def layout(self):
         _columns = gui.ManagedColumn(columns=2)
@@ -268,8 +268,8 @@ def demo():
 
 
 def main():
-    basic_dashboard()
-    # demo()
+    # basic_dashboard()
+    demo()
 
 
 if __name__ == '__main__':

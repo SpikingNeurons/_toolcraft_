@@ -94,17 +94,16 @@ class HashableMethodRunnerCallback(Callback):
         # if not added add
         if _unique_guid not in self.receiver.children.keys():
 
+            # # create plot
+            _plot = getattr(
+                self.hashable, self.callable_name
+            )()
+
             # make collapsing header
             _collapsing_header = gui.CollapsingHeader(
                 label=self.hashable.group_by_name,
                 closable=False,
                 default_open=True,
-            )
-
-            # add child to receiver
-            self.receiver.add_child(
-                guid=_unique_guid,
-                widget=_collapsing_header
             )
 
             # make close button and add it collapsing header
@@ -113,14 +112,25 @@ class HashableMethodRunnerCallback(Callback):
                 guid="close_button", widget=_close_button
             )
 
-            # # create plot
-            _plot = getattr(
-                self.hashable, self.callable_name
-            )()
+            # add separator
+            _collapsing_header.add_child(
+                guid='separator1', widget=gui.Separator()
+            )
 
             # add plot to collapsing header
             _collapsing_header.add_child(
-                guid="plot", widget=_plot, before=_close_button
+                guid="plot", widget=_plot
+            )
+
+            # add separator
+            _collapsing_header.add_child(
+                guid='separator2', widget=gui.Separator()
+            )
+
+            # add child to receiver
+            self.receiver.add_child(
+                guid=_unique_guid,
+                widget=_collapsing_header
             )
 
 

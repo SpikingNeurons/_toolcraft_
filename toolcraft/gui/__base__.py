@@ -558,9 +558,7 @@ class Widget(m.HashableClass, abc.ABC):
             title=f"PREVIEW: {self.__module__}:{self.__class__.__name__}",
         )
         _dash.build()
-        _dash.add_child(
-            name="child", widget=self,
-        )
+        _dash.add_child(guid="child", widget=self)
         _dash.run()
 
 

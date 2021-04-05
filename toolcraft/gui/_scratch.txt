@@ -1,25 +1,25 @@
 
 
-# Small button, useful for embedding in text.
-small: bool = False
+# creates a button on the tab that can hide the tab
+closable: bool = False
 
-# Arrow button, must use with direction
-arrow: bool = False
-
-# A cardinal direction
-direction: int = 0
-
-callback: Callback = None
-
-tip: str = ''
-
-width: int = 0
-
-height: int = 0
-
-# Overrides 'name' as label
 label: str = ''
 
 show: bool = True
 
-enabled: bool = True
+# Disable reordering this tab or having another tab cross over this tab
+no_reorder: bool = False
+
+
+# Enforce the tab position to the left of the tab bar
+# (after the tab list popup button)
+leading: bool = False
+
+# Enforce the tab position to the right of the tab bar
+# (before the scrolling buttons)
+trailing: bool = False
+
+# Disable tooltip for the given tab
+no_tooltip: bool = False
+
+tip: str = ''

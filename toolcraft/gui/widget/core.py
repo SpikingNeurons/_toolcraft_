@@ -8,6 +8,130 @@ from .. import Widget, Color, Dashboard, Callback
 
 
 @dataclasses.dataclass(frozen=True)
+class TabButton(Widget):
+    """
+    Refer to
+    >>> dpg.add_tab_button
+    """
+    label: str = ''
+
+    show: bool = True
+
+    # Disable reordering this tab or having another tab cross over this tab
+    no_reorder: bool = False
+
+    # Enforce the tab position to the left of the tab bar
+    # (after the tab list popup button)
+    leading: bool = False
+
+    # Enforce the tab position to the right of the tab bar
+    # (before the scrolling buttons)
+    trailing: bool = False
+
+    # Disable tooltip for the given tab
+    no_tooltip: bool = False
+
+    tip: str = ''
+
+    callback: Callback = None
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self):
+
+        # add_button
+        dpg.add_tab_button(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            show=self.show,
+            no_reorder=self.no_reorder,
+            leading=self.leading,
+            trailing=self.trailing,
+            no_tooltip=self.no_tooltip,
+            tip=self.tip,
+            callback=None if self.callback is None else self.callback.fn,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class TabBar(Widget):
+    """
+    Refer to
+    >>> dpg.add_tab_bar
+    """
+    # allows for moveable tabs
+    reorderable: bool = False
+    show: bool = True
+    callback: Callback = None
+
+    @property
+    def is_container(self) -> bool:
+        return True
+
+    def build(self):
+
+        # add_button
+        dpg.add_tab_bar(
+            **self.internal.dpg_kwargs,
+            reorderable=self.reorderable,
+            show=self.show,
+            callback=None if self.callback is None else self.callback.fn,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class Tab(Widget):
+    """
+    Refer to
+    >>> dpg.add_tab
+    """
+
+    # creates a button on the tab that can hide the tab
+    closable: bool = False
+
+    label: str = ''
+
+    show: bool = True
+
+    # Disable reordering this tab or having another tab cross over this tab
+    no_reorder: bool = False
+
+    # Enforce the tab position to the left of the tab bar
+    # (after the tab list popup button)
+    leading: bool = False
+
+    # Enforce the tab position to the right of the tab bar
+    # (before the scrolling buttons)
+    trailing: bool = False
+
+    # Disable tooltip for the given tab
+    no_tooltip: bool = False
+
+    tip: str = ''
+
+    @property
+    def is_container(self) -> bool:
+        return True
+
+    def build(self):
+        print("LLLLLLLLLLLLLLLLLL", self.internal.dpg_kwargs)
+        # add_button
+        dpg.add_tab(
+            **self.internal.dpg_kwargs,
+            closable=self.closable,
+            label=self.label,
+            show=self.show,
+            no_reorder=self.no_reorder,
+            leading=self.leading,
+            trailing=self.trailing,
+            no_tooltip=self.no_tooltip,
+            tip=self.tip,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
 class Button(Widget):
     """
     Refer to
@@ -140,7 +264,96 @@ class Combo(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class ChildWindow(Widget):
+class InSameLine(Widget):
+    """
+    Refer to
+    >>> dpg.add_same_line
+    """
+
+    # offset from containing window
+    xoffset: float = 0.0
+
+    # offset from previous widget
+    spacing: float = -1.0
+
+    show: bool = True
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self):
+        dpg.add_same_line(
+            **self.internal.dpg_kwargs,
+            xoffset=self.xoffset,
+            spacing=self.spacing,
+            show=self.show,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class Columns(Widget):
+    """
+    Refer to
+    >>> dpg.add_columns
+    """
+    columns: int
+    border: bool = True
+    show: bool = True
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self):
+        dpg.add_columns(
+            **self.internal.dpg_kwargs,
+            columns=self.columns,
+            border=self.border,
+            show=self.show,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class NextColumn(Widget):
+    """
+    Refer to
+    >>> dpg.add_next_column
+    """
+    show: bool = True
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self):
+        dpg.add_next_column(
+            **self.internal.dpg_kwargs,
+            show=self.show,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class Separator(Widget):
+    """
+    Refer to
+    >>> dpg.add_separator
+    """
+    tip: str = ''
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self):
+        dpg.add_separator(
+            **self.internal.dpg_kwargs,
+            tip=self.tip,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class Child(Widget):
     """
     Refer to
     >>> dpg.add_child

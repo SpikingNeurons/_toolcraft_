@@ -14,6 +14,7 @@ from .. import error as e
 from .. import logger
 from .. import util
 from .. import marshalling as m
+from . import assets
 
 if False:
     from . import Window
@@ -643,8 +644,22 @@ class Dashboard(Widget):
         # -------------------------------------------------- 02
         # set the things for primary window
         # dpgc.set_main_window_size(550, 550)
+        dpg.set_theme(theme="Dark Grey")
+        dpg.set_main_window_pos(x=0, y=0)
+        dpg.set_main_window_size(width=1370, height=740)
         # dpgc.set_main_window_resizable(False)
         dpg.set_main_window_title(self.title)
+
+        assets.Font.RobotoRegular.set(size=14)
+
+        # dpg.set_style_window_border_size(0.0)
+        # dpg.set_style_child_border_size(0.0)
+        # dpg.set_style_window_title_align(0.5, 0.5)
+        dpg.set_style_window_rounding(0.0)
+        dpg.set_style_frame_rounding(0.0)
+
+        # dpg.set_theme_item(dpg.mvGuiCol_TextDisabled, 143, 143, 143, 255)
+        # dpg.set_theme_item(dpg.mvGuiCol_Separator, 127, 127, 127, 255)
 
     def run(self):
 

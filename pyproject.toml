@@ -27,16 +27,17 @@ tqdm = "^4.59.0"
 PyYAML = "^5.4.1"
 dearpygui = "^0.6.281"
 yaspin = "^1.4.1"
-numpy = "^1.20.1"
+numpy = "^1.19.2"
 scikit-learn = "^0.24.1"
 pandas = "^1.2.3"
+pyarrow = "^3.0.0"
+tensorflow = "^2.4.1"
+
+[tool.poetry.dev-dependencies]
 nbformat = "^5.1.2"
 beautifulsoup4 = "^4.9.3"
 nbconvert = "^5.6.1"
 ipython = "^7.21.0"
-pyarrow = "^3.0.0"
-
-[tool.poetry.dev-dependencies]
 coverage = "*"
 flake8 = "*"
 invoke = "*"

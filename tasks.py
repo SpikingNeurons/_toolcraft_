@@ -162,6 +162,8 @@ def docs(c, launch=True, static=True):
     _o = DOCUSAURUS_DIR
     _run(c, f"python scripts\\parse_notebooks.py -i {_i.as_posix()} -o {_o.as_posix()}")
 
+    _run(c, f"cd .website && yarn install")
+
     if static:
         _run(c, f"cd .website && yarn run build")
     if launch:

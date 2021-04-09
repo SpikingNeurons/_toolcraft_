@@ -23,6 +23,7 @@ SPHINX_DIR = ROOT_DIR.joinpath(".sphinx")
 SPHINX_BUILD_DIR = SPHINX_DIR.joinpath(".build")
 DOCUSAURUS_DIR = ROOT_DIR.joinpath(".website")
 NOTEBOOKS_DIR = ROOT_DIR.joinpath(".notebooks")
+SCRIPTS_DIR = ROOT_DIR.joinpath("scripts")
 SPHINX_INDEX = SPHINX_BUILD_DIR.joinpath("index.html")
 PYTHON_DIRS = [str(d) for d in [SOURCE_DIR, TEST_DIR]]
 
@@ -138,7 +139,9 @@ def docs(c, launch=True, static=True):
     # parse sphinx
     _i = SPHINX_BUILD_DIR
     _o = DOCUSAURUS_DIR
-    _run(c, f"python scripts\\parse_sphinx.py -i {_i.as_posix()} -o {_o.as_posix()}")
+    _parse_sphinx = SCRIPTS_DIR / 'parse_sphinx.py'
+
+    _run(c, f"python {_parse_sphinx.as_posix()} -i {_i.as_posix()} -o {_o.as_posix()}")
 
     # copy sphinx js files to docusaurus js folder
     for _js in [
@@ -160,7 +163,8 @@ def docs(c, launch=True, static=True):
     # parse notebooks
     _i = NOTEBOOKS_DIR
     _o = DOCUSAURUS_DIR
-    _run(c, f"python scripts\\parse_notebooks.py -i {_i.as_posix()} -o {_o.as_posix()}")
+    _parse_nb = SCRIPTS_DIR / 'parse_notebooks.py'
+    _run(c, f"python {_parse_nb.as_posix()} -i {_i.as_posix()} -o {_o.as_posix()}")
 
     _run(c, f"cd .website && yarn install")
 

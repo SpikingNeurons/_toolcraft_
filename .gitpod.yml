@@ -3,4 +3,4 @@ image:
 
 tasks:
   - name: Remove User Pip
-    init: export PIP_USER=false
+    command: export PIP_USER=false

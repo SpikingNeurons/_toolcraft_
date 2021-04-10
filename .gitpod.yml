@@ -1,2 +1,6 @@
 image:
   file: .devcontainer/Dockerfile
+
+tasks:
+  - name: Remove User Pip
+    init: export PIP_USER=false

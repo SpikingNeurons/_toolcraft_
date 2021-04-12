@@ -138,7 +138,7 @@ class Internal:
                         f"Please refrain from overwriting it as it is "
                         f"configured to be written only once.",
                         f"In case you want to overwrite it then override "
-                        f"property `self.vars_that_can_be_overwritten` so "
+                        f"method `self.vars_that_can_be_overwritten` so "
                         f"that we allow you to overwrite it."
                     ]
                 )

@@ -431,6 +431,24 @@ class ParallelThreading:
     ...
 
 
+class Compare:
+    """
+    todo: Explore filecmp python module to compare files and folders
+    >>> import filecmp
+    """
+    ...
+
+
+class FileLock:
+    """
+    todo: Explore filelock to lock the files
+      https://stackoverflow.com/questions/489861/locking-a-file-in-python
+    >>> import filelock
+
+    """
+    ...
+
+
 class StringFmt:
     @classmethod
     def centered_text(

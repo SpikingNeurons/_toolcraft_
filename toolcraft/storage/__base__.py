@@ -157,7 +157,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             )
             raise
 
-        # Now if parent_folder is Folder simple return the path of
+        # Now if parent_folder is Folder simply return the path of
         # parent_folder as it is the root_dir for this StorageHashable
         if isinstance(self.parent_folder, Folder):
             return self.parent_folder.path
@@ -606,7 +606,7 @@ class Folder(StorageHashable):
         You might be thinking why not have have folder hex_hash as folder name.
         That sounds fine. But the name of folder using hashables name can in
         future let us use via external utilities to pick up folders only by
-        knowing hashable and the toot_dir must be provided only once.
+        knowing hashable and the root_dir must be provided only once.
         Also parent_folder is required only to get parent folder info we can
         get away just by knowing the path.
 
@@ -623,7 +623,7 @@ class Folder(StorageHashable):
     The contains property:
       Indicates what will stored in this Folder
 
-    When parent_folder is None override root_dit
+    When parent_folder is None override root_dir
       This behaviour is borrowed from super class and well suits the
       requirement for Folder class
 

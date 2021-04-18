@@ -25,9 +25,6 @@ from . import HashesDict, StorageHashable
 
 _LOGGER = logger.get_logger()
 
-# always keep it of length 1
-_SEPARATOR = "."
-
 SHUFFLE_SEED_TYPE = t.Union[
     t.Literal[
         'DETERMINISTIC_SHUFFLE',
@@ -253,15 +250,22 @@ class FileGroup(StorageHashable, abc.ABC):
     @property
     def unknown_files_on_disk(self) -> t.List[pathlib.Path]:
 
-        # if unknown files present throw error
+        # container for unknown files
         _unknown_files = []
-        _key_paths = [self.path_from_file_key(fk) for fk in self.file_keys]
-        for f in self.root_dir.iterdir():
-            # bypass known files
-            if f in _key_paths:
-                continue
-            # if belongs to the file group
-            if f.name.split(_SEPARATOR)[0] == self.name:
+
+        # look inside path dir if it exists
+        if self.path.exists():
+            # expect path to be a dir
+            if self.path.is_file():
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect path to be a dir for FileGroup"
+                    ]
+                )
+            # look inside path dir
+            for f in self.path.iterdir():
+                if f.name in self.file_keys and f.is_file():
+                    continue
                 _unknown_files.append(f)
 
         # return
@@ -305,8 +309,12 @@ class FileGroup(StorageHashable, abc.ABC):
     #     # dataclasses._is_classvar('aa', typing)
     #     ...
 
+    @property
+    def path(self) -> pathlib.Path:
+        return self.root_dir / self.name
+
     def path_from_file_key(self, file_key: str) -> pathlib.Path:
-        return self.root_dir / f"{self.name}{_SEPARATOR}{file_key}"
+        return self.path / file_key
 
     def get_hashes(self) -> t.Dict[str, str]:
         """
@@ -465,34 +473,6 @@ class FileGroup(StorageHashable, abc.ABC):
                     )
 
         # ---------------------------------------------------------- 04
-        # the name for file group should not have separator
-        if self.name.find(_SEPARATOR) != -1:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"self.name={self.name!r} token contains "
-                    f"separator {_SEPARATOR!r}"
-                ]
-            )
-
-        # ---------------------------------------------------------- 05
-        # check file_keys
-        for fk in self.file_keys:
-            e.validation.ShouldBeInstanceOf(
-                value=fk, value_types=(str,),
-                msgs=[
-                    f"Please check the `self.file_keys` property of class "
-                    f"{self.__class__}"
-                ]
-            )
-            if fk.find(_SEPARATOR) != -1:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"The file_key={fk!r} token contains separator "
-                        f"{_SEPARATOR!r}"
-                    ]
-                )
-
-        # ---------------------------------------------------------- 06
         # check if duplicate file_keys
         if len(self.file_keys) != len(set(self.file_keys)):
             e.validation.NotAllowed(
@@ -502,7 +482,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
-        # ---------------------------------------------------------- 07
+        # ---------------------------------------------------------- 05
         # check if files used in this file group can be handled for disk io
         for f in [self.path_from_file_key(fk) for fk in self.file_keys]:
             e.io.LongPath(path=f, msgs=[])
@@ -517,9 +497,9 @@ class FileGroup(StorageHashable, abc.ABC):
         # if config.DEBUG_HASHABLE_STATE we will create files two times
         # to confirm if states are consistent and hence it will help us to
         # debug DEBUG_HASHABLE_STATE
-        _info_backup_path = self.info.backup_path
-        _config_backup_path = self.config.backup_path
         if settings.FileHash.DEBUG_HASHABLE_STATE:
+            _info_backup_path = self.info.backup_path
+            _config_backup_path = self.config.backup_path
             _info_backup_exists = _info_backup_path.exists()
             _config_backup_exists = _config_backup_path.exists()
             if _info_backup_exists ^ _config_backup_exists:
@@ -541,10 +521,6 @@ class FileGroup(StorageHashable, abc.ABC):
                 self.info.check_if_backup_matches()
                 # test config backup
                 self.config.check_if_backup_matches()
-        else:
-            # wipe out backup files if any
-            _info_backup_path.unlink()
-            _config_backup_path.unlink()
 
         # ----------------------------------------------------------- 03
         # if created and outdated then delete and create them
@@ -766,6 +742,12 @@ class FileGroup(StorageHashable, abc.ABC):
         super().create_pre_runner()
 
         # --------------------------------------------------------------02
+        # create path dir if it does not exist
+        # Note that FileGroup is a folder with file names file_keys inside it
+        if not self.path.exists():
+            self.path.mkdir()
+
+        # --------------------------------------------------------------03
         # if unknown files present throw error
         _unknown_files = self.unknown_files_on_disk
         if bool(_unknown_files):

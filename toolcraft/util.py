@@ -1272,6 +1272,13 @@ def extract_file(
     archive.close()
 
 
+def io_move():
+    """
+    todo: os.replace looks like is the fastest
+    """
+    ...
+
+
 def io_make_path_read_only(path: pathlib.Path):
     if path.is_file() or path.is_dir():
         path.chmod(_FILE_READ_MODE)

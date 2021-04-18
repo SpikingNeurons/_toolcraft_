@@ -211,7 +211,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _present_files = [
             f.is_file() or f.is_dir()
             for f in [
-                self.path_from_file_key(fk) for fk in self.file_keys
+                self.path / fk for fk in self.file_keys
             ]
         ]
         _all_files_in_fg_present = all(_present_files)
@@ -312,9 +312,6 @@ class FileGroup(StorageHashable, abc.ABC):
     @property
     def path(self) -> pathlib.Path:
         return self.root_dir / self.name
-
-    def path_from_file_key(self, file_key: str) -> pathlib.Path:
-        return self.path / file_key
 
     def get_hashes(self) -> t.Dict[str, str]:
         """
@@ -484,7 +481,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ---------------------------------------------------------- 05
         # check if files used in this file group can be handled for disk io
-        for f in [self.path_from_file_key(fk) for fk in self.file_keys]:
+        for f in [self.path / fk for fk in self.file_keys]:
             e.io.LongPath(path=f, msgs=[])
 
     def init(self):
@@ -584,7 +581,7 @@ class FileGroup(StorageHashable, abc.ABC):
         ) as spinner:
             _hashes = self.get_hashes()
             for i, fk in enumerate(self.file_keys):
-                _key_path = self.path_from_file_key(fk)
+                _key_path = self.path / fk
                 _provided_hashes = _hashes[fk]
                 _failed_or_unknown_key_paths = util.crosscheck_hashes(
                     _key_path, _provided_hashes, fk
@@ -771,7 +768,7 @@ class FileGroup(StorageHashable, abc.ABC):
         spinner = self.spinner
         for i, k in enumerate(self.file_keys):
             # get expected file from key
-            _expected_file = self.path_from_file_key(k)
+            _expected_file = self.path / k
 
             # log
             spinner.text = f"{_expected_file.name!r}: " \
@@ -813,7 +810,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # todo: if failed delete files that are created
         """
         created_fs = hooked_method_return_value
-        expected_fs = [self.path_from_file_key(fk) for fk in self.file_keys]
+        expected_fs = [self.path / fk for fk in self.file_keys]
 
         # ----------------------------------------------------------------01
         # validation
@@ -905,7 +902,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 )
             _auto_hashes = {}
             for k in self.file_keys:
-                _fg = self.path_from_file_key(k)
+                _fg = self.path / k
                 _auto_hashes[k] = util.compute_hashes(_fg)
             self.config.auto_hashes = HashesDict(_auto_hashes)
 
@@ -971,7 +968,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 [
                     f"\t > file: {p.name}\n"
                     for p in [
-                        self.path_from_file_key(fk) for fk in self.file_keys
+                        self.path / fk for fk in self.file_keys
                     ]
                 ]
             )
@@ -999,7 +996,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # delete all files for the group
             for i, fk in enumerate(self.file_keys):
 
-                _key_path = self.path_from_file_key(fk)
+                _key_path = self.path / fk
 
                 spinner.text = f"{_key_path.name!r}: " \
                                f"{i: {_s_fmt}d}/{_total_keys} deleted ..."
@@ -1506,9 +1503,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         again.
         """
         return {
-            fk: NpyMemMap(
-                file_path=self.path_from_file_key(fk),
-            )
+            fk: NpyMemMap(file_path=self.path / fk,)
             for fk in self.file_keys
         }
 
@@ -1590,7 +1585,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         npy_data: t.Union[np.ndarray, t.Dict[str, np.ndarray]],
     ) -> pathlib.Path:
         # get file from a file_key
-        _file = self.path_from_file_key(file_key)
+        _file = self.path / file_key
 
         # if file exists raise error
         if _file.exists():
@@ -1667,7 +1662,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # fine but state_manager files will be not on the disk and hence
             # we cannot use `self.get_file()`. Hence we rely on `s.NpyMemMap`.
             _npy_memmaps[file_key] = NpyMemMap(
-                file_path=self.path_from_file_key(file_key),
+                file_path=self.path / file_key,
             )
 
         # ----------------------------------------------------------------02
@@ -1737,7 +1732,7 @@ class TempFileGroup(FileGroup, abc.ABC):
             self, *, file_keys: t.List[str]
     ) -> t.Dict[str, pathlib.Path]:
         return {
-            file_key: self.path_from_file_key(file_key)
+            file_key: self.path / file_key
             for file_key in file_keys
         }
 
@@ -1808,7 +1803,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     def create_file(self, *, file_key: str) -> pathlib.Path:
         # get file
-        _file = self.path_from_file_key(file_key)
+        _file = self.path / file_key
 
         # download
         util.download_file(
@@ -1830,7 +1825,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             self, *, file_keys: t.List[str]
     ) -> t.Dict[str, pathlib.Path]:
         return {
-            file_key: self.path_from_file_key(file_key)
+            file_key: self.path / file_key
             for file_key in file_keys
         }
 

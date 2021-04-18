@@ -55,8 +55,9 @@ import time
 from .. import util
 from .. import error as e
 from .. import marshalling as m
+from .. import storage as s
 from . import file_system as our_fs
-from . import Folder, StorageHashableConfig, StorageHashableInternal
+from . import Folder
 
 _PARTITIONING = "hive"
 # _FILE_FORMAT = pds.ParquetFileFormat()
@@ -308,16 +309,11 @@ def _write_table(
     )
 
 
-class DfFileInternal(StorageHashableInternal):
+class DfFileInternal(m.Internal):
 
     partitioning: t.Optional[pds.Partitioning]
     schema: t.Optional[pa.Schema]
     partition_cols: t.Optional[t.List[str]]
-
-    @property
-    def owner(self) -> "DfFile":
-        # noinspection PyTypeChecker
-        return super().owner
 
     @property
     def is_updated(self) -> bool:
@@ -406,7 +402,7 @@ class DfFileInternal(StorageHashableInternal):
 
 
 @dataclasses.dataclass
-class DfFileConfig(StorageHashableConfig):
+class DfFileConfig(s.Config):
 
     schema: t.Optional[m.FrozenSchema] = None
     partition_cols: t.Optional[t.List[str]] = None

@@ -180,6 +180,10 @@ class Config(StateFile):
         BACKUP_YAML_STR_KEY
     """
 
+    class LITERAL(StateFile.LITERAL):
+        config_updated_on_list_limit = 10
+        accessed_on_list_limit = 10
+
     # note that created on refers to hashable class of which config is a
     # property ... but we cannot have that field in there as it will affect
     # its unique hex_hash value
@@ -189,9 +193,10 @@ class Config(StateFile):
     config_updated_on: t.List[datetime.datetime] = dataclasses.field(
         default_factory=list
     )
-
-    class LITERAL(StateFile.LITERAL):
-        config_updated_on_list_limit = 10
+    # will be updated when File or Folder is accessed
+    accessed_on: t.List[datetime.datetime] = dataclasses.field(
+        default_factory=list
+    )
 
     @property
     @util.CacheResult
@@ -261,21 +266,6 @@ class Config(StateFile):
         # todo: remove this
         raise Exception("NO LONGER SUPPORTED")
 
-    def make_frozen_dict_from_current_state(self) -> m.FrozenDict:
-        # here we convert proxy notifier list and dict back to normal python
-        # builtins
-        _dict = {}
-        for f_name in self.dataclass_field_names:
-            value = getattr(self, f_name)
-            if isinstance(value, list):
-                value = list(value)
-            if isinstance(value, dict):
-                value = dict(value)
-            _dict[f_name] = value
-
-        # noinspection PyTypeChecker
-        return m.FrozenDict(item=_dict)
-
     def sync(self):
         # -------------------------------------------------- 01
         # get current state
@@ -336,6 +326,24 @@ class Config(StateFile):
         # set back to sync so that any further updates can be synced
         self.internal.start_syncing = True
 
+    # noinspection DuplicatedCode
+    def append_last_accessed_on(self):
+        # this can never happen
+        if len(self.accessed_on) > \
+                self.LITERAL.accessed_on_list_limit:
+            e.code.CodingError(
+                msgs=[
+                    f"This should never happens ... did you try to append "
+                    f"last_accessed_on list multiple times"
+                ]
+            )
+        # limit the list
+        if len(self.accessed_on) == \
+                self.LITERAL.accessed_on_list_limit:
+            self.accessed_on = self.accessed_on[1:]
+        # append time
+        self.accessed_on.append(datetime.datetime.now())
+
     def check_if_backup_matches(self):
         # noinspection DuplicatedCode
         if not self.backup_path.exists():
@@ -390,3 +398,18 @@ class Config(StateFile):
                             )
                         ]
                     )
+
+    def make_frozen_dict_from_current_state(self) -> m.FrozenDict:
+        # here we convert proxy notifier list and dict back to normal python
+        # builtins
+        _dict = {}
+        for f_name in self.dataclass_field_names:
+            value = getattr(self, f_name)
+            if isinstance(value, list):
+                value = list(value)
+            if isinstance(value, dict):
+                value = dict(value)
+            _dict[f_name] = value
+
+        # noinspection PyTypeChecker
+        return m.FrozenDict(item=_dict)

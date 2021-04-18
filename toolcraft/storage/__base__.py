@@ -54,44 +54,6 @@ class HashesDict(m.FrozenDict):
         return f"!frozen_hashes_dict"
 
 
-@dataclasses.dataclass
-class StorageHashableConfig(state.Config):
-
-    class LITERAL(state.Config.LITERAL):
-        accessed_on_list_limit = 10
-
-    # will be updated when File or Folder is accessed
-    accessed_on: t.List[datetime.datetime] = dataclasses.field(
-        default_factory=list
-    )
-
-    # noinspection DuplicatedCode
-    def append_last_accessed_on(self):
-        # this can never happen
-        if len(self.accessed_on) > \
-                self.LITERAL.accessed_on_list_limit:
-            e.code.CodingError(
-                msgs=[
-                    f"This should never happens ... did you try to append "
-                    f"last_accessed_on list multiple times"
-                ]
-            )
-        # limit the list
-        if len(self.accessed_on) == \
-                self.LITERAL.accessed_on_list_limit:
-            self.accessed_on = self.accessed_on[1:]
-        # append time
-        self.accessed_on.append(datetime.datetime.now())
-
-
-class StorageHashableInternal(m.Internal):
-
-    @property
-    def owner(self) -> "StorageHashable":
-        # noinspection PyTypeChecker
-        return super().owner
-
-
 @dataclasses.dataclass(frozen=True)
 class StorageHashable(m.HashableClass, abc.ABC):
 
@@ -99,8 +61,8 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def config(self) -> StorageHashableConfig:
-        return StorageHashableConfig(
+    def config(self) -> state.Config:
+        return state.Config(
             hashable=self,
             root_dir_str=self.root_dir.as_posix(),
         )
@@ -115,8 +77,8 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def internal(self) -> "StorageHashableInternal":
-        return StorageHashableInternal(self)
+    def internal(self) -> m.Internal:
+        return m.Internal(self)
 
     @property
     def root_dir(self) -> pathlib.Path:

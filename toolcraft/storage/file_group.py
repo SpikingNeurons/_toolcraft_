@@ -19,9 +19,9 @@ import datetime
 import random
 
 from .. import util, logger, settings
-from .. import marshalling as m
+from .. import storage as s
 from .. import error as e
-from . import StorageHashableConfig, HashesDict, StorageHashable
+from . import HashesDict, StorageHashable
 
 _LOGGER = logger.get_logger()
 
@@ -55,9 +55,9 @@ SELECT_TYPE = t.Union[
 
 
 @dataclasses.dataclass
-class FileGroupConfig(StorageHashableConfig):
+class FileGroupConfig(s.Config):
 
-    class LITERAL(StorageHashableConfig.LITERAL):
+    class LITERAL(s.Config.LITERAL):
         checked_on_list_limit = 5
 
     # updated when some sort of check is performed
@@ -1749,7 +1749,7 @@ class TempFileGroup(FileGroup, abc.ABC):
     @property
     @util.CacheResult
     def root_dir(self) -> pathlib.Path:
-        return config.Dir.TEMPORARY / self.__class__.__module__
+        return settings.Dir.TEMPORARY / self.__class__.__module__
 
     def get_files(
             self, *, file_keys: t.List[str]

@@ -96,6 +96,10 @@ class Info(StateFile):
 
 
 class ConfigInternal(m.Internal):
+    """
+    todo: not possible to get rid of this ... need to see if any optimization
+      can be done while setting attributes over config
+    """
 
     start_syncing: bool = False
 

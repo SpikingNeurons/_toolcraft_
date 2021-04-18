@@ -20,6 +20,23 @@ class Suffix:
 
 @dataclasses.dataclass
 class StateFile(m.Tracker, abc.ABC):
+    """
+
+    Manages the state of HashableClass
+    + save class info in *.info file that has hex value
+    + save config info in *.config file ... note that config does not affect
+      the *.info file
+
+    todo: We can have the state manager via some decorator like
+      storage.StoreField where we create two data frames one for info and other
+      for config. Then we can stream them or store to some database where we
+      can retrieve them ....
+      As of now we limit them to be saved alongside FileGroup, DfFile and
+      Folder ... and hence this class does not make sense here but instead
+      should be moved to storage module ....
+      But we might have more usage for this so we will retain here
+
+    """
     hashable: m.HashableClass
     root_dir_str: str
 
@@ -34,17 +51,9 @@ class StateFile(m.Tracker, abc.ABC):
     def suffix(self) -> str:
         ...
 
-    @abc.abstractmethod
-    def sync(self):
-        ...
-
-    @abc.abstractmethod
-    def delete(self):
-        ...
-
-
-@dataclasses.dataclass
-class Info(StateFile):
+    @property
+    def is_available(self) -> bool:
+        return self.path.exists()
 
     @property
     @util.CacheResult
@@ -58,6 +67,39 @@ class Info(StateFile):
         )
         return self.path.parent / f"_backup_{self.path.name}_backup_"
 
+    @abc.abstractmethod
+    def sync(self):
+        ...
+
+    @abc.abstractmethod
+    def reset(self):
+        """
+        Set to defaults the non mandatory fields
+        """
+        ...
+
+    def delete(self):
+        util.io_make_path_editable(self.path)
+        self.path.unlink()
+        self.reset()
+
+    def backup(self):
+        self.backup_path.write_text(self.path.read_text())
+        util.io_make_path_read_only(self.backup_path)
+
+    @abc.abstractmethod
+    def check_if_backup_matches(self):
+        ...
+
+
+@dataclasses.dataclass
+class Info(StateFile):
+    """
+    Info is a tricky class
+    + When we serialize it will save it as HashableClass and hence when loaded
+      from disk it will still be HashableClass and not the Info class
+    """
+
     @property
     def suffix(self) -> str:
         return Suffix.info
@@ -65,10 +107,10 @@ class Info(StateFile):
     def sync(self):
         """
         The info on disk if available must match.
-        Also note that we only sync hashable. Note that if hashable is
-        StorageHashable we might have parent_folder info inside it but this
-        class wants to support all HashableClass. So we need extra argument
-        parent_folder
+        Also note that we only sync hashable and remaining fields are skipped.
+
+        So if you load this yaml using from yaml you will get instance of
+        hashableClass and not the Info class
         """
         _yaml = self.hashable.yaml()
         if self.path.exists():
@@ -90,9 +132,31 @@ class Info(StateFile):
             # ... make read only as done only once
             util.io_make_path_read_only(self.path)
 
-    def delete(self):
-        util.io_make_path_editable(self.path)
-        self.path.unlink()
+    def check_if_backup_matches(self):
+        if not self.backup_path.exists():
+            e.code.CodingError(
+                msgs=[
+                    f"Looks like you have forgot to backup the state file ..."
+                ]
+            )
+
+        _self_yaml = self.hashable.yaml()
+        _backup_yaml = self.backup_path.read_text()
+        if self.hashable.yaml() != self.backup_path.read_text():
+            e.code.CodingError(
+                msgs=[
+                    f"We expect Info state file to be exactly same",
+                    dict(
+                        _self_yaml=_self_yaml, _backup_yaml=_backup_yaml
+                    )
+                ]
+            )
+
+    def reset(self):
+        """
+        Set to defaults the non mandatory fields
+        """
+        ...
 
 
 class ConfigInternal(m.Internal):
@@ -150,7 +214,6 @@ class Config(StateFile):
         """
         __post_init__ is allowed as it is not m.HashableClass
         """
-
         # ------------------------------------------------------------ 01
         # if path exists load data dict from it
         # that is sync with contents on disk
@@ -168,7 +231,6 @@ class Config(StateFile):
         self.internal.start_syncing = True
 
     def __setattr__(self, key, value):
-
         # for key in dataclass field names then if any of it is list or dict
         # make them special notifier based proxy list and dict
         if key in self.dataclass_field_names:
@@ -199,7 +261,7 @@ class Config(StateFile):
         # todo: remove this
         raise Exception("NO LONGER SUPPORTED")
 
-    def make_yaml_str_from_current_state(self) -> str:
+    def make_frozen_dict_from_current_state(self) -> m.FrozenDict:
         # here we convert proxy notifier list and dict back to normal python
         # builtins
         _dict = {}
@@ -212,12 +274,12 @@ class Config(StateFile):
             _dict[f_name] = value
 
         # noinspection PyTypeChecker
-        return m.FrozenDict(item=_dict).yaml()
+        return m.FrozenDict(item=_dict)
 
     def sync(self):
         # -------------------------------------------------- 01
         # get current state
-        _current_state = self.make_yaml_str_from_current_state()
+        _current_state = self.make_frozen_dict_from_current_state().yaml()
 
         # -------------------------------------------------- 02
         # if file exists on the disk then check if the contents are different
@@ -240,112 +302,91 @@ class Config(StateFile):
                     ]
                 )
 
-        # -------------------------------------------------- 04
+        # -------------------------------------------------- 03
         # write to disk
         self.path.write_text(_current_state)
 
-    def delete(self):
-        # delete associated file on the disk
-        self.path.unlink()
+    def reset(self):
+        """
+        Set to defaults the non mandatory fields
+        """
+        # first we need to stop syncing as we will reset the fields
+        self.internal.start_syncing = False
 
-        # also reset the config based on default values
-        # this we achieve by creating new object on the fly ...
-        # Note we can also wipe cache using
-        # `util.WipeCacheResult("config", self.hashable)` but that will not
-        # help as this object itself is cached
-        # noinspection PyArgumentList
-        # The below code will trigger __post_init__ so list and dict will be
-        # converted to Notifier proxies anyways
-        _default_config = self.__class__(
-            hashable=self.hashable, root_dir_str=self.root_dir_str
-        )
+        # Set non mandatory fields to default values.
+        # Note that list self.dataclass_field_names already skips mandatory
+        # fields
+        for f_name in self.dataclass_field_names:
+            # noinspection PyUnresolvedReferences
+            f = self.__dataclass_fields__[f_name]
+            v = f.default
+            if v == dataclasses.MISSING:
+                v = f.default_factory()
+            if v == dataclasses.MISSING:
+                e.code.CodingError(
+                    msgs=[
+                        f"Field {f_name} does not have any default value to "
+                        f"extract",
+                        f"We assume it is non mandatory field and hence we "
+                        f"expect a default to be provided"
+                    ]
+                )
+            setattr(self, f_name, v)
 
-        # Note that this will not trigger __setattr__
-        self.__dict__.update(
-            _default_config.__dict__
-        )
+        # set back to sync so that any further updates can be synced
+        self.internal.start_syncing = True
 
-
-@dataclasses.dataclass
-class StateManager(m.Tracker):
-    """
-    Manages the state of HashableClass
-    + save class info in *.info file that has hex value
-    + save config info in *.config file ... note that config does not affect
-      the *.info file
-
-    todo: We can have the state manager via some decorator like
-      storage.StoreField where we create two data frames one for info and other
-      for config. Then we can stream them or store to some database where we
-      can retrieve them ....
-      As of now we limit them to be saved alongside FileGroup, DfFile and
-      Folder ... and hence this class does not make sense here but instead
-      should be moved to storage module ....
-      But we might have more usage for this so we will retain here
-    """
-    hashable: m.HashableClass
-    root_dir_str: str
-    config: Config
-
-    @property
-    @util.CacheResult
-    def info(self) -> Info:
-        return Info(hashable=self.hashable, root_dir_str=self.root_dir_str)
-
-    @property
-    def is_available(self) -> bool:
-        # check if file present
-        _info_file_there = self.info.path.is_file()
-        _config_file_there = self.config.path.is_file()
-
-        # if one is present and other is not raise error
-        if _info_file_there ^ _config_file_there:
+    def check_if_backup_matches(self):
+        # noinspection DuplicatedCode
+        if not self.backup_path.exists():
             e.code.CodingError(
                 msgs=[
-                    f"We expect either both files to be present or none to be "
-                    f"present",
-                    f"It seems you have only one of the files",
-                    {
-                        "_info_file_there": _info_file_there,
-                        "_config_file_there": _config_file_there
-                    },
-                    f"In case this error occur during execution of "
-                    f"create_post_runner then may be you have updated config "
-                    f"before calling sync. Try to do updates to config after "
-                    f"making call to super where created_on time stamp is "
-                    f"added using sync() method ..."
+                    f"Looks like you have forgot to backup the state file ..."
                 ]
             )
 
-        # return
-        return _info_file_there
+        # get the state as dict
+        _self_yaml_dict = self.make_frozen_dict_from_current_state().as_dict()
+        _backup_yaml_dict = m.FrozenDict.from_yaml(
+            self.backup_path.read_text()
+        ).as_dict()
 
-    @property
-    def is_backup_available(self) -> bool:
-        return self.info.backup_path.is_file()
-
-    def delete(self):
-        # delete state files if on disk
-        if self.is_available:
-            self.info.delete()
-            self.config.delete()
-        else:
+        # match lengths
+        if len(_self_yaml_dict) != len(_backup_yaml_dict):
             e.code.CodingError(
                 msgs=[
-                    f"We do not have the state for hashable so we cannot "
-                    f"delete it",
-                    f"Did you forget to call {self.__class__.sync_to_disk} "
-                    f"or else you need to check if state is available on "
-                    f"disk first using property `self.is_available`"
+                    f"The config does not have same number of keys as that "
+                    f"in backup"
                 ]
             )
 
-    def sync_to_disk(self):
-        # ----------------------------------------------------------- 01
-        # just call sync
-        # + if present will check the file on disk with internal state
-        # + else will create file
-        self.info.sync()
-        # ----------------------------------------------------------- 02
-        # just update created_on it will auto sync
-        self.config.created_on = datetime.datetime.now()
+        # keys that must differ
+        _keys_that_must_differ = ['created_on']
+
+        # keys that must not differ
+        _keys_that_must_not_differ = ['auto_hashes']
+
+        # loop over keys
+        for k in _self_yaml_dict.keys():
+            _matches = _self_yaml_dict[k] == _backup_yaml_dict[k]
+            if k in _keys_that_must_differ:
+                if _matches:
+                    e.code.CodingError(
+                        msgs=[
+                            f"We expect value for key `{k}` to differ in "
+                            f"backup",
+                            f"Found value: {_backup_yaml_dict[k]}"
+                        ]
+                    )
+            if k in _keys_that_must_not_differ:
+                if not _matches:
+                    e.code.CodingError(
+                        msgs=[
+                            f"We expect value for key `{k}` to not differ in "
+                            f"backup",
+                            dict(
+                                _self=_self_yaml_dict[k],
+                                _backup=_backup_yaml_dict[k],
+                            )
+                        ]
+                    )

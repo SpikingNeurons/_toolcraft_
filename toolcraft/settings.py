@@ -40,4 +40,4 @@ class FileHash:
 
     # when you want to debug if auto_hashing feature creates same files in
     # consecutive runs
-    DEBUG_HASHABLE_STATE = False
+    DEBUG_HASHABLE_STATE = True

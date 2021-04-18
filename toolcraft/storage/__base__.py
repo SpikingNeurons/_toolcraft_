@@ -107,6 +107,14 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
+    def info(self) -> state.Info:
+        return state.Info(
+            hashable=self,
+            root_dir_str=self.root_dir.as_posix(),
+        )
+
+    @property
+    @util.CacheResult
     def internal(self) -> "StorageHashableInternal":
         return StorageHashableInternal(self)
 
@@ -175,16 +183,19 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     @property
     def is_created(self) -> bool:
-        return self.state_manager.is_available
-
-    @property
-    @util.CacheResult
-    def state_manager(self) -> "state.StateManager":
-        return state.StateManager(
-            hashable=self,
-            root_dir_str=self.root_dir.as_posix(),
-            config=self.config
-        )
+        _info_there = self.info.is_available
+        _config_there = self.config.is_available
+        if _info_there ^ _config_there:
+            e.code.CodingError(
+                msgs=[
+                    f"Both config and info should be present or none should "
+                    f"be present ...",
+                    dict(
+                        _info_there=_info_there, _config_there=_config_there
+                    )
+                ]
+            )
+        return _info_there and _config_there
 
     @classmethod
     def hook_up_methods(cls):
@@ -316,22 +327,19 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     )
 
     def init(self):
+        # ----------------------------------------------------------- 01
         # call super
         super().init()
 
+        # ----------------------------------------------------------- 02
         # if root dir does not exist make it
         if not self.root_dir.exists():
             self.root_dir.mkdir(parents=True)
 
+        # ----------------------------------------------------------- 03
         # if not created create
         if not self.is_created:
             self.create()
-
-        # if has parent_folder add self to items
-        if self.parent_folder is not None:
-            # add item ... note if item already exists due to sync we will
-            # overwrite it
-            self.parent_folder.add_item(hashable=self)
 
     def as_dict(
         self
@@ -415,7 +423,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # ----------------------------------------------------------- 01
         # The below call will create state manager files on the disk
         # check if .info and .config file exists i.e. state exists
-        if self.config.path.exists():
+        if self.config.is_available:
             e.code.CodingError(
                 msgs=[
                     f"Looks like you have updated config before this parent "
@@ -424,97 +432,31 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"created the parent create_post_runner by calling sync()"
                 ]
             )
-        if self.state_manager.is_available:
+        if self.info.is_available:
             e.code.CodingError(
                 msgs=[
-                    f"We just finished creation for {self.__class__} and "
-                    f"wanted to create files related to state manager",
-                    f"But we already found them on disk for {self.name!r}"
+                    f"looks like info file for this StorageHashable is "
+                    f"already present",
+                    f"As files were just created we expect that this state "
+                    f"file should not be present ..."
                 ]
             )
-        # the file were created now .... so update state accordingly
-        self.state_manager.sync_to_disk()
+        # redundant
+        _ = self.is_created
 
         # ----------------------------------------------------------- 02
-        # if config.DEBUG_HASHABLE_STATE we will create files two times
-        # to confirm if states are consistent and hence it will help us to
-        # de DEBUG_HASHABLE_STATE
-        # The logic is:
-        # 01: if: current state available
-        #   + ...
-        # 02: else: current state not available
-        #   02.01: create current state
-        #   02.02: if config.DEBUG_HASHABLE_STATE:
-        #          > if: backup state is available (2nd pass)
-        #            - compare current state with backup state
-        #          > else: if backup state is not available (1st pass)
-        #            - create backup state from current state
-        #            - delete current state, and the things created by
-        #              parent
-        #            - make sure that delete above create files again as
-        #              we cannot create things for `parent hashable` here
-        # Note that this part of code (i.e. 02.xx) will never get called
-        # after 2 passes are over as both backup state and current state
-        # will be on the disk
-        if settings.FileHash.DEBUG_HASHABLE_STATE:
-            _state_manager = self.state_manager
-            if _state_manager.is_backup_available:
-
-                # get backup state info on disk
-                _backup_info = self.from_yaml(
-                    _state_manager.info.backup_path,
-                    bypass_post_init_call=True
-                )
-                _current_info = self
-
-                # crosscheck all fields
-                _mismatched_fields = {}
-                for f_name in _current_info.dataclass_field_names:
-
-                    # compare
-                    _backup_v = getattr(_backup_info, f_name)
-                    _current_v = getattr(_current_info, f_name)
-                    if _backup_v != _current_v:
-                        _mismatched_fields[f_name] = {
-                            "current": _current_v,
-                            "backup": _backup_v
-                        }
-
-                # raise if mismatch happened
-                if bool(_mismatched_fields):
-                    e.code.CodingError(
-                        msgs=[
-                            f"*** ******************************** ***",
-                            f"*** YOU ARE DEBUGGING HASHABLE STATE ***",
-                            f"*** ******************************** ***",
-                            f"We found discrepancy in "
-                            f"{_state_manager.info.path.name!r} "
-                            f"from root dir "
-                            f"{_state_manager.root_dir_str}.",
-                            f"This happens when data generation code has "
-                            f"generated different data. Make sure that if "
-                            f"you use randomness it must be deterministic.",
-                            f"The below fields do not match:",
-                            _mismatched_fields,
-                            f"*** ******************************** ***",
-                            f"*** ********** END DEBUG *********** ***",
-                            f"*** ******************************** ***",
-                        ]
-                    )
-            else:
-                # create backup
-                _state_manager.info.backup_path.write_text(self.yaml())
-                # lock them up (note both info and config are locked)
-                util.io_make_path_read_only(
-                    _state_manager.info.backup_path)
-                # delete things created by hashable parent note that this
-                # should also delete files related to state manager
-                self.delete()
-                # now let's create again both the things for hashable and
-                # the state manager files
-                self.create()
+        # sync to disk ... note that from here on state files will be on the
+        # disc and the child methods that will call super can take over and
+        # modify state files like config
+        self.info.sync()
+        self.config.sync()
 
         # ----------------------------------------------------------- 03
+        # also sync the created on ... note that config can auto sync on
+        # update to its fields
+        self.config.created_on = datetime.datetime.now()
+
+        # ----------------------------------------------------------- 04
         # check if property updated
         if not self.is_created:
             e.code.NotAllowed(
@@ -525,6 +467,13 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"things are now created."
                 ]
             )
+
+        # ----------------------------------------------------------- 05
+        # if has parent_folder add self to items
+        if self.parent_folder is not None:
+            # add item ... note if item already exists due to sync we will
+            # overwrite it
+            self.parent_folder.add_item(hashable=self)
 
     # noinspection PyUnusedLocal
     def delete_pre_runner(self, *, force: bool = False):
@@ -551,9 +500,10 @@ class StorageHashable(m.HashableClass, abc.ABC):
     def delete_post_runner(
         self, *, hooked_method_return_value: t.Any
     ):
-        # delete state manager files as they were created along with teh
+        # delete state files as they were created along with the
         # files for this StorageHashable in create_post_runner
-        self.state_manager.delete()
+        self.info.delete()
+        self.config.delete()
 
         # check if property updated
         if self.is_created:
@@ -588,7 +538,8 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # hence we want to make sure any other references will fail to use
         # this instance ...
         # To achieve this we just clear out the internal __dict__
-        self.__dict__.clear()
+        if not settings.FileHash.DEBUG_HASHABLE_STATE:
+            self.__dict__.clear()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -955,7 +906,7 @@ class Folder(StorageHashable):
 
         # since we are adding hashable item that are persisted to disk their
         # state should be present on disk
-        if not hashable.state_manager.is_available:
+        if not hashable.is_created:
 
             # err msg
             if isinstance(hashable, StorageHashable):

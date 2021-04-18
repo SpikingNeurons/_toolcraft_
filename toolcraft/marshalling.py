@@ -764,7 +764,12 @@ class FrozenDict(YamlRepr):
         return f"!frozen_dict"
 
     def get(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        return self._item.copy()
+        _ret = {}
+        for k, v in self._item.items():
+            if isinstance(v, YamlRepr):
+                v = v.as_dict()
+            _ret[k] = v
+        return _ret
 
     def as_dict(
         self

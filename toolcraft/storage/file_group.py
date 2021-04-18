@@ -318,12 +318,11 @@ class FileGroup(StorageHashable, abc.ABC):
         if self.is_auto_hash:
             # we assume that the files will be created by now so we expect
             # the state_manager files to be present on the disk
-            if not self.state_manager.is_available:
+            if not self.is_created:
                 e.code.CodingError(
                     msgs=[
-                        f"Never call this until files are created if not "
-                        f"preset. Only when files are created state manager "
-                        f"files will be generated."
+                        f"Never call this until files are created. Only after "
+                        f"that the state files will be present on the disk"
                     ]
                 )
 
@@ -509,10 +508,45 @@ class FileGroup(StorageHashable, abc.ABC):
             e.io.LongPath(path=f, msgs=[])
 
     def init(self):
-
+        # ----------------------------------------------------------- 01
         # call super
         super().init()
 
+        # ----------------------------------------------------------- 02
+        # NOTE: we only do this for file group and not for folders
+        # if config.DEBUG_HASHABLE_STATE we will create files two times
+        # to confirm if states are consistent and hence it will help us to
+        # debug DEBUG_HASHABLE_STATE
+        _info_backup_path = self.info.backup_path
+        _config_backup_path = self.config.backup_path
+        if settings.FileHash.DEBUG_HASHABLE_STATE:
+            _info_backup_exists = _info_backup_path.exists()
+            _config_backup_exists = _config_backup_path.exists()
+            if _info_backup_exists ^ _config_backup_exists:
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect both info and config backup file to be "
+                        f"present"
+                    ]
+                )
+            if not _info_backup_exists:
+                # create backup
+                self.info.backup()
+                self.config.backup()
+                # delete things that were created in 03
+                self.delete()
+                # now let's create again
+                self.create()
+                # test info backup
+                self.info.check_if_backup_matches()
+                # test config backup
+                self.config.check_if_backup_matches()
+        else:
+            # wipe out backup files if any
+            _info_backup_path.unlink()
+            _config_backup_path.unlink()
+
+        # ----------------------------------------------------------- 03
         # if created and outdated then delete and create them
         # if created and periodic check needed then perform periodic check
         # if files are not created create them
@@ -601,12 +635,13 @@ class FileGroup(StorageHashable, abc.ABC):
             # delete manually
             if not self.is_auto_hash:
                 _state_manager_files_msg = f"Note that we have deleted " \
-                                           f"state manager files on the disk"
+                                           f"state files on the disk"
                 # todo: should we ask permission ...
-                self.state_manager.delete()
+                self.info.delete()
+                self.config.delete()
             else:
                 _state_manager_files_msg = f"Note that you need to delete " \
-                                           f"state manager files on the disk " \
+                                           f"state files on the disk " \
                                            f"as the FileGroup is enabled for " \
                                            f"auto hashing."
             # raise
@@ -633,6 +668,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # since things are now checked write to disk but before that make
         # sure to add checked on info
         self.config.append_checked_on()
+        ...
 
     def get_files_pre_runner(
         self, *,
@@ -874,8 +910,9 @@ class FileGroup(StorageHashable, abc.ABC):
         # ----------------------------------------------------------------05
         # in case of auto hashing we need to generate hashes and save it in
         # config ....
-        # Note we call super before this so that config is created with sync
-        # method then we perform updates to auto hash dict
+        # Note we call super above as below code will generate config file on
+        # disc and hence super will raise error ... in super the auto_hashes
+        # will get set to None and then here we update it after computing hashes
         if self.is_auto_hash:
             if self.config.auto_hashes is not None:
                 e.code.CodingError(

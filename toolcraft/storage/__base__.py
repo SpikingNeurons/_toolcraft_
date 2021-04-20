@@ -308,6 +308,40 @@ class StorageHashable(m.HashableClass, abc.ABC):
         if not self.is_created:
             self.create()
 
+        # ----------------------------------------------------------- 04
+        # if has parent_folder add self to items
+        if self.parent_folder is not None:
+            # add item ...
+            # Note that item can already exist due to sync in that case
+            self.parent_folder.add_item(hashable=self)
+
+        # # Note due to sync that gets called when parent_folder instance
+        # # was created the items dict of parent_folder will get instance
+        # # of self if already present on disc ... in that case delete the
+        # # item in dict and replace with self ...
+        # if hashable.name in self.items.keys():
+        #     # Also we do sanity check for integrity to check if hash of
+        #     # existing item matches hashable ... this ensure that this is
+        #     # safe update of dict
+        #     if hashable.hex_hash != self.items[hashable.name].hex_hash:
+        #         e.code.NotAllowed(
+        #             msgs=[
+        #                 f"While syncing from disk the hashable had different "
+        #                 f"hex_hash than one assigned now",
+        #                 f"We expect that while creating objects of "
+        #                 f"StorageHashable it should match with hex_hash of "
+        #                 f"equivalent object that was instantiated from disk",
+        #                 {
+        #                     "yaml_on_dsk": self.items[hashable.name].yaml(),
+        #                     "yaml_in_memory": hashable.yaml(),
+        #                 }
+        #             ]
+        #         )
+        #     # note we do not call delete() method of item as it will delete
+        #     # actual files/folder on disc
+        #     # here we just update dict
+        #     del self.items[hashable.name]
+
     def as_dict(
         self
     ) -> t.Dict[str, m.SUPPORTED_HASHABLE_OBJECTS_TYPE]:
@@ -434,13 +468,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"things are now created."
                 ]
             )
-
-        # ----------------------------------------------------------- 05
-        # if has parent_folder add self to items
-        if self.parent_folder is not None:
-            # add item ... note if item already exists due to sync we will
-            # overwrite it
-            self.parent_folder.add_item(hashable=self)
 
     # noinspection PyUnusedLocal
     def delete_pre_runner(self, *, force: bool = False):
@@ -832,22 +859,6 @@ class Folder(StorageHashable):
             if not f.name.endswith(state.Suffix.info):
                 continue
 
-            # if self.contains is None the Folder was configured too not have
-            # FileGroup or Folder .... so it should not have any *.info files
-            # and can have anything else like arrow storage files etc
-            # Note that if we reach here the file in question is *.info file
-            # so we do not want contains=None in that case
-            if self.contains is None:
-                e.code.CodingError(
-                    msgs=[
-                        f"We found a file {f} which is hashable info file",
-                        f"Since the folder {self.__class__} was configured to "
-                        f"have no {StorageHashable} instances, we will "
-                        f"raise error.",
-                        f"As we do not expect a *.info file."
-                    ]
-                )
-
             # construct hashable instance from meta file
             # Note that when instance for hashable is created it will check
             # things on its own periodically
@@ -892,33 +903,6 @@ class Folder(StorageHashable):
             else:
                 _err_msg = f"Don't know the type {type(hashable)}"
                 e.code.ShouldNeverHappen(msgs=[_err_msg])
-
-        # Note due to sync that gets called when parent_folder instance
-        # was created the items dict of parent_folder will get instance
-        # of self if already present on disc ... in that case delete the
-        # item in dict and replace with self ...
-        if hashable.name in self.items.keys():
-            # Also we do sanity check for integrity to check if hash of
-            # existing item matches hashable ... this ensure that this is
-            # safe update of dict
-            if hashable.hex_hash != self.items[hashable.name].hex_hash:
-                e.code.NotAllowed(
-                    msgs=[
-                        f"While syncing from disk the hashable had different "
-                        f"hex_hash than one assigned now",
-                        f"We expect that while creating objects of "
-                        f"StorageHashable it should match with hex_hash of "
-                        f"equivalent object that was instantiated from disk",
-                        {
-                            "yaml_on_dsk": self.items[hashable.name].yaml(),
-                            "yaml_in_memory": hashable.yaml(),
-                        }
-                    ]
-                )
-            # note we do not call delete() method of  item as it will delete
-            # actual files/folder on disc
-            # here we just update dict
-            del self.items[hashable.name]
 
         # add item
         self.items[hashable.name] = hashable

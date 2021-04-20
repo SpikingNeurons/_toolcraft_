@@ -64,7 +64,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
     def config(self) -> state.Config:
         return state.Config(
             hashable=self,
-            root_dir_str=self.root_dir.as_posix(),
+            path_prefix=self.path.as_posix(),
         )
 
     @property
@@ -72,8 +72,12 @@ class StorageHashable(m.HashableClass, abc.ABC):
     def info(self) -> state.Info:
         return state.Info(
             hashable=self,
-            root_dir_str=self.root_dir.as_posix(),
+            path_prefix=self.path.as_posix(),
         )
+
+    @property
+    def group_by_name(self) -> str:
+        return self.__module__
 
     @property
     @util.CacheResult
@@ -81,14 +85,15 @@ class StorageHashable(m.HashableClass, abc.ABC):
         return m.Internal(self)
 
     @property
-    def root_dir(self) -> pathlib.Path:
+    @util.CacheResult
+    def path(self) -> pathlib.Path:
         # this property should never be called when parent_folder is None as
         # it will be overridden
         if self.parent_folder is None:
             e.code.ShouldNeverHappen(
                 msgs=[
                     f"This is already validated in init_validate",
-                    f"You are supposed to override property root_dir in class "
+                    f"You are supposed to override property path in class "
                     f"{self.__class__} if you are not supplying field "
                     f"parent_folder i.e. when parent_folder=None"
                 ]
@@ -128,9 +133,9 @@ class StorageHashable(m.HashableClass, abc.ABC):
             raise
 
         # Now if parent_folder is Folder simply return the path of
-        # parent_folder as it is the root_dir for this StorageHashable
+        # parent_folder as it is the root plus the name for this StorageHashable
         if isinstance(self.parent_folder, Folder):
-            return self.parent_folder.path
+            return self.parent_folder.path / self.name
 
         # if above thing does not return that means we have a problem so
         # raise error
@@ -222,39 +227,39 @@ class StorageHashable(m.HashableClass, abc.ABC):
         super().init_validate()
 
         # ----------------------------------------------------------- 03
-        # validate root_dir and hence parent_folder
-        # Note that if parent_folder is not supplied then root_dir must be
+        # validate path and hence parent_folder
+        # Note that if parent_folder is not supplied then path must be
         # overridden
-        _ = self.root_dir
+        _ = self.path
 
         # ----------------------------------------------------------- 04
-        # check for root_dir length
-        e.io.LongPath(path=self.root_dir, msgs=[])
+        # check for path length
+        e.io.LongPath(path=self.path, msgs=[])
 
-        # if root_dir exists check if it is a folder
-        if self.root_dir.exists():
-            if not self.root_dir.is_dir():
+        # if path exists check if it is a folder
+        if self.path.exists():
+            if not self.path.is_dir():
                 e.validation.NotAllowed(
                     msgs=[
-                        f"We expect {self.root_dir} to be a dir"
+                        f"We expect {self.path} to be a dir"
                     ]
                 )
 
         # ----------------------------------------------------------- 05
-        # wither you override root_dir or else you supply parent_folder
+        # wither you override path or else you supply parent_folder
         _parent_folder_supplied = self.parent_folder is not None
-        _root_dir_overridden = \
-            self.__class__.root_dir != StorageHashable.root_dir
-        if not (_parent_folder_supplied ^ _root_dir_overridden):
+        _path_overridden = \
+            self.__class__.path != StorageHashable.path
+        if not (_parent_folder_supplied ^ _path_overridden):
             e.code.CodingError(
                 msgs=[
                     f"For subclasses of Folder you either need to supply "
-                    f"parent_folder or else override property root_dir",
+                    f"parent_folder or else override property path",
                     f"For instances of class {self.__class__} we found that "
                     f"you: ",
                     {
                         "supplied parent_folder": _parent_folder_supplied,
-                        "overrided root_dir property": _root_dir_overridden,
+                        "overrided path property": _path_overridden,
                     }
                 ]
             )
@@ -295,8 +300,8 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
         # ----------------------------------------------------------- 02
         # if root dir does not exist make it
-        if not self.root_dir.exists():
-            self.root_dir.mkdir(parents=True)
+        if not self.path.exists():
+            self.path.mkdir(parents=True)
 
         # ----------------------------------------------------------- 03
         # if not created create
@@ -519,7 +524,7 @@ class Folder(StorageHashable):
         You might be thinking why not have have folder hex_hash as folder name.
         That sounds fine. But the name of folder using hashables name can in
         future let us use via external utilities to pick up folders only by
-        knowing hashable and the root_dir must be provided only once.
+        knowing hashable and the path must be provided only once.
         Also parent_folder is required only to get parent folder info we can
         get away just by knowing the path.
 
@@ -536,7 +541,7 @@ class Folder(StorageHashable):
     The contains property:
       Indicates what will stored in this Folder
 
-    When parent_folder is None override root_dir
+    When parent_folder is None override path
       This behaviour is borrowed from super class and well suits the
       requirement for Folder class
 
@@ -555,8 +560,7 @@ class Folder(StorageHashable):
         """
         Do not override.
 
-        NOTE this also happens to be name of the folder which will be
-        created inside root_dir
+        NOTE this also happens to be name of the folder
 
         Note that for Folder the uniqueness is completely decided by
         self.for_hashable field.
@@ -589,8 +593,9 @@ class Folder(StorageHashable):
 
     @property
     @util.CacheResult
-    def path(self) -> pathlib.Path:
-        return self.root_dir / self.name
+    def group_by_name(self) -> str:
+        return f"{logger.module_name_to_emoji(self.for_hashable.__module__)}." \
+               f"{self.for_hashable.__class__.__name__}"
 
     @property
     def is_created(self) -> bool:

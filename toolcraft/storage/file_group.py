@@ -183,7 +183,7 @@ class FileGroup(StorageHashable, abc.ABC):
     def config(self) -> FileGroupConfig:
         return FileGroupConfig(
             hashable=self,
-            root_dir_str=self.root_dir.as_posix(),
+            path_prefix=self.path.as_posix(),
         )
 
     @property
@@ -234,7 +234,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 e.code.CodingError(
                     msgs=[
                         f"State manager files for file group `{self.name}` "
-                        f"are present in dir {self.root_dir}.",
+                        f"are present in dir {self.path}.",
                         _msg,
                     ]
                 )
@@ -308,10 +308,6 @@ class FileGroup(StorageHashable, abc.ABC):
     #     # a way to detect if field is class var
     #     # dataclasses._is_classvar('aa', typing)
     #     ...
-
-    @property
-    def path(self) -> pathlib.Path:
-        return self.root_dir / self.name
 
     def get_hashes(self) -> t.Dict[str, str]:
         """
@@ -576,7 +572,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # noinspection SpellCheckingInspection
         with logger.Spinner(
                 title=f"Hash check for file group "
-                      f"`{self.root_dir.name}`",
+                      f"`{self.path.name}`",
                 logger=_LOGGER
         ) as spinner:
             _hashes = self.get_hashes()
@@ -621,7 +617,7 @@ class FileGroup(StorageHashable, abc.ABC):
             e.code.NotAllowed(
                 msgs=[
                     f"Some files are corrupted for file group "
-                    f"{self.name!r} in dir {self.root_dir}",
+                    f"{self.name!r} in dir {self.path}",
                     _failed_key_paths,
                     "...",
                     _state_manager_files_msg,
@@ -752,7 +748,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 msgs=[
                     f"We were trying to create files for class "
                     f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in root dir {self.root_dir} we "
+                    f"{self.name!r} in dir {self.path} we "
                     f"found below unknown files",
                     [f.name for f in _unknown_files]
                 ]
@@ -870,7 +866,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 msgs=[
                     f"We have created files for class "
                     f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in root dir {self.root_dir}. Below "
+                    f"{self.name!r} in dir {self.path}. Below "
                     f"unknown files were also created along with it.",
                     [f.name for f in _unknown_files]
                 ]
@@ -948,7 +944,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     f"{self.__class__.__name__!r}",
                 msgs=[
                     f"name: {self.name!r}",
-                    f"root_dir: {self.root_dir}",
+                    f"path: {self.path}",
                     f"This is intentional as you have set "
                     f"`config.DEBUG_HASHABLE_STATE = True`"
                 ]
@@ -977,7 +973,7 @@ class FileGroup(StorageHashable, abc.ABC):
             response = util.input_response(
                 question=f"Do you really want to delete the listed "
                          f"files/folders for file group {self.name!r} in "
-                         f"root_dir {self.root_dir} ???\n"
+                         f"path {self.path} ???\n"
                          f"{_formatted_names}\n",
                 options=["y", "n"]
             )
@@ -1725,8 +1721,8 @@ class TempFileGroup(FileGroup, abc.ABC):
 
     @property
     @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
-        return settings.Dir.TEMPORARY / self.__class__.__module__
+    def path(self) -> pathlib.Path:
+        return settings.Dir.TEMPORARY / self.group_by_name / self.name
 
     def get_files(
             self, *, file_keys: t.List[str]
@@ -1762,22 +1758,14 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         return self.__class__.__name__
 
     @property
-    def group_by_name(self) -> str:
-        """
-        Every DownloadFileGroup class in a module will get a folder which is
-        named after module name
-        """
-        return self.__module__
-
-    @property
     @util.CacheResult
     def file_keys(self) -> t.List[str]:
         return list(self.get_urls().keys())
 
     @property
     @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
-        return settings.Dir.DOWNLOAD / self.group_by_name
+    def path(self) -> pathlib.Path:
+        return settings.Dir.DOWNLOAD / self.group_by_name / self.name
 
     @property
     @abc.abstractmethod

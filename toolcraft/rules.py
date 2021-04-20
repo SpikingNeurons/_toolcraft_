@@ -68,7 +68,7 @@ def check_things_to_be_cached(
             'hex_hash', 'store_fields_folder'
         ],
         StorageHashable: [
-            'config', 'info',
+            'config', 'info', 'path',
         ],
         Folder: ['items'],
         FileGroup: ['file_keys'],

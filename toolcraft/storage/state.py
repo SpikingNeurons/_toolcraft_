@@ -38,13 +38,14 @@ class StateFile(m.Tracker, abc.ABC):
 
     """
     hashable: m.HashableClass
-    root_dir_str: str
+    # this is the path for which we store state
+    # this is the str to which we attack suffix and save it alongside path dir
+    path_prefix: str
 
     @property
     @util.CacheResult
     def path(self) -> pathlib.Path:
-        return pathlib.Path(self.root_dir_str) / \
-            f"{self.hashable.name}{self.suffix}"
+        return pathlib.Path(f"{self.path_prefix}{self.suffix}")
 
     @property
     @abc.abstractmethod
@@ -212,7 +213,7 @@ class Config(StateFile):
     def dataclass_field_names(self) -> t.List[str]:
         return [
             f_name for f_name in super().dataclass_field_names
-            if f_name not in ["hashable", "root_dir_str"]
+            if f_name not in ["hashable", "path_prefix"]
         ]
 
     def __post_init__(self):

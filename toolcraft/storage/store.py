@@ -461,7 +461,8 @@ class StoreField:
             if _c.partition_cols != self.partition_cols:
                 _c.partition_cols = self.partition_cols
             # track using _folder
-            _folder.add_item(hashable=_df_file)
+            # the above instance creation automatically adds to items in _folder
+            # _folder.add_item(hashable=_df_file)
 
         # ------------------------------------------------------- 04
         # now process

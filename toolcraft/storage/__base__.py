@@ -499,6 +499,17 @@ class StorageHashable(m.HashableClass, abc.ABC):
         self.info.delete()
         self.config.delete()
 
+        # also delete the empty path folder
+        if util.io_is_dir_empty(self.path):
+            self.path.rmdir()
+        else:
+            e.code.CodingError(
+                msgs=[
+                    f"All the files inside folder should be deleted by now ...",
+                    f"Expected path dir to be empty"
+                ]
+            )
+
         # check if property updated
         if self.is_created:
             e.code.NotAllowed(

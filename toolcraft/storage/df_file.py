@@ -55,8 +55,9 @@ import time
 from .. import util
 from .. import error as e
 from .. import marshalling as m
+from .. import storage as s
 from . import file_system as our_fs
-from . import Folder, StorageHashableConfig, StorageHashableInternal
+from . import Folder
 
 _PARTITIONING = "hive"
 # _FILE_FORMAT = pds.ParquetFileFormat()
@@ -308,16 +309,11 @@ def _write_table(
     )
 
 
-class DfFileInternal(StorageHashableInternal):
+class DfFileInternal(m.Internal):
 
     partitioning: t.Optional[pds.Partitioning]
     schema: t.Optional[pa.Schema]
     partition_cols: t.Optional[t.List[str]]
-
-    @property
-    def owner(self) -> "DfFile":
-        # noinspection PyTypeChecker
-        return super().owner
 
     @property
     def is_updated(self) -> bool:
@@ -342,8 +338,9 @@ class DfFileInternal(StorageHashableInternal):
         on disk. Else we set things to None
         """
         # schema from config
+        # noinspection PyUnresolvedReferences
         _c = self.owner.config
-        _schema_in_config = _c.schema.get()
+        _schema_in_config = _c.schema
 
         # if table is provided that means either validate schema if schema
         # in config or else infer schema from table and sync that to
@@ -369,7 +366,7 @@ class DfFileInternal(StorageHashableInternal):
             # if table_schema none estimate from first table and write it
             # back to config
             if _schema_in_config is None:
-                _c.schema = m.FrozenSchema(table.schema)
+                _c.schema = table.schema
             # if table_schema available then validate
             else:
                 if _schema_in_config != table.schema:
@@ -401,14 +398,14 @@ class DfFileInternal(StorageHashableInternal):
 
         # update internal for faster access later
         self.partitioning = _c.get_partitioning()
-        self.schema = _c.schema.get()
+        self.schema = _c.schema
         self.partition_cols = _c.partition_cols
 
 
 @dataclasses.dataclass
-class DfFileConfig(StorageHashableConfig):
+class DfFileConfig(s.Config):
 
-    schema: t.Optional[m.FrozenSchema] = None
+    schema: t.Optional[t.Dict] = None
     partition_cols: t.Optional[t.List[str]] = None
 
     def get_partitioning(self) -> t.Optional[pds.Partitioning]:
@@ -426,7 +423,7 @@ class DfFileConfig(StorageHashableConfig):
             return None
         # noinspection PyUnresolvedReferences
         return pds.partitioning(
-            self.schema.get().empty_table().select(self.partition_cols).schema
+            self.schema.empty_table().select(self.partition_cols).schema
         )
 
 
@@ -474,7 +471,7 @@ class DfFile(Folder):
     @util.CacheResult
     def config(self) -> DfFileConfig:
         return DfFileConfig(
-            hashable=self, root_dir_str=self.root_dir.as_posix()
+            hashable=self, path_prefix=self.path.as_posix()
         )
 
     @property
@@ -528,9 +525,6 @@ class DfFile(Folder):
         # disk we can fetch it
         _s = self.config.schema
         if _s is not None:
-            _s = _s.get()
-        _schema_present = _s is not None
-        if _schema_present:
             self.internal.update_from_table_or_config(table=None)
 
     def exists(

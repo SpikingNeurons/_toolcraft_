@@ -25,6 +25,12 @@ class Dir:
     ROOT_DND = pathlib.Path("C:\\Sdl_DND")
     ROOT_DEL = pathlib.Path("C:\\z_Sdl_DEL")
     DOWNLOAD = ROOT_DND / "Download"
+    FOSTERED = ROOT_DEL / "Fo"
+    ANALYSIS = ROOT_DEL / "Analysis"
+    MODEL = ROOT_DEL / "NN"
+    TEMPORARY = ROOT_DEL / "_tmp"
+    PREPARED = ROOT_DND / "Pr"
+    TMP_PREPARED = ROOT_DEL / "PrTmp"
 
 
 class FileHash:

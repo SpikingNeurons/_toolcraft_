@@ -37,7 +37,9 @@ from toolcraft import util
 
 from .marshalling import YamlRepr, HashableClass, FrozenEnum, Tracker
 from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup
-from .storage.state import Config, StateManager, Info, StateFile
+from .storage.state import Config, Info, StateFile
+from .dataset import Dataset, FosteredFileGroup
+from .ml import Model, Head, SmartCheckpoint
 
 
 LITERAL_CLASS_NAME = "LITERAL"
@@ -45,7 +47,7 @@ LITERAL_CLASS_NAME = "LITERAL"
 
 def check_classes_that_should_not_be_overridden():
     _CLASSES_THAT_SHOULD_NOT_BE_OVERRIDDEN = [
-        Info, StateManager
+        Info
     ]
     for cls in _CLASSES_THAT_SHOULD_NOT_BE_OVERRIDDEN:
         _sub_classes = cls.available_sub_classes()
@@ -68,12 +70,14 @@ def check_things_to_be_cached(
             'hex_hash', 'store_fields_folder'
         ],
         StorageHashable: [
-            'config',
-            'state_manager',
+            'config', 'info', 'path',
         ],
-        StateManager: ['info'],
         Folder: ['items'],
         FileGroup: ['file_keys'],
+        Dataset: ['foster_data'],
+        FosteredFileGroup: ['tensor_spec', 'container'],
+        Model: ['chkpt', 'manager'],
+        Head: ['metrics'],
     }
     if to_check is not None:
         _THINGS_TO_BE_CACHED = to_check
@@ -101,6 +105,14 @@ def check_things_not_to_be_cached(
 ):
     _THINGS_NOT_TO_BE_CACHED = {
         Tracker: ['is_called'],
+        StateFile: ['is_available'],
+        Dataset: ['get_tf_dataset', 'get_keras_inputs'],
+        Model: [
+            'is_built',
+            'latest_epoch', 'best_epoch',
+            'is_training', 'epochs_on_disk',
+        ],
+        # SmartCheckpoint: ['epoch'],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_CACHED = to_check
@@ -133,6 +145,9 @@ def check_things_not_to_be_overridden(
         Folder: ['name'],
         NpyFileGroup: ['get_files', 'get_file'],
         Tracker: ['is_called'],
+        FosteredFileGroup: ['container'],
+        # FosteredFileGroup: ['generator_with_exit'],
+        Dataset: ['get_tf_dataset'],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_OVERRIDDEN = to_check
@@ -150,7 +165,7 @@ def check_things_not_to_be_overridden(
 
 def check_things_to_be_dataclasses():
     _THINGS_TO_BE_DATACLASSES = [
-        HashableClass, StateFile, StateManager
+        HashableClass, StateFile
     ]
     for sup_cls in _THINGS_TO_BE_DATACLASSES:
         for cls in sup_cls.available_sub_classes():

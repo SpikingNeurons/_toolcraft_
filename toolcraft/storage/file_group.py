@@ -19,14 +19,11 @@ import datetime
 import random
 
 from .. import util, logger, settings
-from .. import marshalling as m
+from .. import storage as s
 from .. import error as e
-from . import StorageHashableConfig, HashesDict, StorageHashable
+from . import HashesDict, StorageHashable
 
 _LOGGER = logger.get_logger()
-
-# always keep it of length 1
-_SEPARATOR = "."
 
 SHUFFLE_SEED_TYPE = t.Union[
     t.Literal[
@@ -55,9 +52,9 @@ SELECT_TYPE = t.Union[
 
 
 @dataclasses.dataclass
-class FileGroupConfig(StorageHashableConfig):
+class FileGroupConfig(s.Config):
 
-    class LITERAL(StorageHashableConfig.LITERAL):
+    class LITERAL(s.Config.LITERAL):
         checked_on_list_limit = 5
 
     # updated when some sort of check is performed
@@ -186,7 +183,7 @@ class FileGroup(StorageHashable, abc.ABC):
     def config(self) -> FileGroupConfig:
         return FileGroupConfig(
             hashable=self,
-            root_dir_str=self.root_dir.as_posix(),
+            path_prefix=self.path.as_posix(),
         )
 
     @property
@@ -214,7 +211,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _present_files = [
             f.is_file() or f.is_dir()
             for f in [
-                self.path_from_file_key(fk) for fk in self.file_keys
+                self.path / fk for fk in self.file_keys
             ]
         ]
         _all_files_in_fg_present = all(_present_files)
@@ -237,7 +234,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 e.code.CodingError(
                     msgs=[
                         f"State manager files for file group `{self.name}` "
-                        f"are present in dir {self.root_dir}.",
+                        f"are present in dir {self.path}.",
                         _msg,
                     ]
                 )
@@ -253,15 +250,22 @@ class FileGroup(StorageHashable, abc.ABC):
     @property
     def unknown_files_on_disk(self) -> t.List[pathlib.Path]:
 
-        # if unknown files present throw error
+        # container for unknown files
         _unknown_files = []
-        _key_paths = [self.path_from_file_key(fk) for fk in self.file_keys]
-        for f in self.root_dir.iterdir():
-            # bypass known files
-            if f in _key_paths:
-                continue
-            # if belongs to the file group
-            if f.name.split(_SEPARATOR)[0] == self.name:
+
+        # look inside path dir if it exists
+        if self.path.exists():
+            # expect path to be a dir
+            if self.path.is_file():
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect path to be a dir for FileGroup"
+                    ]
+                )
+            # look inside path dir
+            for f in self.path.iterdir():
+                if f.name in self.file_keys and f.is_file():
+                    continue
                 _unknown_files.append(f)
 
         # return
@@ -305,9 +309,6 @@ class FileGroup(StorageHashable, abc.ABC):
     #     # dataclasses._is_classvar('aa', typing)
     #     ...
 
-    def path_from_file_key(self, file_key: str) -> pathlib.Path:
-        return self.root_dir / f"{self.name}{_SEPARATOR}{file_key}"
-
     def get_hashes(self) -> t.Dict[str, str]:
         """
         If get_hashes is not overridden in child class we assume that
@@ -318,12 +319,11 @@ class FileGroup(StorageHashable, abc.ABC):
         if self.is_auto_hash:
             # we assume that the files will be created by now so we expect
             # the state_manager files to be present on the disk
-            if not self.state_manager.is_available:
+            if not self.is_created:
                 e.code.CodingError(
                     msgs=[
-                        f"Never call this until files are created if not "
-                        f"preset. Only when files are created state manager "
-                        f"files will be generated."
+                        f"Never call this until files are created. Only after "
+                        f"that the state files will be present on the disk"
                     ]
                 )
 
@@ -466,34 +466,6 @@ class FileGroup(StorageHashable, abc.ABC):
                     )
 
         # ---------------------------------------------------------- 04
-        # the name for file group should not have separator
-        if self.name.find(_SEPARATOR) != -1:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"self.name={self.name!r} token contains "
-                    f"separator {_SEPARATOR!r}"
-                ]
-            )
-
-        # ---------------------------------------------------------- 05
-        # check file_keys
-        for fk in self.file_keys:
-            e.validation.ShouldBeInstanceOf(
-                value=fk, value_types=(str,),
-                msgs=[
-                    f"Please check the `self.file_keys` property of class "
-                    f"{self.__class__}"
-                ]
-            )
-            if fk.find(_SEPARATOR) != -1:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"The file_key={fk!r} token contains separator "
-                        f"{_SEPARATOR!r}"
-                    ]
-                )
-
-        # ---------------------------------------------------------- 06
         # check if duplicate file_keys
         if len(self.file_keys) != len(set(self.file_keys)):
             e.validation.NotAllowed(
@@ -503,16 +475,47 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
-        # ---------------------------------------------------------- 07
+        # ---------------------------------------------------------- 05
         # check if files used in this file group can be handled for disk io
-        for f in [self.path_from_file_key(fk) for fk in self.file_keys]:
+        for f in [self.path / fk for fk in self.file_keys]:
             e.io.LongPath(path=f, msgs=[])
 
     def init(self):
-
+        # ----------------------------------------------------------- 01
         # call super
         super().init()
 
+        # ----------------------------------------------------------- 02
+        # NOTE: we only do this for file group and not for folders
+        # if config.DEBUG_HASHABLE_STATE we will create files two times
+        # to confirm if states are consistent and hence it will help us to
+        # debug DEBUG_HASHABLE_STATE
+        if settings.FileHash.DEBUG_HASHABLE_STATE:
+            _info_backup_path = self.info.backup_path
+            _config_backup_path = self.config.backup_path
+            _info_backup_exists = _info_backup_path.exists()
+            _config_backup_exists = _config_backup_path.exists()
+            if _info_backup_exists ^ _config_backup_exists:
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect both info and config backup file to be "
+                        f"present"
+                    ]
+                )
+            if not _info_backup_exists:
+                # create backup
+                self.info.backup()
+                self.config.backup()
+                # delete things that were created in 03
+                self.delete()
+                # now let's create again
+                self.create()
+                # test info backup
+                self.info.check_if_backup_matches()
+                # test config backup
+                self.config.check_if_backup_matches()
+
+        # ----------------------------------------------------------- 03
         # if created and outdated then delete and create them
         # if created and periodic check needed then perform periodic check
         # if files are not created create them
@@ -569,12 +572,12 @@ class FileGroup(StorageHashable, abc.ABC):
         # noinspection SpellCheckingInspection
         with logger.Spinner(
                 title=f"Hash check for file group "
-                      f"`{self.root_dir.name}`",
+                      f"`{self.path.name}`",
                 logger=_LOGGER
         ) as spinner:
             _hashes = self.get_hashes()
             for i, fk in enumerate(self.file_keys):
-                _key_path = self.path_from_file_key(fk)
+                _key_path = self.path / fk
                 _provided_hashes = _hashes[fk]
                 _failed_or_unknown_key_paths = util.crosscheck_hashes(
                     _key_path, _provided_hashes, fk
@@ -601,19 +604,20 @@ class FileGroup(StorageHashable, abc.ABC):
             # delete manually
             if not self.is_auto_hash:
                 _state_manager_files_msg = f"Note that we have deleted " \
-                                           f"state manager files on the disk"
+                                           f"state files on the disk"
                 # todo: should we ask permission ...
-                self.state_manager.delete()
+                self.info.delete()
+                self.config.delete()
             else:
                 _state_manager_files_msg = f"Note that you need to delete " \
-                                           f"state manager files on the disk " \
+                                           f"state files on the disk " \
                                            f"as the FileGroup is enabled for " \
                                            f"auto hashing."
             # raise
             e.code.NotAllowed(
                 msgs=[
                     f"Some files are corrupted for file group "
-                    f"{self.name!r} in dir {self.root_dir}",
+                    f"{self.name!r} in dir {self.path}",
                     _failed_key_paths,
                     "...",
                     _state_manager_files_msg,
@@ -633,6 +637,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # since things are now checked write to disk but before that make
         # sure to add checked on info
         self.config.append_checked_on()
+        ...
 
     def get_files_pre_runner(
         self, *,
@@ -730,6 +735,12 @@ class FileGroup(StorageHashable, abc.ABC):
         super().create_pre_runner()
 
         # --------------------------------------------------------------02
+        # create path dir if it does not exist
+        # Note that FileGroup is a folder with file names file_keys inside it
+        if not self.path.exists():
+            self.path.mkdir()
+
+        # --------------------------------------------------------------03
         # if unknown files present throw error
         _unknown_files = self.unknown_files_on_disk
         if bool(_unknown_files):
@@ -737,7 +748,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 msgs=[
                     f"We were trying to create files for class "
                     f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in root dir {self.root_dir} we "
+                    f"{self.name!r} in dir {self.path} we "
                     f"found below unknown files",
                     [f.name for f in _unknown_files]
                 ]
@@ -753,7 +764,7 @@ class FileGroup(StorageHashable, abc.ABC):
         spinner = self.spinner
         for i, k in enumerate(self.file_keys):
             # get expected file from key
-            _expected_file = self.path_from_file_key(k)
+            _expected_file = self.path / k
 
             # log
             spinner.text = f"{_expected_file.name!r}: " \
@@ -795,7 +806,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # todo: if failed delete files that are created
         """
         created_fs = hooked_method_return_value
-        expected_fs = [self.path_from_file_key(fk) for fk in self.file_keys]
+        expected_fs = [self.path / fk for fk in self.file_keys]
 
         # ----------------------------------------------------------------01
         # validation
@@ -855,7 +866,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 msgs=[
                     f"We have created files for class "
                     f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in root dir {self.root_dir}. Below "
+                    f"{self.name!r} in dir {self.path}. Below "
                     f"unknown files were also created along with it.",
                     [f.name for f in _unknown_files]
                 ]
@@ -874,8 +885,9 @@ class FileGroup(StorageHashable, abc.ABC):
         # ----------------------------------------------------------------05
         # in case of auto hashing we need to generate hashes and save it in
         # config ....
-        # Note we call super before this so that config is created with sync
-        # method then we perform updates to auto hash dict
+        # Note we call super above as below code will generate config file on
+        # disc and hence super will raise error ... in super the auto_hashes
+        # will get set to None and then here we update it after computing hashes
         if self.is_auto_hash:
             if self.config.auto_hashes is not None:
                 e.code.CodingError(
@@ -886,7 +898,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 )
             _auto_hashes = {}
             for k in self.file_keys:
-                _fg = self.path_from_file_key(k)
+                _fg = self.path / k
                 _auto_hashes[k] = util.compute_hashes(_fg)
             self.config.auto_hashes = HashesDict(_auto_hashes)
 
@@ -932,7 +944,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     f"{self.__class__.__name__!r}",
                 msgs=[
                     f"name: {self.name!r}",
-                    f"root_dir: {self.root_dir}",
+                    f"path: {self.path}",
                     f"This is intentional as you have set "
                     f"`config.DEBUG_HASHABLE_STATE = True`"
                 ]
@@ -952,7 +964,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 [
                     f"\t > file: {p.name}\n"
                     for p in [
-                        self.path_from_file_key(fk) for fk in self.file_keys
+                        self.path / fk for fk in self.file_keys
                     ]
                 ]
             )
@@ -961,7 +973,7 @@ class FileGroup(StorageHashable, abc.ABC):
             response = util.input_response(
                 question=f"Do you really want to delete the listed "
                          f"files/folders for file group {self.name!r} in "
-                         f"root_dir {self.root_dir} ???\n"
+                         f"path {self.path} ???\n"
                          f"{_formatted_names}\n",
                 options=["y", "n"]
             )
@@ -980,7 +992,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # delete all files for the group
             for i, fk in enumerate(self.file_keys):
 
-                _key_path = self.path_from_file_key(fk)
+                _key_path = self.path / fk
 
                 spinner.text = f"{_key_path.name!r}: " \
                                f"{i: {_s_fmt}d}/{_total_keys} deleted ..."
@@ -1487,9 +1499,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         again.
         """
         return {
-            fk: NpyMemMap(
-                file_path=self.path_from_file_key(fk),
-            )
+            fk: NpyMemMap(file_path=self.path / fk,)
             for fk in self.file_keys
         }
 
@@ -1571,7 +1581,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         npy_data: t.Union[np.ndarray, t.Dict[str, np.ndarray]],
     ) -> pathlib.Path:
         # get file from a file_key
-        _file = self.path_from_file_key(file_key)
+        _file = self.path / file_key
 
         # if file exists raise error
         if _file.exists():
@@ -1648,7 +1658,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # fine but state_manager files will be not on the disk and hence
             # we cannot use `self.get_file()`. Hence we rely on `s.NpyMemMap`.
             _npy_memmaps[file_key] = NpyMemMap(
-                file_path=self.path_from_file_key(file_key),
+                file_path=self.path / file_key,
             )
 
         # ----------------------------------------------------------------02
@@ -1711,14 +1721,14 @@ class TempFileGroup(FileGroup, abc.ABC):
 
     @property
     @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
-        return config.Dir.TEMPORARY / self.__class__.__module__
+    def path(self) -> pathlib.Path:
+        return settings.Dir.TEMPORARY / self.group_by_name / self.name
 
     def get_files(
             self, *, file_keys: t.List[str]
     ) -> t.Dict[str, pathlib.Path]:
         return {
-            file_key: self.path_from_file_key(file_key)
+            file_key: self.path / file_key
             for file_key in file_keys
         }
 
@@ -1748,22 +1758,14 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         return self.__class__.__name__
 
     @property
-    def group_by_name(self) -> str:
-        """
-        Every DownloadFileGroup class in a module will get a folder which is
-        named after module name
-        """
-        return self.__module__
-
-    @property
     @util.CacheResult
     def file_keys(self) -> t.List[str]:
         return list(self.get_urls().keys())
 
     @property
     @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
-        return settings.Dir.DOWNLOAD / self.group_by_name
+    def path(self) -> pathlib.Path:
+        return settings.Dir.DOWNLOAD / self.group_by_name / self.name
 
     @property
     @abc.abstractmethod
@@ -1789,7 +1791,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     def create_file(self, *, file_key: str) -> pathlib.Path:
         # get file
-        _file = self.path_from_file_key(file_key)
+        _file = self.path / file_key
 
         # download
         util.download_file(
@@ -1811,7 +1813,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             self, *, file_keys: t.List[str]
     ) -> t.Dict[str, pathlib.Path]:
         return {
-            file_key: self.path_from_file_key(file_key)
+            file_key: self.path / file_key
             for file_key in file_keys
         }
 

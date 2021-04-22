@@ -29,6 +29,8 @@ import multiprocessing as mp
 from six.moves.urllib.error import HTTPError
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlretrieve
+import socket
+import contextlib
 # import inspect
 # import addict
 
@@ -425,6 +427,24 @@ class ParallelThreading:
     """
     https://medium.com/@bfortuner/python-
     multithreading-vs-multiprocessing-73072ce5600b
+    """
+    ...
+
+
+class Compare:
+    """
+    todo: Explore filecmp python module to compare files and folders
+    >>> import filecmp
+    """
+    ...
+
+
+class FileLock:
+    """
+    todo: Explore filelock to lock the files
+      https://stackoverflow.com/questions/489861/locking-a-file-in-python
+    >>> import filelock
+
     """
     ...
 
@@ -1252,6 +1272,13 @@ def extract_file(
     archive.close()
 
 
+def io_move():
+    """
+    todo: os.replace looks like is the fastest
+    """
+    ...
+
+
 def io_make_path_read_only(path: pathlib.Path):
     if path.is_file() or path.is_dir():
         path.chmod(_FILE_READ_MODE)
@@ -1328,6 +1355,19 @@ def io_is_dir_empty(_dir: pathlib.Path) -> bool:
 
     # return
     return _is_empty
+
+
+def find_free_port():
+    """
+    Inspired from
+    https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
+    """
+    with contextlib.closing(
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ) as _socket:
+        _socket.bind(('', 0))
+        _socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return _socket.getsockname()[1]
 
 
 def npy_array_save(file: pathlib.Path, npy_array: np.ndarray):

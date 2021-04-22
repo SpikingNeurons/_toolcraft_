@@ -138,7 +138,7 @@ class Internal:
                         f"Please refrain from overwriting it as it is "
                         f"configured to be written only once.",
                         f"In case you want to overwrite it then override "
-                        f"property `self.vars_that_can_be_overwritten` so "
+                        f"method `self.vars_that_can_be_overwritten` so "
                         f"that we allow you to overwrite it."
                     ]
                 )
@@ -764,7 +764,12 @@ class FrozenDict(YamlRepr):
         return f"!frozen_dict"
 
     def get(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        return self._item.copy()
+        _ret = {}
+        for k, v in self._item.items():
+            if isinstance(v, YamlRepr):
+                v = v.as_dict()
+            _ret[k] = v
+        return _ret
 
     def as_dict(
         self
@@ -849,81 +854,6 @@ class FrozenKeras(YamlRepr):
             class_module=yaml_state["module"],
         )  # type: t.Type[cls.LITERAL.SUPPORTED_KERAS_OBJECTS_TYPE]
         return cls(item=_k_class.from_config(yaml_state["config"]))
-
-
-class FrozenSchema(YamlRepr):
-
-    def __init__(
-        self,
-        table_schema: t.Optional[pa.Schema],
-    ):
-
-        if table_schema is not None:
-            e.validation.ShouldBeInstanceOf(
-                value=table_schema,
-                value_types=(pa.Schema, ),
-                msgs=[
-                    f"Expecting a pyarrow table schema."
-                ]
-            )
-
-        self._table_schema = table_schema
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"!frozen_schema"
-
-    def get(self) -> pa.Schema:
-        return self._table_schema
-
-    def as_dict(
-        self
-    ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        if self._table_schema is None:
-            schema_fields = None
-            schema_metadata = None
-        else:
-            # todo: find appropriate way to make str out of `_.type` right
-            #  now it saves pyarrow class that creates the type
-            schema_fields = [
-                [_.name, _.type, _.nullable, _.metadata]
-                for _ in self._table_schema
-            ]
-            schema_metadata = self._table_schema.metadata
-
-        return {
-            "fields": schema_fields,
-            "metadata": schema_metadata,
-        }
-
-    @classmethod
-    def from_dict(
-        cls,
-        yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-        **kwargs
-    ) -> "FrozenSchema":
-        schema_fields = yaml_state['fields']
-        schema_metadata = yaml_state["metadata"]
-
-        if schema_fields is None:
-            if schema_metadata is not None:
-                e.code.ShouldNeverHappen(
-                    msgs=[
-                        f"Never expected this to happen"
-                    ]
-                )
-            table_schema = None
-        else:
-            table_schema = pa.schema(
-                fields=[
-                    pa.field(*_) for _ in schema_fields
-                ],
-                metadata=schema_metadata
-            )
-
-        return cls(
-            table_schema=table_schema,
-        )
 
 
 # todo: Have a FrozenEnum and FrozenSlice which is built on top of python
@@ -1303,7 +1233,8 @@ SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
     int, float, str, slice,
     np.float32, np.int64,
     datetime.datetime, None,
-    FrozenDict, FrozenEnum, FrozenKeras, FrozenSchema, HashableClass,
+    FrozenDict, FrozenEnum, FrozenKeras, HashableClass,
+    pa.Schema,
 
     # Note that list and HashableClass are handle by code and please do not
     # include here ....

@@ -836,7 +836,7 @@ def get_object_memory_usage(obj) -> int:
     return size
 
 
-def __get_hash(
+def _get_hash(
     path_or_npy_arr, hash_type: str
 ) -> t.Union[str, dict]:
     """
@@ -855,23 +855,24 @@ def __get_hash(
     if isinstance(path_or_npy_arr, pathlib.Path):
         if path_or_npy_arr.is_file():
             with path_or_npy_arr.open(mode='rb', buffering=0) as fb:
-                chunk_size = 64 * 64
-                num_chunks = path_or_npy_arr.stat().st_size // chunk_size
+                _chunk_size = 64 * 64
+                _num_chunks = path_or_npy_arr.stat().st_size // _chunk_size
+                _total = (_num_chunks+1)*_chunk_size
                 with logger.ProgressBar(
-                    total=num_chunks*chunk_size,
+                    total=_total,
                     unit_scale=True,
                     unit='B',
                     unit_divisor=1024,
                     miniters=1,
                 ) as pb:
-                    for chunk in iter(lambda: fb.read(chunk_size), b''):
+                    for chunk in iter(lambda: fb.read(_chunk_size), b''):
                         hash_module.update(chunk)
-                        pb.update(chunk_size)
+                        pb.update(_chunk_size)
                 fb.close()
         elif path_or_npy_arr.is_dir():
             _ret = {}
             for p in path_or_npy_arr.iterdir():
-                _ret[p.name] = __get_hash(p, hash_type)
+                _ret[p.name] = _get_hash(p, hash_type)
             return _ret
         else:
             e.code.CodingError(
@@ -893,13 +894,13 @@ def __get_hash(
 # def compute_sha256_hash(
 #         path_or_npy_arr: t.Union[pathlib.Path, np.ndarray]
 # ) -> t.Union[str, t.Dict]:
-#     return __get_hash(path_or_npy_arr, "sha256")
+#     return _get_hash(path_or_npy_arr, "sha256")
 #
 #
 # def compute_md5_hash(
 #         path_or_npy_arr: t.Union[pathlib.Path, np.ndarray]
 # ) -> t.Union[str, t.Dict]:
-#     return __get_hash(path_or_npy_arr, "md5")
+#     return _get_hash(path_or_npy_arr, "md5")
 
 
 def compute_hashes(_path: pathlib.Path) -> t.Union[str, dict]:
@@ -921,7 +922,7 @@ def compute_hashes(_path: pathlib.Path) -> t.Union[str, dict]:
         raise
 
     # we always use sha256 for auto hashing
-    return __get_hash(_path, "sha256")
+    return _get_hash(_path, "sha256")
 
 
 def crosscheck_hashes(
@@ -1006,7 +1007,7 @@ def crosscheck_hashes(
     # ----------------------------------------------------------- 03
     # if file
     if _path.is_file():
-        _computed_hash = __get_hash(_path, "sha256")
+        _computed_hash = _get_hash(_path, "sha256")
         if _computed_hash != _hashes:
             return [
                 {
@@ -1028,7 +1029,7 @@ def check_hash_sha256(
     _LOGGER.info(
         msg="Checking sha256 hash ..."
     )
-    _calc_hash = __get_hash(path_or_npy_arr, "sha256")
+    _calc_hash = _get_hash(path_or_npy_arr, "sha256")
     _LOGGER.debug(
         msg="sha256 checksum",
         msgs=[
@@ -1048,7 +1049,7 @@ def check_hash_md5(
     _LOGGER.info(
         msg="Checking md5 hash ..."
     )
-    _calc_hash = __get_hash(path_or_npy_arr, "md5")
+    _calc_hash = _get_hash(path_or_npy_arr, "md5")
     _LOGGER.debug(
         msg="md5 checksum",
         msgs=[

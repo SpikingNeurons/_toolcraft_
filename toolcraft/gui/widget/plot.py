@@ -716,6 +716,138 @@ class ImageSeries(PlotItem):
 
 
 @dataclasses.dataclass(frozen=True)
+class VLineSeries(PlotItem):
+    """
+    Refer to
+    >>> dpg.add_vline_series
+    """
+
+    x: PLOT_DATA_TYPE
+    color: Color = Color.DEFAULT
+    weight: float = 1.0
+    update_bounds: bool = True
+    axis: int = 0
+
+    def plot(self, parent_plot: Plot):
+        dpg.add_vline_series(
+            plot=parent_plot.name,
+            name=self.label,
+            x=self.x,
+            color=self.color.dpg_value,
+            weight=self.weight,
+            update_bounds=self.update_bounds,
+            axis=self.axis,
+        )
+
+    @staticmethod
+    def generate_from_npy(
+        data: t.List[np.ndarray],
+        label: t.List[str],
+    ) -> t.List["VLineSeries"]:
+        # ---------------------------------------------- 01
+        # validate length of lists
+        if len(data) != len(label):
+            e.code.NotAllowed(
+                msgs=[
+                    f"We expect same number of items in data and label"
+                ]
+            )
+        # ---------------------------------------------- 02
+        # loop over and generate series
+        _ret = []
+        for _index in range(len(label)):
+            # get data for index
+            _label = label[_index]
+            _data = data[_index]
+            _length = len(_data)
+
+            # validate
+            if _data.ndim != 1:
+                e.code.NotAllowed(
+                    msgs=[
+                        f"We expect data to be 1D for index {_index}"
+                    ]
+                )
+
+            # create series
+            _ret.append(
+                VLineSeries(
+                    label=_label, x=_data
+                )
+            )
+
+        # ---------------------------------------------- 03
+        # return
+        return _ret
+
+
+@dataclasses.dataclass(frozen=True)
+class HLineSeries(PlotItem):
+    """
+    Refer to
+    >>> dpg.add_hline_series
+    """
+
+    x: PLOT_DATA_TYPE
+    color: Color = Color.DEFAULT
+    weight: float = 1.0
+    update_bounds: bool = True
+    axis: int = 0
+
+    def plot(self, parent_plot: Plot):
+        dpg.add_hline_series(
+            plot=parent_plot.name,
+            name=self.label,
+            x=self.x,
+            color=self.color.dpg_value,
+            weight=self.weight,
+            update_bounds=self.update_bounds,
+            axis=self.axis,
+        )
+
+    @staticmethod
+    def generate_from_npy(
+        data: t.List[np.ndarray],
+        label: t.List[str],
+    ) -> t.List["HLineSeries"]:
+        # ---------------------------------------------- 01
+        # validate length of lists
+        if len(data) != len(label):
+            e.code.NotAllowed(
+                msgs=[
+                    f"We expect same number of items in data and label"
+                ]
+            )
+        # ---------------------------------------------- 02
+        # loop over and generate series
+        _ret = []
+        for _index in range(len(label)):
+            # get data for index
+            _label = label[_index]
+            _data = data[_index]
+            _length = len(_data)
+
+            # validate
+            if _data.ndim != 1:
+                e.code.NotAllowed(
+                    msgs=[
+                        f"We expect data to be 1D for index {_index}"
+                    ]
+                )
+
+            # create series
+            _ret.append(
+                HLineSeries(
+                    label=_label, x=_data
+                )
+            )
+
+        # ---------------------------------------------- 03
+        # return
+        return _ret
+
+
+@dataclasses.dataclass(frozen=True)
 class LineSeries(PlotItem):
     """
     Refer to

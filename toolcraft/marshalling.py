@@ -216,6 +216,16 @@ class Tracker:
         return self.internal.on_call_kwargs is not None
 
     @property
+    def iterable_length(self) -> int:
+        e.code.NotSupported(
+            msgs=[
+                f"Override this property in class if you want to use iterate "
+                f"over tracker"
+            ]
+        )
+        return -1
+
+    @property
     @util.CacheResult
     def dataclass_field_names(self) -> t.List[str]:
         # noinspection PyUnresolvedReferences
@@ -299,8 +309,10 @@ class Tracker:
                         f"iterator"
                     ]
                 )
-            for _ in self.on_iter():
-                yield _
+            with logger.ProgressBar(total=self.iterable_length) as pg:
+                for _ in _iterable:
+                    pg.update(1)
+                    yield _
 
     def on_call(self):
         """

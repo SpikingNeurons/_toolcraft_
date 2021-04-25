@@ -328,7 +328,7 @@ class ProgressBar(tqdm):
         Refer to super class init for allowed kwargs
         >>> tqdm.__init__
 
-        As and when we need som kwargs from there we will document them here
+        As and when we need some kwargs from there we will document them here
         and use it ...
 
         iterable  : iterable, optional

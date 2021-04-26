@@ -58,6 +58,29 @@ class CloseWidgetCallback(Callback):
 
 
 @dataclasses.dataclass(frozen=True)
+class RefreshWidgetCallback(Callback):
+    """
+    This callback will be added to a Button that will delete its Parent and
+    then call the refresh function that must ideally add the deleted widget back
+    """
+
+    refresh_callback: Callback
+
+    @classmethod
+    def get_button_widget(
+        cls, refresh_callback: Callback
+    ) -> widget.Button:
+        return widget.Button(
+            label="Refresh [R]",
+            callback=cls(refresh_callback=refresh_callback)
+        )
+
+    def fn(self):
+        self.sender.parent.delete()
+        self.refresh_callback.fn()
+
+
+@dataclasses.dataclass(frozen=True)
 class HashableMethodRunnerCallback(Callback):
     """
     This callback can call a method of HashableClass.
@@ -66,10 +89,13 @@ class HashableMethodRunnerCallback(Callback):
     receiver Widget as a child
 
     Note that method triggers only when button is clicked.
+
+    todo: support auto refresh
     """
     hashable: m.HashableClass
     callable_name: str
     receiver: Widget
+    refresh_support: bool
 
     def init_validate(self):
         # call super
@@ -111,6 +137,25 @@ class HashableMethodRunnerCallback(Callback):
             _collapsing_header.add_child(
                 guid="close_button", widget=_close_button
             )
+
+            # make refresh button and add it collapsing header
+            if self.refresh_support:
+
+                # the next button should be in same line
+                _in_same_line = gui.InSameLine()
+                _collapsing_header.add_child(
+                    guid="in_same_line", widget=_in_same_line
+                )
+
+                # add refresh button
+                # noinspection PyUnresolvedReferences
+                _refresh_button = \
+                    gui.callback.RefreshWidgetCallback.get_button_widget(
+                        self.sender.callback
+                    )
+                _collapsing_header.add_child(
+                    guid="refresh_button", widget=_refresh_button
+                )
 
             # add separator
             _collapsing_header.add_child(

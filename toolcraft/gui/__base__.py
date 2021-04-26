@@ -338,11 +338,28 @@ class Widget(m.HashableClass, abc.ABC):
             post_method=cls.build_post_runner,
         )
 
+        # hookup delete
+        util.HookUp(
+            cls=cls,
+            silent=True,
+            method=cls.delete,
+            pre_method=cls.delete_pre_runner,
+            post_method=cls.delete_post_runner,
+        )
+
+    def delete_pre_runner(self):
+        ...
+
     def delete(self):
         # delete self from parents children
         del self.parent.children[self.guid]
         # delete the UI counterpart
         dpg.delete_item(item=self.name, children_only=False)
+
+    def delete_post_runner(
+        self, *, hooked_method_return_value: t.Any
+    ):
+        ...
 
     def layout(self):
         """

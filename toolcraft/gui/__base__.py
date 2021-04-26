@@ -304,6 +304,7 @@ class Widget(m.HashableClass, abc.ABC):
 
         # ------------------------------------------------------ 01
         # get field and its default value
+        # noinspection PyUnresolvedReferences
         _field = self.__dataclass_fields__[field_name]
         _default_value = _field.default
 

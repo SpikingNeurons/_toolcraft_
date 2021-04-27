@@ -664,7 +664,7 @@ class Dashboard(Widget):
         # dpgc.set_main_window_size(550, 550)
         dpg.set_theme(theme="Dark Grey")
         dpg.set_main_window_pos(x=0, y=0)
-        dpg.set_main_window_size(width=1370, height=740)
+        dpg.set_main_window_size(width=1370, height=1080)
         # dpgc.set_main_window_resizable(False)
         dpg.set_main_window_title(self.title)
 
@@ -691,7 +691,7 @@ class Dashboard(Widget):
             )
 
         # dpgc.start_dearpygui()
-        dpg.set_theme(theme="Dark Grey")
+        dpg.set_theme(theme="Dark sdasdasGrey")
         dpg.start_dearpygui(primary_window=self.name)
 
     def on_close(self, sender, data):

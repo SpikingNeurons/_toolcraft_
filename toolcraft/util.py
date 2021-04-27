@@ -1659,7 +1659,7 @@ class HookUp:
             # -------------------------------------------------------03.02
             # call actual method
             if self.silent:
-                spinner.text += "++"
+                spinner.text += " ++ "
             else:
                 spinner.info(msg="processing ...")
             _ret = self.method(self.method_self, **kwargs)

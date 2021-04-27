@@ -18,6 +18,7 @@ from . import error as e
 if False:
     # noinspection PyUnresolvedReferences
     from . import storage
+    from . import gui
 
 
 _LOGGER = logger.get_logger()
@@ -1239,6 +1240,52 @@ class HashableClass(YamlRepr, abc.ABC):
 
         """
         ...
+
+    def get_gui_button(
+        self,
+        callable_name: str,
+        receiver: "gui.Widget"
+    ) -> "gui.Button":
+        """
+        todo: support refresh
+        """
+
+        # ---------------------------------------------------- 01
+        # import
+        from . import gui
+        from . import storage
+
+        # ---------------------------------------------------- 02
+        # test callable name
+        if not hasattr(self, callable_name):
+            e.code.CodingError(
+                msgs=[
+                    f"Callable `{callable_name}` not available for "
+                    f"HashableClass {self.__class__}"
+                ]
+            )
+        if not storage.is_store_field(getattr(self, callable_name)):
+            e.code.CodingError(
+                msgs=[
+                    f"The property/method `{callable_name}` of class "
+                    f"{self.__class__} is not a {storage.StoreField}"
+                ]
+            )
+
+        # ---------------------------------------------------- 03
+        # create callback
+        _callback = gui.callback.HashableMethodRunnerCallback(
+            hashable=self,
+            callable_name=callable_name,
+            receiver=receiver,
+            refresh_support=True,
+        )
+
+        # ---------------------------------------------------- 04
+        # create button
+        _button = gui.Button(
+
+        )
 
 
 SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[

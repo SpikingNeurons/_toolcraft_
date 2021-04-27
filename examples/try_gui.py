@@ -280,7 +280,7 @@ def demo():
 
 def main():
     basic_dashboard()
-    # demo()
+    demo()
 
 
 if __name__ == '__main__':

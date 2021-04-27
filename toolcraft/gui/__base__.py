@@ -664,7 +664,7 @@ class Dashboard(Widget):
         # dpgc.set_main_window_size(550, 550)
         dpg.set_theme(theme="Dark Grey")
         dpg.set_main_window_pos(x=0, y=0)
-        dpg.set_main_window_size(width=1370, height=1080)
+        dpg.set_main_window_size(width=1370, height=1200)
         # dpgc.set_main_window_resizable(False)
         dpg.set_main_window_title(self.title)
 

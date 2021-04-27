@@ -92,10 +92,12 @@ class HashableMethodRunnerCallback(Callback):
 
     todo: support auto refresh
     """
+    title: str
     hashable: m.HashableClass
     callable_name: str
     receiver: Widget
-    refresh_support: bool
+    add_refresh_support: bool
+    add_close_support: bool
 
     def init_validate(self):
         # call super
@@ -110,73 +112,86 @@ class HashableMethodRunnerCallback(Callback):
             )
 
     def fn(self):
-
+        # ----------------------------------------------------- 01
         # get some vars
-        # as the unique widget will be collapsing header
         _h = self.hashable
-        _unique_guid = self.hashable.hex_hash + "_ch"
+        _unique_guid = f"{self.hashable.hex_hash}_{self.callable_name}"
         _sender = self.sender
 
-        # if not added add
-        if _unique_guid not in self.receiver.children.keys():
+        # ----------------------------------------------------- 02
+        # dont do anything is already added to receiver
+        if _unique_guid in self.receiver.children.keys():
+            return
 
-            # # create plot
-            _plot = getattr(
-                self.hashable, self.callable_name
-            )()
-
-            # make collapsing header
-            _collapsing_header = gui.CollapsingHeader(
-                label=self.hashable.group_by_name,
-                closable=False,
-                default_open=True,
+        # ----------------------------------------------------- 03
+        # build the UI
+        # ----------------------------------------------------- 03.01
+        # everything will be added to child widget which is window with
+        # scrollbar
+        # todo: instead of child we can also use Window which can pop out
+        _main_ui = gui.Child(
+            # todo: need to support this
+            menubar=False,
+            border=False,
+        )
+        # add main ui to receiver
+        self.receiver.add_child(
+            guid=_unique_guid, widget=_main_ui,
+        )
+        # ----------------------------------------------------- 03.02
+        # make title and add it main ui
+        _text_title = gui.Text(msgs=self.title)
+        _text_sub_title = gui.Text(
+            msgs=[
+                f"group by: {self.hashable.group_by_name}",
+                f"callable: [{self.hashable.hex_hash}] {self.callable_name}"
+            ],
+            bullet=True,
+        )
+        _main_ui.add_child(guid="title", widget=_text_title)
+        _main_ui.add_child(guid="sub_title", widget=_text_sub_title)
+        # ----------------------------------------------------- 03.03
+        # add buttons ... note that they remain in same line
+        _buttons = []  # type: t.List[gui.Button]
+        # ----------------------------------------------------- 03.03.01
+        # add close button
+        if self.add_close_support:
+            _buttons.append(
+                gui.callback.CloseWidgetCallback.get_button_widget()
             )
-
-            # make close button and add it collapsing header
-            _close_button = gui.callback.CloseWidgetCallback.get_button_widget()
-            _collapsing_header.add_child(
-                guid="close_button", widget=_close_button
-            )
-
-            # make refresh button and add it collapsing header
-            if self.refresh_support:
-
-                # the next button should be in same line
-                _in_same_line = gui.InSameLine()
-                _collapsing_header.add_child(
-                    guid="in_same_line", widget=_in_same_line
+        # ----------------------------------------------------- 03.03.02
+        # add refresh button
+        if self.add_refresh_support:
+            # noinspection PyUnresolvedReferences
+            _buttons.append(
+                gui.callback.RefreshWidgetCallback.get_button_widget(
+                    self.sender.callback
                 )
-
-                # add refresh button
-                # noinspection PyUnresolvedReferences
-                _refresh_button = \
-                    gui.callback.RefreshWidgetCallback.get_button_widget(
-                        self.sender.callback
-                    )
-                _collapsing_header.add_child(
-                    guid="refresh_button", widget=_refresh_button
-                )
-
-            # add separator
-            _collapsing_header.add_child(
-                guid='separator1', widget=gui.Separator()
             )
+        # ----------------------------------------------------- 03.03.03
+        # keep in line
+        gui.helper.keep_in_line(guid="line1", parent=_main_ui, widgets=_buttons)
 
-            # add plot to collapsing header
-            _collapsing_header.add_child(
-                guid="plot", widget=_plot
-            )
+        # ----------------------------------------------------- 03.04
+        # add separator
+        _main_ui.add_child(
+            guid='separator1', widget=gui.Separator()
+        )
 
-            # add separator
-            _collapsing_header.add_child(
-                guid='separator2', widget=gui.Separator()
-            )
+        # ----------------------------------------------------- 03.05
+        # get actual plot we are interested to display
+        _result_widget = getattr(
+            self.hashable, self.callable_name
+        )()
+        _main_ui.add_child(
+            guid="result", widget=_result_widget
+        )
 
-            # add child to receiver
-            self.receiver.add_child(
-                guid=_unique_guid,
-                widget=_collapsing_header
-            )
+        # ----------------------------------------------------- 03.05
+        # add separator
+        _main_ui.add_child(
+            guid='separator2', widget=gui.Separator()
+        )
 
 
 

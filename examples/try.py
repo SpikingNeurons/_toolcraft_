@@ -11,19 +11,19 @@ from toolcraft import storage as s
 
 class A:
 
-    @s.StoreField()
-    def f(
-        self, mode: s.MODE_TYPE, epoch: int
-    ) -> pa.Table:
-        ...
+    def __init__(self):
+        self.a = 333
+
+class AA:
+
+    def __init__(self):
+        self.aa = A()
 
 
-a = A()
-
-print(A.f)
-print(A().f)
-
-print(s.is_store_field(A.f))
-print(s.is_store_field(A().f))
-print(hasattr(A, 'f'))
-print(hasattr(A(), 'f'))
+aa= AA()
+pp = util.rgetattr(aa, 'aa.a')
+print(pp)
+util.rsetattr(aa, 'aa.a', 444)
+pp = util.rgetattr(aa, 'aa.a')
+print(pp)
+print(util.rhasattr(aa, 'aa.a'))

@@ -18,6 +18,7 @@ import datetime
 import pathlib
 import traceback
 import time
+import functools
 import zipfile
 import dataclasses
 import collections
@@ -463,6 +464,34 @@ class StringFmt:
         _left_len = (total_len - _msg_len) // 2
         _right_len = total_len - _msg_len - _left_len
         return f"{fill_char * _left_len}{msg}{fill_char * _right_len}"
+
+
+def rsetattr(obj, attr, val):
+    """
+    Inspired from
+    https://stackoverflow.com/questions/31174295/
+    """
+    pre, _, post = attr.rpartition('.')
+    return setattr(rgetattr(obj, pre) if pre else obj, post, val)
+
+
+def rgetattr(obj, attr, *args):
+    """
+    Inspired from
+    https://stackoverflow.com/questions/31174295/
+    """
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+    return functools.reduce(_getattr, [obj] + attr.split('.'))
+
+
+def rhasattr(obj, attr):
+    """
+    Inspired from
+    https://stackoverflow.com/questions/31174295/
+    """
+    pre, _, post = attr.rpartition('.')
+    return hasattr(rgetattr(obj, pre) if pre else obj, post)
 
 
 def load_class_from_strs(

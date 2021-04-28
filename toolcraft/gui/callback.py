@@ -85,19 +85,18 @@ class HashableMethodRunnerCallback(Callback):
     """
     This callback can call a method of HashableClass.
 
-    The method is expected to return a Widget which then will be added to
-    receiver Widget as a child
+    If tab_group_name is None then we make unique guid for all callable_name
+    else we reuse tab_group_name across different callables this will just
+    mimic the TabGroup behaviour where one receiver widget will be updated.
 
-    Note that method triggers only when button is clicked.
-
-    todo: support auto refresh
+    Note that this will mean that allow_refresh will be True when
+    tab_group_name is not None.
     """
-    title: str
     hashable: m.HashableClass
     callable_name: str
     receiver: Widget
-    add_refresh_support: bool
-    add_close_support: bool
+    allow_refresh: bool
+    tab_group_name: str = None
 
     def init_validate(self):
         # call super
@@ -111,86 +110,48 @@ class HashableMethodRunnerCallback(Callback):
                 ]
             )
 
-    def fn(self):
-        # ----------------------------------------------------- 01
-        # get some vars
-        _h = self.hashable
-        _unique_guid = f"{self.hashable.hex_hash}_{self.callable_name}"
-        _sender = self.sender
-
-        # ----------------------------------------------------- 02
-        # dont do anything is already added to receiver
-        if _unique_guid in self.receiver.children.keys():
-            return
-
-        # ----------------------------------------------------- 03
-        # build the UI
-        # ----------------------------------------------------- 03.01
-        # everything will be added to child widget which is window with
-        # scrollbar
-        # todo: instead of child we can also use Window which can pop out
-        _main_ui = gui.Child(
-            # todo: need to support this
-            menubar=False,
-            border=False,
-        )
-        # add main ui to receiver
-        self.receiver.add_child(
-            guid=_unique_guid, widget=_main_ui,
-        )
-        # ----------------------------------------------------- 03.02
-        # make title and add it main ui
-        _text_title = gui.Text(msgs=self.title)
-        _text_sub_title = gui.Text(
-            msgs=[
-                f"group by: {self.hashable.group_by_name}",
-                f"callable: [{self.hashable.hex_hash}] {self.callable_name}"
-            ],
-            bullet=True,
-        )
-        _main_ui.add_child(guid="title", widget=_text_title)
-        _main_ui.add_child(guid="sub_title", widget=_text_sub_title)
-        # ----------------------------------------------------- 03.03
-        # add buttons ... note that they remain in same line
-        _buttons = []  # type: t.List[gui.Button]
-        # ----------------------------------------------------- 03.03.01
-        # add close button
-        if self.add_close_support:
-            _buttons.append(
-                gui.callback.CloseWidgetCallback.get_button_widget()
-            )
-        # ----------------------------------------------------- 03.03.02
-        # add refresh button
-        if self.add_refresh_support:
-            # noinspection PyUnresolvedReferences
-            _buttons.append(
-                gui.callback.RefreshWidgetCallback.get_button_widget(
-                    self.sender.callback
+        # if tab_group_name is supplied that means you are sharing receiver
+        # object across multiple Callbacks with same tab_group_name
+        # So ensure that the allow_refresh is True
+        if self.tab_group_name is not None:
+            if not self.allow_refresh:
+                e.code.NotAllowed(
+                    msgs=[
+                        f"looks like you are using tab_group_name. So please "
+                        f"ensure that allow_refresh is set to True"
+                    ]
                 )
-            )
-        # ----------------------------------------------------- 03.03.03
-        # keep in line
-        gui.helper.keep_in_line(guid="line1", parent=_main_ui, widgets=_buttons)
 
-        # ----------------------------------------------------- 03.04
-        # add separator
-        _main_ui.add_child(
-            guid='separator1', widget=gui.Separator()
-        )
+    def fn(self):
+        # get some vars
+        _sender = self.sender
+        _hashable = self.hashable
+        _receiver = self.receiver
+        if self.tab_group_name is None:
+            _unique_guid = f"{_hashable.hex_hash}_{self.callable_name}"
+        else:
+            # this make sure that same guid is shared across multiple
+            # callbacks that use same tab_group_name.
+            # Note this applies if _hashable and receiver are same
+            _unique_guid = f"{_hashable.hex_hash}_{self.tab_group_name}"
 
-        # ----------------------------------------------------- 03.05
-        # get actual plot we are interested to display
-        _result_widget = getattr(
-            self.hashable, self.callable_name
+        # if present in children
+        if _unique_guid in _receiver.children.keys():
+            # if allow refresh delete so that it can be deleted later
+            if self.allow_refresh:
+                _receiver.children[_unique_guid].delete()
+            # else return as nothing to do
+            else:
+                return
+
+        # get actual result widget we are interested to display ... and make
+        # it child to receiver
+        _result_widget = util.rgetattr(
+            _hashable, self.callable_name
         )()
-        _main_ui.add_child(
-            guid="result", widget=_result_widget
-        )
-
-        # ----------------------------------------------------- 03.05
-        # add separator
-        _main_ui.add_child(
-            guid='separator2', widget=gui.Separator()
+        _receiver.add_child(
+            guid=_unique_guid,
+            widget=_result_widget
         )
 
 

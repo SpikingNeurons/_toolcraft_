@@ -1243,8 +1243,11 @@ class HashableClass(YamlRepr, abc.ABC):
 
     def get_gui_button(
         self,
+        button_label: str,
         callable_name: str,
-        receiver: "gui.Widget"
+        receiver: "gui.Widget",
+        allow_refresh: bool,
+        tab_group_name: str = None,
     ) -> "gui.Button":
         """
         todo: support refresh
@@ -1253,22 +1256,14 @@ class HashableClass(YamlRepr, abc.ABC):
         # ---------------------------------------------------- 01
         # import
         from . import gui
-        from . import storage
 
         # ---------------------------------------------------- 02
         # test callable name
-        if not hasattr(self, callable_name):
+        if not util.rhasattr(self, callable_name):
             e.code.CodingError(
                 msgs=[
                     f"Callable `{callable_name}` not available for "
                     f"HashableClass {self.__class__}"
-                ]
-            )
-        if not storage.is_store_field(getattr(self, callable_name)):
-            e.code.CodingError(
-                msgs=[
-                    f"The property/method `{callable_name}` of class "
-                    f"{self.__class__} is not a {storage.StoreField}"
                 ]
             )
 
@@ -1278,13 +1273,14 @@ class HashableClass(YamlRepr, abc.ABC):
             hashable=self,
             callable_name=callable_name,
             receiver=receiver,
-            refresh_support=True,
+            allow_refresh=allow_refresh,
+            tab_group_name=tab_group_name,
         )
 
         # ---------------------------------------------------- 04
-        # create button
-        _button = gui.Button(
-
+        # create and return button
+        return gui.Button(
+            label=button_label, callback=_callback,
         )
 
 

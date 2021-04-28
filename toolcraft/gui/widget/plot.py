@@ -171,7 +171,8 @@ class Plot(Widget):
     y3axis_lock_min: bool = False
     y3axis_lock_max: bool = False
     width: int = -1
-    height: int = -1
+    # height: int = -1
+    height: int = 400
     show_color_scale: bool = False
     scale_min: float = 0.0
     scale_max: float = 1.0

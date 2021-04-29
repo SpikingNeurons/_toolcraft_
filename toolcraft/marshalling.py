@@ -250,7 +250,11 @@ class Tracker:
         # call class_init
         cls.class_init()
 
-    def __call__(self, **kwargs) -> "Tracker":
+    def __call__(
+        self, *,
+        on_iter_show_progress_bar: bool = True,
+        **kwargs,
+    ) -> "Tracker":
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
 
@@ -270,7 +274,10 @@ class Tracker:
                 ]
             )
         else:
-            self.internal.on_call_kwargs = kwargs
+            self.internal.on_call_kwargs = {
+                **kwargs,
+                'on_iter_show_progress_bar': on_iter_show_progress_bar
+            }
 
         self.on_call()
 
@@ -310,9 +317,15 @@ class Tracker:
                         f"iterator"
                     ]
                 )
-            with logger.ProgressBar(total=self.iterable_length) as pg:
+            _show_progress_bar = \
+                self.internal.on_call_kwargs['on_iter_show_progress_bar']
+            if _show_progress_bar:
+                with logger.ProgressBar(total=self.iterable_length) as pg:
+                    for _ in _iterable:
+                        pg.update(1)
+                        yield _
+            else:
                 for _ in _iterable:
-                    pg.update(1)
                     yield _
 
     def on_call(self):

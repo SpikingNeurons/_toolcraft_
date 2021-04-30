@@ -256,6 +256,11 @@ def _read_table(
     partitioning: pds.Partitioning,
     table_schema: pa.Schema,
 ) -> pa.Table:
+    """
+    todo: need to find a way to preserve indexes while writing or
+     else find a way to read with sort with pyarrow ... then there
+     will be no need to use to_pandas() and also no need ofr casting
+    """
     # noinspection PyProtectedMember
     _table = pa.Table.from_batches(
         batches=pds.dataset(

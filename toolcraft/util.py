@@ -1806,18 +1806,63 @@ def compute_class_weights(
     _labels: np.ndarray
 ) -> t.Tuple[np.ndarray, np.ndarray]:
     _unique_labels = np.sort(np.unique(_labels))
-    _unique_labels_weight = sklearn.utils.compute_class_weight(
+    _unique_labels_weight = sklearn.utils.compute_class_
+
+    weight(
         'balanced', _unique_labels, _labels)
     return _unique_labels, _unique_labels_weight
 
 
-def pa_to_np(data: pa.ChunkedArray) -> np.ndarray:
+def np_to_pa(data: np.ndarray) -> pa.Array:
     """
-    Note that we convert to list as there is problem with dearpygui to
-    sometimes read numpy arrays
-    todo: fix this after testing with new releases of dearpygui
+    Unit test code
+
+    a = np.zeros((2, 3, 4, 5), dtype=np.uint8)
+    pa_a = util.np_to_pa(a)
+    _a = util.pa_to_np(pa_a)
+    print(a.shape, a.dtype)
+    print(_a.shape, _a.dtype)
     """
-    return np.asarray(data.to_pylist())
+
+    def _make_list(_data):
+        if _data.ndim == 1:
+            return _data
+        else:
+            return [_make_list(_) for _ in _data]
+
+    return pa.array(_make_list(_data=data))
+
+
+def pa_to_np(data: t.Union[pa.Array, pa.ChunkedArray]) -> np.ndarray:
+    """
+    Unit test code
+
+    a = np.zeros((2, 3, 4, 5), dtype=np.uint8)
+    pa_a = util.np_to_pa(a)
+    _a = util.pa_to_np(pa_a)
+    print(a.shape, a.dtype)
+    print(_a.shape, _a.dtype)
+    """
+    if isinstance(data, pa.Array):
+        data = data.to_numpy(zero_copy_only=False)
+    elif isinstance(data, pa.ChunkedArray):
+        data = data.to_numpy()
+    else:
+        e.code.CodingError(
+            msgs=[
+                f"Expected {pa.Array} or {pa.ChunkedArray} but found "
+                f"{type(data)}"
+            ]
+        )
+
+    def _make_list(_data):
+        if _data.dtype != object:
+            return _data
+        else:
+            return [_make_list(_) for _ in _data]
+
+    # noinspection PyTypeChecker
+    return np.asarray(_make_list(_data=data))
 
 
 def one_hot_to_simple_labels(oh_label: pd.Series) -> pd.Series:

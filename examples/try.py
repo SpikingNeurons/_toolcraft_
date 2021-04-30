@@ -9,21 +9,13 @@ import pyarrow as pa
 from toolcraft import gui, util
 from toolcraft import storage as s
 
-class A:
 
-    def __init__(self):
-        self.a = 333
+a = np.zeros((2, 3, 4, 5), dtype=np.uint8)
+pa_a = util.np_to_pa(a)
+_a = util.pa_to_np(pa_a)
+print(a.shape, a.dtype)
+print(_a.shape, _a.dtype)
 
-class AA:
-
-    def __init__(self):
-        self.aa = A()
+tt = pa.table({'a': pa_a})
 
 
-aa= AA()
-pp = util.rgetattr(aa, 'aa.a')
-print(pp)
-util.rsetattr(aa, 'aa.a', 444)
-pp = util.rgetattr(aa, 'aa.a')
-print(pp)
-print(util.rhasattr(aa, 'aa.a'))

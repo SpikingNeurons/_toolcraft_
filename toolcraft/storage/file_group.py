@@ -523,7 +523,9 @@ class FileGroup(StorageHashable, abc.ABC):
         # generated
         if self.is_created:
             if self.is_outdated:
-                # todo: add code to ask permission from user
+                # todo: dont try to `force=True` as it does not work ...
+                #   It currently asks permission but that does not work ...
+                #   hence just try to delete physically
                 self.delete()
                 self.create()
                 self.check()

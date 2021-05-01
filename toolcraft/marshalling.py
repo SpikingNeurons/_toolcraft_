@@ -973,7 +973,9 @@ class HashableClass(YamlRepr, abc.ABC):
                 f"Do you need some grouping?",
                 f"Are you using this for plotting or organizing folders?",
                 f"Then please override this property or else refrain from "
-                f"using this property."
+                f"using this property.",
+                f"Check class {self.__class__} and override its property "
+                f"`group_by_name` is needed"
             ]
         )
         return ""

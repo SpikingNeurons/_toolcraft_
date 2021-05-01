@@ -6,6 +6,8 @@ The rule for now is to
 import abc
 import dataclasses
 import typing as t
+
+import yaml
 from dearpygui import core as dpg
 import numpy as np
 import enum
@@ -54,7 +56,9 @@ class Color(m.FrozenEnum, enum.Enum):
                 msgs=[f"Unknown {self}"]
             )
 
-    # noinspection PyPep8Naming
+    # todo: this does not match with parent signature may be on_iter
+    #  behaviour can be migrated to child class
+    # noinspection PyPep8Naming,PyMethodOverriding
     def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
         """
         This method return fake Color when called with Color.CUSTOM(...)
@@ -555,18 +559,18 @@ class Widget(m.HashableClass, abc.ABC):
     def hide(self, children_only: bool = False):
         # todo: needs testing
         if children_only:
-            for child in dpg.get_item_children(item=self.id):
+            for child in dpg.get_item_children(item=self.guid):
                 dpg.configure_item(item=child, show=False)
         else:
-            dpg.configure_item(item=self.id, show=False)
+            dpg.configure_item(item=self.guid, show=False)
 
     def show(self, children_only: bool = False):
         # todo: needs testing
         if children_only:
-            for child in dpg.get_item_children(item=self.id):
+            for child in dpg.get_item_children(item=self.guid):
                 dpg.configure_item(item=child, show=True)
         else:
-            dpg.configure_item(item=self.id, show=True)
+            dpg.configure_item(item=self.guid, show=True)
 
     def preview(self):
         """
@@ -579,6 +583,17 @@ class Widget(m.HashableClass, abc.ABC):
         _dash.build()
         _dash.add_child(guid="child", widget=self)
         _dash.run()
+
+    def guid_dom(self) -> t.Tuple[str, t.Union[None, t.Dict]]:
+        if not self.is_container:
+            return self.guid, None
+
+        _ret = {}
+        for _w in self.children.values():
+            _name, _children = _w.guid_dom()
+            _ret[_name] = _children
+
+        return self.guid, _ret
 
 
 @dataclasses.dataclass(frozen=True)

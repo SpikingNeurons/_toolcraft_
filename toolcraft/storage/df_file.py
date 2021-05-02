@@ -574,32 +574,6 @@ class DfFile(Folder):
         else:
             return bool(_table)
 
-    def delete(self, *, force: bool = False):
-        """
-        This is delete related to Folder from which DfFile extends.
-        As DfFile contains None we handle the delete as there are files that
-        cannot be tracked by items.
-
-        Note for delete mode `d` we have method `delete_()` and should not be
-        confused with this method
-
-        Here we wipe all partitions and files for pyarrow i.e. delete_ with
-        no filters i.e. delete_(filters=None)
-
-        Args:
-            force:
-
-        Returns:
-
-        """
-        # delete
-        # todo: do u want to add permission check for
-        #  Folder similar to FileGroup
-        # We just delete everything in the folder
-        if self.path.exists():
-            # noinspection PyTypeChecker
-            self.file_system.delete(self.path, recursive=True)
-
     # Note that the parent delete is for Folder but for DfFile also we have
     # folder which represents folder and we will take care of the delete. But
     # note that this delete is special with `filters` argument while `force`
@@ -610,6 +584,12 @@ class DfFile(Folder):
     ) -> bool:
         """
         Note that this is not Folder.delete but delete related to mode=`d`
+
+        IMPORTANT:
+        This delete_ with filters=None will delete all contents of
+        StoreFieldsFolder but will keep the empty dir and its state files
+        intact. While delete acts like normal Folder.delete() and is also
+        responsible to delete state files and empty dirs.
 
         Note that delete is not supported by pyarrow so we have our own
         implementation. We expect simple filters that can resolve to folder
@@ -637,6 +617,8 @@ class DfFile(Folder):
         # DO NOT BE TEMPTED .... to call delete which deletes the state file
         # this is because consecutive writes will work but since they do not
         # use create method of Folder the state files will not be generated
+        # ... also that is never the job of delete_ as it only is responsible
+        # for pyarrow stuff and not the Folder stuff
         if not bool(filters):
             # noinspection PyTypeChecker
             self.file_system.delete(self.path, recursive=True)
@@ -783,6 +765,11 @@ class DfFile(Folder):
                         # noinspection PyTypeChecker
                         self.file_system.delete(
                             _nested_path, recursive=False)
+                        # if nested path is empty the delete empty dir
+                        # todo: can this be optimized ??
+                        if _nested_path.exists():
+                            if util.io_is_dir_empty(_nested_path):
+                                _nested_path.unlink()
                         # update global flag
                         _something_deleted |= True
                     # else call the method in recursion

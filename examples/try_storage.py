@@ -1,12 +1,7 @@
 """
 todo: Some bugs to be fixed
-  [1]
+  [1] try_arrow_storage()
   Exists check with filter queries
-    + need test cases
-    + and is not working
-  [2]
-  Delete with filter query deletes leaf nodes but top level partition cols
-  that are empty dirs are not deleted
     + need test cases
     + and is not working
 """
@@ -286,7 +281,7 @@ class TestStorage(m.HashableClass):
 
     @property
     def store_fields_location(self) -> pathlib.Path:
-        return _TEMP_PATH
+        return _TEMP_PATH / self.name
 
     @staticmethod
     def data_vector(
@@ -724,11 +719,11 @@ def try_main():
     #     util.io_path_delete(_TEMP_PATH, force=True)
     _TEMP_PATH.mkdir(parents=True, exist_ok=True)
     _TEMP_PATH = _TEMP_PATH.resolve()
-    # try_hashable_ser()
-    # try_download_file()
-    # try_auto_hashed_download_file()
-    # try_metainfo_file()
-    # try_creating_folders()
+    try_hashable_ser()
+    try_download_file()
+    try_auto_hashed_download_file()
+    try_metainfo_file()
+    try_creating_folders()
     try_arrow_storage()
     _TEMP_PATH.rmdir()
 

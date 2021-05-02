@@ -708,6 +708,38 @@ def try_arrow_storage():
 
     # ---------------------------------------------------------06
     print("---------------------------------------------------------06")
+    # todo: add unittests for columns ... also data dict cannot take multiple
+    #  columns
+    print("check columns ... still todo")
+    # using data dict for dumping
+    # r = ts.store_with_data_kwarg(
+    #     mode='w', epoch=1, data={'a': [1], 'b': [11]}
+    # )
+    # assert r
+    # r = ts.store_with_data_kwarg(
+    #     mode='w', epoch=2, data={'a': [2], 'b': [22]}
+    # )
+    # assert r
+    # r = ts.store_with_data_kwarg(
+    #     mode='w', epoch=3, data={'a': [3], 'b': [33]}
+    # )
+    # assert r
+
+    r = ts.store_with_data_kwarg(mode='r')
+    print(r.to_pandas())
+
+    r = ts.store_with_data_kwarg(mode='r', epoch=2)
+    print(r.to_pandas())
+
+    r = ts.store_with_data_kwarg(mode='r', epoch=2, columns=['a'])
+    print(r.to_pandas())
+
+    r = ts.store_with_data_kwarg(mode='d')
+    print("ts.store_with_data_kwarg(mode='d')")
+    assert r
+
+    # ---------------------------------------------------------07
+    print("---------------------------------------------------------07")
     # finally delete folder for hashable that has StoreFields
     ts.store_fields_folder.delete()
     print("ts.store_fields_folder.delete()")

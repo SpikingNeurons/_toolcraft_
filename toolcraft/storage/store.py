@@ -422,8 +422,15 @@ class StoreField:
         # return wrapped method that will be called instead of decorated method
         # Note that the method used for wrapping will anyways call the
         # original dec_fn
-        def _wrap_fn(for_hashable, *args, **kwargs):
-            return self.on_call(for_hashable=for_hashable, *args, **kwargs)
+        def _wrap_fn(*args, **kwargs):
+            if len(args) != 1:
+                e.code.CodingError(
+                    msgs=[
+                        f"The class methods decorated with {StoreField} do "
+                        f"not allow args ... only use kwargs ..."
+                    ]
+                )
+            return self.on_call(for_hashable=args[0], **kwargs)
         _wrap_fn._is_store_field = True
         return _wrap_fn
 

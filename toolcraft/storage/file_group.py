@@ -1505,13 +1505,18 @@ class NpyFileGroup(FileGroup, abc.ABC):
             for fk in self.file_keys
         }
 
+    # noinspection PyMethodOverriding
     def __call__(
         self, *,
+        on_iter_show_progress_bar: bool = True,
         shuffle_seed: SHUFFLE_SEED_TYPE,
     ) -> "NpyFileGroup":
         # call super
         # noinspection PyTypeChecker
-        return super().__call__(shuffle_seed=shuffle_seed)
+        return super().__call__(
+            on_iter_show_progress_bar=on_iter_show_progress_bar,
+            shuffle_seed=shuffle_seed
+        )
 
     def on_enter(self):
         # call super

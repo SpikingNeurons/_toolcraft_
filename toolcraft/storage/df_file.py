@@ -737,7 +737,7 @@ class DfFile(Folder):
                 # todo: this is when folder name is just column value
                 _val = _nested_path.name
                 try:
-                    # note that if int then becomes float bit thats okay with
+                    # note that if int then becomes float bit that is okay with
                     # expression matching in python
                     _val = float(_val)
                 except ValueError:

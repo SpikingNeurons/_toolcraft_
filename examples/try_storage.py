@@ -1,5 +1,5 @@
 """
-todo: Some bugs and their test cases
+todo: Some bugs to be fixed
   [1]
   Exists check with filter queries
     + need test cases
@@ -265,9 +265,18 @@ def try_creating_folders():
 
     # or else just delete the super parent and things will chain
     folder0.delete(force=True)
-    # note that after this any access to all four instances will get blocked
-    # folder0.items
-    # folder3.items
+    # note that after this any access to all four instances should get
+    # blocked but we still can access them ... check below
+    # todo: need to figure out what to do with folders that are deleted ...
+    #  adding some flag will increase overhead in __getattribute__ method ...
+    #  somehow need to invalidate use of the instance maybe by overriding
+    #  dunder methods on fly
+    print(folder0.items.keys())
+    print(folder1.items.keys())
+    print(folder2.items.keys())
+    # not this one as it contains None so cannot access items but this too
+    # needs to be blocked for any future access
+    # print(folder3.items.keys())
 
 
 @dataclasses.dataclass(frozen=True)
@@ -715,11 +724,11 @@ def try_main():
     #     util.io_path_delete(_TEMP_PATH, force=True)
     _TEMP_PATH.mkdir(parents=True, exist_ok=True)
     _TEMP_PATH = _TEMP_PATH.resolve()
-    try_hashable_ser()
-    try_download_file()
-    try_auto_hashed_download_file()
-    try_metainfo_file()
-    try_creating_folders()
+    # try_hashable_ser()
+    # try_download_file()
+    # try_auto_hashed_download_file()
+    # try_metainfo_file()
+    # try_creating_folders()
     try_arrow_storage()
     _TEMP_PATH.rmdir()
 

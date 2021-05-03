@@ -31,6 +31,8 @@ class Color(m.FrozenEnum, enum.Enum):
     WHITE = enum.auto()
     BLACK = enum.auto()
     CUSTOM = enum.auto()
+    GREY = enum.auto()
+    RED = enum.auto()
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -44,6 +46,10 @@ class Color(m.FrozenEnum, enum.Enum):
             return [255., 255., 255., 255.]
         elif self is self.BLACK:
             return [0., 0., 0., 255.]
+        elif self is self.RED:
+            return [255., 0., 0., 255.]
+        elif self is self.GREY:
+            return [127., 127., 127., 127.]
         elif self is self.CUSTOM:
             e.code.CodingError(
                 msgs=[

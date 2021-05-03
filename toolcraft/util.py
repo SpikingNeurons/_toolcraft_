@@ -1813,6 +1813,20 @@ def compute_class_weights(
     return _unique_labels, _unique_labels_weight
 
 
+def np_to_lnp(data: np.ndarray) -> t.List:
+    """
+    Convert any n-dim array to nested list of lists of 1D array
+    """
+
+    def _make_list(_data):
+        if _data.ndim == 1:
+            return _data
+        else:
+            return [_make_list(_) for _ in _data]
+
+    return _make_list(_data=data)
+
+
 def np_to_pa(data: np.ndarray) -> pa.Array:
     """
     Unit test code
@@ -1823,14 +1837,7 @@ def np_to_pa(data: np.ndarray) -> pa.Array:
     print(a.shape, a.dtype)
     print(_a.shape, _a.dtype)
     """
-
-    def _make_list(_data):
-        if _data.ndim == 1:
-            return _data
-        else:
-            return [_make_list(_) for _ in _data]
-
-    return pa.array(_make_list(_data=data))
+    return pa.array(np_to_lnp(data=data))
 
 
 def pa_to_np(data: t.Union[pa.Array, pa.ChunkedArray]) -> np.ndarray:

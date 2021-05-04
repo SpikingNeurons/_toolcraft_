@@ -689,7 +689,7 @@ class Dashboard(Widget):
         # dpgc.set_main_window_resizable(False)
         dpg.set_main_window_title(self.title)
 
-        assets.Font.RobotoRegular.set(size=14)
+        assets.Font.RobotoRegular.set(size=16)
 
         # dpg.set_style_window_border_size(0.0)
         # dpg.set_style_child_border_size(0.0)

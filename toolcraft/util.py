@@ -3,7 +3,6 @@ Module to hold simple utilities that can be built with minimal dependencies.
 # todo: Cut down on dependencies ...
 """
 
-import functools
 import typing as t
 import pyarrow as pa
 import numpy as np
@@ -11,7 +10,6 @@ import sys
 import inspect
 import abc
 import gc
-import sklearn
 import types
 import hashlib
 import datetime
@@ -865,11 +863,122 @@ def get_object_memory_usage(obj) -> int:
     return size
 
 
-def _get_hash(
-    path_or_npy_arr, hash_type: str
-) -> t.Union[str, dict]:
+def _generate_descriptors_for_group_tasks(
+    _items: t.Dict[str, t.Any]
+) -> t.Dict[str, str]:
+
+    _num_items = len(_items)
+    _max_key_len = max([len(_) for _ in _items.keys()])
+    _descriptors = {
+        _: f"{i+1:0{len(str(_num_items))}d}/{_num_items} > {_}"
+        for i, _ in enumerate(_items.keys())
+    }
+    _max_desc_len = max([len(_) for _ in _descriptors.values()])
+    _descriptors = {
+        k: v.ljust(_max_desc_len, ' ')
+        for k, v in _descriptors.items()
+    }
+    return _descriptors
+
+
+def crosscheck_hashes_for_paths(
+    paths: t.Dict[str, pathlib.Path],
+    msg: str,
+    hash_type: t.Literal['sha256', 'md5'] = 'sha256',
+    correct_hashes: t.Dict[str, str] = None
+) -> t.Optional[t.Dict[str, str]]:
     """
-    Capable of hashing file and folders on disk .... and numpy errors in memory
+    Compute hashes for group of paths.
+
+    If correct_hashes is not provided then we will return all computed hashes
+
+    If correct_correct_hashes are provided will print only hashes that did
+    not match and raise error
+
+    If correct_hashes is provided and everything matches then will return
+    peacefully
+
+    Args:
+        paths:
+        hash_type:
+        msg:
+        correct_hashes:
+
+    Returns:
+
+    """
+    # -------------------------------------------------------- 01
+    # handle spinner enter
+    _last_spinner = logger.Spinner.get_last_spinner()
+    if _last_spinner is not None:
+        _last_spinner.hide()
+
+    # -------------------------------------------------------- 02
+    # log
+    if _last_spinner is not None:
+        _last_spinner.info(
+            msg=f"Computing hashes for {msg}",
+            annotate_with_time_elapsed=False,
+        )
+    else:
+        _LOGGER.info(msg=f"Computing hashes for {msg}")
+
+    # -------------------------------------------------------- 03
+    # compute hashes
+    _descriptors = _generate_descriptors_for_group_tasks(_items=paths)
+    _store = {}
+    for _key, _path in paths.items():
+        _correct_hash = None if correct_hashes is None else correct_hashes[_key]
+        _computed_hash, _ = crosscheck_hash(
+            path_or_npy_arr=paths[_key],
+            hash_type=hash_type,
+            msg=_descriptors[_key],
+            correct_hash=_correct_hash,
+        )
+        if correct_hashes is None:
+            _store[_key] = _computed_hash
+        else:
+            if _computed_hash != _correct_hash:
+                _store[_key] = dict(
+                    provided=_correct_hash, computed=_computed_hash
+                )
+
+    # -------------------------------------------------------- 04
+    # handle spinner exit
+    if _last_spinner is not None:
+        _last_spinner.show()
+
+    # -------------------------------------------------------- 05
+    # handle return
+    if correct_hashes is None:
+        return _store
+    else:
+        if bool(_store):
+            e.code.CodingError(
+                msgs=[
+                    f"Hashes for some files did not match. Check below",
+                    _store
+                ]
+            )
+        return None
+
+
+def crosscheck_hash(
+    path_or_npy_arr: t.Union[np.ndarray, pathlib.Path],
+    hash_type: t.Literal['sha256', 'md5'],
+    msg: str,
+    correct_hash: str = None
+) -> t.Tuple[str, t.Optional[str]]:
+    """
+
+    Args:
+        path_or_npy_arr:
+        hash_type:
+        msg:
+        correct_hash:
+
+    Returns:
+        Tuple (computed_hash, correct_hash)
     """
     # grab hashing module
     if hash_type == "sha256":
@@ -894,22 +1003,37 @@ def _get_hash(
                     unit_divisor=1024,
                     miniters=1,
                 ) as pb:
+                    # set description
+                    pb.set_description_str(msg)
+                    if correct_hash is not None:
+                        pb.set_postfix_str("⚠")
+
+                    # compute
                     for chunk in iter(lambda: fb.read(_chunk_size), b''):
                         hash_module.update(chunk)
                         pb.update(_chunk_size)
-                fb.close()
-        elif path_or_npy_arr.is_dir():
-            _ret = {}
-            for p in path_or_npy_arr.iterdir():
-                _ret[p.name] = _get_hash(p, hash_type)
-            return _ret
+                    fb.close()
+                    computed_hash = hash_module.hexdigest()
+
+                    # test
+                    if correct_hash is not None:
+                        _hash_is_correct = computed_hash == correct_hash
+                        _status = "☑" if _hash_is_correct else "❎"
+                        pb.set_postfix_str(_status)
         else:
             e.code.CodingError(
                 msgs=[f"Unknown type for path {path_or_npy_arr}"]
             )
+            raise
     elif isinstance(path_or_npy_arr, np.ndarray):
-        # noinspection PyTypeChecker
-        hash_module.update(path_or_npy_arr)
+        with logger.Spinner(
+            title=f"{msg}",
+            logger=_LOGGER,
+        ) as spinner:
+            spinner.text = "Computing hash ..."
+            # noinspection PyTypeChecker
+            hash_module.update(path_or_npy_arr)
+            computed_hash = hash_module.hexdigest()
     else:
         e.code.NotAllowed(
             msgs=[
@@ -917,197 +1041,82 @@ def _get_hash(
                 f"Found {path_or_npy_arr} of type {type(path_or_npy_arr)}"
             ]
         )
-    return hash_module.hexdigest()
-
-
-# def compute_sha256_hash(
-#         path_or_npy_arr: t.Union[pathlib.Path, np.ndarray]
-# ) -> t.Union[str, t.Dict]:
-#     return _get_hash(path_or_npy_arr, "sha256")
-#
-#
-# def compute_md5_hash(
-#         path_or_npy_arr: t.Union[pathlib.Path, np.ndarray]
-# ) -> t.Union[str, t.Dict]:
-#     return _get_hash(path_or_npy_arr, "md5")
-
-
-def compute_hashes(_path: pathlib.Path) -> t.Union[str, dict]:
-    """
-    If file return str ...
-    If dir returns nested dict representing the internal structure of dir
-    and with hashes if the item is file ...
-
-    This computes hashes for FileGroup when `self.is_auto_hash` is True
-    i.e. when `self.hashes` is None.
-    We use this when files are generated automatically.
-    """
-    if not _path.exists():
-        e.code.NotAllowed(
-            msgs=[
-                f"Path {_path} does not exist on the disk ..."
-            ]
-        )
         raise
 
-    # we always use sha256 for auto hashing
-    return _get_hash(_path, "sha256")
+    # final return
+    return computed_hash, correct_hash
 
 
-def crosscheck_hashes(
-    _path: pathlib.Path, _hashes: t.Union[str, dict],
-    _key: str
-) -> t.List[t.Dict[str, str]]:
-    """
-    Return list of failed or unknown of file paths ... if empty
-    everything is fine
-    """
-    # this is special key that is reserved for the purpose of use with
-    # folders with nested dirs or files
-    # noinspection PyPep8Naming
-    RESERVED_UNKNOWN_KEY = "__unknown__"
+def download_files(
+    paths: t.Dict[str, pathlib.Path],
+    urls: t.Dict[str, str],
+    msg: str,
+):
 
-    # ----------------------------------------------------------- 01
-    # some validation
-    # if path does not exist
-    if not _path.exists():
+    # -------------------------------------------------------- 01
+    # handle spinner enter
+    _last_spinner = logger.Spinner.get_last_spinner()
+    if _last_spinner is not None:
+        _last_spinner.hide()
+
+    # -------------------------------------------------------- 02
+    # log
+    if _last_spinner is not None:
+        _last_spinner.info(
+            msg=f"Downloading files for {msg}",
+            annotate_with_time_elapsed=False,
+        )
+    else:
+        _LOGGER.info(msg=f"Downloading files for {msg}")
+
+    # -------------------------------------------------------- 03
+    # compute hashes
+    _descriptors = _generate_descriptors_for_group_tasks(_items=paths)
+    _store = {}
+    for _key, _path in paths.items():
+        _ret = download_file(
+            file_path=paths[_key],
+            file_url=urls[_key],
+            msg=_descriptors[_key],
+            raise_error=False,
+        )
+        if _ret is not None:
+            _store[_key] = _ret
+
+    # -------------------------------------------------------- 04
+    # handle spinner exit
+    if _last_spinner is not None:
+        _last_spinner.show()
+
+    # -------------------------------------------------------- 05
+    # handle return
+    if bool(_store):
         e.code.CodingError(
             msgs=[
-                f"Path {_path} for key {_key} does not exist"
+                f"Some files failed to download. Check below",
+                _store
             ]
         )
-    # if path is dir hashes must be a dict
-    if _path.is_dir():
-        if not isinstance(_hashes, dict):
-            e.code.CodingError(
-                msgs=[
-                    f"When crosschecking folder provided hashes "
-                    f"must be a dict ... instead found {type(_hashes)} ...",
-                    {
-                        "path": _path,
-                        "nested_key": _key,
-                    }
-                ]
-            )
-    # if path is file hashes must be a str
-    elif _path.is_file():
-        if not isinstance(_hashes, str):
-            e.code.CodingError(
-                msgs=[
-                    f"When crosschecking file provided hashes "
-                    f"must be a str ... instead found {type(_hashes)} ...",
-                    {
-                        "path": _path,
-                        "nested_key": _key,
-                        "hashes": _hashes,
-                    }
-                ]
-            )
-        # hashes should never be __unknown__
-        if RESERVED_UNKNOWN_KEY == _hashes:
-            e.code.NotAllowed(
-                msgs=[
-                    f"Please avoid using hash with reserved value "
-                    f"{RESERVED_UNKNOWN_KEY}"
-                ]
-            )
-    # should never happen
-    else:
-        e.code.ShouldNeverHappen(msgs=[
-            f"Check: ",
-            {
-                "path": _path,
-                "nested_key": _key,
-                "hashes": _hashes,
-            }
-        ])
-    # ----------------------------------------------------------- 02
-    # if folder
-    if _path.is_dir():
-        _ret = []
-        for p in _path.iterdir():
-            # if some unknown file or folder the hashes are set as below
-            _hashes_if_unknown = {} if p.is_dir() else RESERVED_UNKNOWN_KEY
-            # recursive call
-            _ret += crosscheck_hashes(
-                p, _hashes.get(p.name, _hashes_if_unknown), f"{_key}:{p.name}"
-            )
-        return _ret
-    # ----------------------------------------------------------- 03
-    # if file
-    if _path.is_file():
-        _computed_hash = _get_hash(_path, "sha256")
-        if _computed_hash != _hashes:
-            return [
-                {
-                    "file": _key,
-                    "expected_hash": _hashes,
-                    "computed_hash": _computed_hash,
-                }
-            ]
-        else:
-            return []
-    # ----------------------------------------------------------- 03
-    e.code.ShouldNeverHappen(msgs=[f"Must exit by now ..."])
-
-
-def check_hash_sha256(
-    path_or_npy_arr: t.Union[pathlib.Path, np.ndarray],
-    check_sum: str
-) -> bool:
-    _LOGGER.info(
-        msg="Checking sha256 hash ..."
-    )
-    _calc_hash = _get_hash(path_or_npy_arr, "sha256")
-    _LOGGER.debug(
-        msg="sha256 checksum",
-        msgs=[
-            {
-                "provided  ": check_sum,
-                "calculated": _calc_hash
-            }
-        ]
-    )
-    return _calc_hash == check_sum
-
-
-def check_hash_md5(
-    path_or_npy_arr: t.Union[pathlib.Path, np.ndarray],
-    check_sum: str
-) -> bool:
-    _LOGGER.info(
-        msg="Checking md5 hash ..."
-    )
-    _calc_hash = _get_hash(path_or_npy_arr, "md5")
-    _LOGGER.debug(
-        msg="md5 checksum",
-        msgs=[
-            {
-                "provided  ": check_sum,
-                "calculated": _calc_hash
-            }
-        ]
-    )
-    return _calc_hash == check_sum
 
 
 def download_file(
     file_path: pathlib.Path,
     file_url: str,
-):
+    msg: str,
+    raise_error: bool = True
+) -> t.Optional[t.Dict[str, str]]:
     """
-    Downloads a file from a URL if it not already in the cache.
+    If raise_error is True and there is a error then it will return a dict
+    with error messages else it will return None
 
-    Files in tar, tar.gz, tar.bz, and zip formats can also be extracted.
-    Passing a hash will verify the file after download. The command line
-    programs `shasum` and `sha256sum` can compute the hash.
-
-    Arguments:
-    file_path: File Path where to save the file.
-    file_url: URL of the file.
+    Args:
+        file_path:
+        file_url:
+        msg:
+        raise_error:
 
     Returns:
-        None
+
     """
     # ---------------------------------------------------------- 01
     # create parent if not present
@@ -1119,68 +1128,94 @@ def download_file(
             )
     else:
         file_path.parent.mkdir(parents=True)
+    # if file_path exists and is file we return
+    if file_path.exists():
+        if not file_path.is_file():
+            e.code.NotAllowed(
+                msgs=[
+                    f"The download file already exists and we expect "
+                    f"it to be a file ..."
+                ]
+            )
 
     # ---------------------------------------------------------- 02
-    # if last spinner there pause it
-    with logger.Spinner.get_last_spinner():
+    _error_msgs = None
+    with logger.ProgressBar(
+        unit='B', unit_scale=True, unit_divisor=1024, miniters=1,
+        # desc=file_path.name,
+    ) as pb:
 
-        # ------------------------------------------------------ 03
-        # log
-        _LOGGER.info(
-            msg="Downloading ...",
-            msgs=[
-                {
-                    "from url": file_url,
-                    "to file ":
-                        str(
-                            file_path.relative_to(
-                                file_path.parent.parent.parent
-                            )
-                        ),
-                }
-            ]
-        )
+        # ------------------------------------------------------ 02.01
+        # set description
+        pb.set_description_str(msg)
+        pb.set_postfix_str("⚠")
 
-        # ------------------------------------------------------ 04
-        error_msg = 'URL fetch failure on {}: {} -- {}'
+        # ------------------------------------------------------ 02.02
+        # retrieve
         try:
-            try:
-                with logger.ProgressBar(
-                    unit='B', unit_scale=True, unit_divisor=1024, miniters=1,
-                    # desc=file_path.name,
-                ) as _pg:
+            # retrieve data
+            # todo: can we have our own url_retrieve which can also
+            #  compute hash as it download file ... this way we need
+            #  not store data locally and can directly upload data to
+            #  network storage as we download data
+            if not file_path.exists():
+                urlretrieve(
+                    url=file_url,
+                    filename=file_path,
+                    reporthook=pb.hook_for_urlretrive,
+                    # todo: in case if some download server need extra
+                    #  information may be this is the argument we need
+                    #  to set
+                    data=None,
+                )
+            else:
+                # as file exists set the pb total
+                pb.total = pb.n
 
-                    # retrieve data
-                    # todo: can we have our own url_retrieve which can also
-                    #  compute hash as it download file ... this way we need
-                    #  not store data locally and can directly upload data to
-                    #  network storage as we download data
-                    urlretrieve(
-                        url=file_url,
-                        filename=file_path,
-                        reporthook=_pg.hook_for_urlretrive,
-                        # todo: in case if some download server need extra
-                        #  information may be this is the argument we need
-                        #  to set
-                        data=None,
-                    )
+        except HTTPError as exp:
+            # noinspection PyUnresolvedReferences
+            _error_msgs = dict(
+                url=file_url,
+                error_type='HTTPError',
+                error_code=exp.code,
+                error_msg=exp.msg
+            )
 
-                    _pg.total = _pg.n
+        except URLError as exp:
+            # noinspection PyUnresolvedReferences
+            _error_msgs = dict(
+                url=file_url,
+                error_type='URLError',
+                error_no=exp.errno,
+                error_reason=exp.reason,
+            )
 
-            except HTTPError as exp:
-                # noinspection PyUnresolvedReferences
-                raise Exception(error_msg.format(file_url, exp.code, exp.msg))
+        except KeyboardInterrupt as exp:
+            # noinspection PyUnresolvedReferences
+            _error_msgs = dict(
+                url=file_url,
+                error_type='KeyboardInterrupt',
+            )
 
-            except URLError as exp:
-                raise Exception(error_msg.format(file_url, exp.errno, exp.reason))
-
-        except (Exception, KeyboardInterrupt) as exp:
+        # ------------------------------------------------------ 02.03
+        # if there is error
+        if bool(_error_msgs):
+            # set pb
+            pb.set_postfix_str("❎")
             # delete if any files created
             if file_path.exists():
                 file_path.unlink()
-
-            # raise if any exceptions
-            raise exp
+            # raise or return
+            if raise_error:
+                raise Exception(_error_msgs)
+            else:
+                return _error_msgs
+        # else
+        else:
+            # set pb
+            pb.set_postfix_str("☑")
+            # return
+            return None
 
 
 def pathlib_rmtree(
@@ -1805,12 +1840,13 @@ def try_hook_instance_method():
 def compute_class_weights(
     _labels: np.ndarray
 ) -> t.Tuple[np.ndarray, np.ndarray]:
-    _unique_labels = np.sort(np.unique(_labels))
-    _unique_labels_weight = sklearn.utils.compute_class_
-
-    weight(
-        'balanced', _unique_labels, _labels)
-    return _unique_labels, _unique_labels_weight
+    ...
+    # _unique_labels = np.sort(np.unique(_labels))
+    # _unique_labels_weight = sklearn.utils.compute_class_
+    #
+    # weight(
+    #     'balanced', _unique_labels, _labels)
+    # return _unique_labels, _unique_labels_weight
 
 
 def np_to_lnp(data: np.ndarray) -> t.List:

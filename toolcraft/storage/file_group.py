@@ -565,71 +565,12 @@ class FileGroup(StorageHashable, abc.ABC):
     # noinspection PyUnusedLocal
     def check(self, *, force: bool = False):
 
-        # computed file hashes must match self.hashes
-        _failed_key_paths = {}
-        # some helper variables
-        # todo: make it like progress bar
-        _total_key_paths = len(self.file_keys)
-        _s_fmt = len(str(_total_key_paths))
-        # noinspection SpellCheckingInspection
-        with logger.Spinner(
-                title=f"Hash check for file group "
-                      f"`{self.path.name}`",
-                logger=_LOGGER
-        ) as spinner:
-            _hashes = self.get_hashes()
-            for i, fk in enumerate(self.file_keys):
-                _key_path = self.path / fk
-                _provided_hashes = _hashes[fk]
-                _failed_or_unknown_key_paths = util.crosscheck_hashes(
-                    _key_path, _provided_hashes, fk
-                )
-                if bool(_failed_or_unknown_key_paths):
-                    spinner.text = f"FileGroup {fk!r}: ❎ (FAILED) " \
-                                   f"{i: {_s_fmt}d}/{_total_key_paths}"
-                    spinner.success = False
-                    _failed_key_paths[fk] = _failed_or_unknown_key_paths
-                else:
-                    spinner.text = f"FileGroup {fk!r}: ☑️ (OKAY)   " \
-                                   f"{i: {_s_fmt}d}/{_total_key_paths}"
-
-        # print()
-        # for k, v in _failed_key_paths.items():
-        #     print(
-        #         f"self.LITERAL.{k}: \n\t\"{v[0]['computed_hash']}\","
-        #     )
-
-        # if some file keys failed
-        if bool(_failed_key_paths):
-            # delete state manager files as things are corrupted ... delete
-            # only if hashes are provided in code ... if auto hashing then
-            # delete manually
-            if not self.is_auto_hash:
-                _state_manager_files_msg = f"Note that we have deleted " \
-                                           f"state files on the disk"
-                # todo: should we ask permission ...
-                self.info.delete()
-                self.config.delete()
-            else:
-                _state_manager_files_msg = f"Note that you need to delete " \
-                                           f"state files on the disk " \
-                                           f"as the FileGroup is enabled for " \
-                                           f"auto hashing."
-            # raise
-            e.code.NotAllowed(
-                msgs=[
-                    f"Some files are corrupted for file group "
-                    f"{self.name!r} in dir {self.path}",
-                    _failed_key_paths,
-                    "...",
-                    _state_manager_files_msg,
-                    f"The expected hashes are:",
-                    {
-                        v[0]['file']: v[0]['computed_hash']
-                        for k, v in _failed_key_paths.items()
-                    }
-                ]
-            )
+        util.crosscheck_hashes_for_paths(
+            paths={fk: self.path / fk for fk in self.file_keys},
+            hash_type='sha256',
+            correct_hashes=self.get_hashes(),
+            msg=f"file group `{self.name}`"
+        )
 
     # noinspection PyUnusedLocal
     def check_post_runner(
@@ -898,10 +839,12 @@ class FileGroup(StorageHashable, abc.ABC):
                         f"hashes to be present in the config"
                     ]
                 )
-            _auto_hashes = {}
-            for k in self.file_keys:
-                _fg = self.path / k
-                _auto_hashes[k] = util.compute_hashes(_fg)
+            _auto_hashes = util.crosscheck_hashes_for_paths(
+                paths={k: self.path/k for k in self.file_keys},
+                hash_type='sha256',
+                msg=f"file group {self.name}",
+                correct_hashes=None,
+            )
             self.config.auto_hashes = HashesDict(_auto_hashes)
 
         # ----------------------------------------------------------------06
@@ -1796,25 +1739,27 @@ class DownloadFileGroup(FileGroup, abc.ABC):
     def get_urls(self) -> t.Dict[str, str]:
         ...
 
-    def create_file(self, *, file_key: str) -> pathlib.Path:
-        # get file
-        _file = self.path / file_key
+    def create(self) -> t.List[pathlib.Path]:
 
-        # download
-        util.download_file(
-            _file, self.get_urls()[file_key],
+        _file_paths = {
+            fk: self.path/fk for fk in self.file_keys
+        }
+        _urls = self.get_urls()
+
+        util.download_files(
+            paths=_file_paths, urls=_urls, msg=f"file group `{self.name}`"
         )
 
-        # should exist now
-        if _file.exists():
-            # return
-            return _file
-        else:
-            e.code.ShouldNeverHappen(
-                msgs=[
-                    f"We expected that downloaded file will be available ..."
-                ]
-            )
+        return list(_file_paths.values())
+
+    # noinspection PyTypeChecker
+    def create_file(self, *, file_key: str) -> pathlib.Path:
+        e.code.CodingError(
+            msgs=[
+                f"This method need not be called as create method is "
+                f"overridden for class {self.__class__}"
+            ]
+        )
 
     def get_files(
             self, *, file_keys: t.List[str]

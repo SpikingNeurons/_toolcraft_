@@ -63,6 +63,7 @@ class Plotting(gui.CollapsingHeader):
         # ------------------------------------------------------- 02
         # _line_plot
         _line_plot = self.line_plot
+        # noinspection PyTypeChecker
         _line_plot_items = [
             gui.LineSeries(
                 label="line 1",
@@ -80,6 +81,16 @@ class Plotting(gui.CollapsingHeader):
                 for _ in range(5)
             ],
             label=[f"line {i}" for i in range(3, 3+5)]
+        ) + gui.VLineSeries.generate_from_npy(
+            data=[
+                np.asarray([1., 2.]), np.asarray([3., 4.])
+            ],
+            label=["vline1", "vline2"]
+        ) + gui.HLineSeries.generate_from_npy(
+            data=[
+                np.asarray([1., 2.]), np.asarray([3., 4.])
+            ],
+            label=["hline1", "hline2"]
         )
         _line_plot.add_items(items=_line_plot_items)
 
@@ -268,7 +279,7 @@ def demo():
 
 
 def main():
-    # basic_dashboard()
+    basic_dashboard()
     demo()
 
 

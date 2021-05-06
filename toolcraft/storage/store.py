@@ -305,6 +305,19 @@ class OnCallReturn(t.NamedTuple):
             raise
 
 
+def is_store_field(property_or_fn) -> bool:
+    if inspect.ismethod(property_or_fn) or inspect.isfunction(property_or_fn):
+        return hasattr(property_or_fn, '_is_store_field')
+    elif isinstance(property_or_fn, property):
+        return hasattr(property_or_fn.fget, '_is_store_field')
+    else:
+        e.code.ShouldNeverHappen(
+            msgs=[
+                f"unknown type {type(property_or_fn)}"
+            ]
+        )
+
+
 class StoreField:
     """
     Will be used as a decorator.
@@ -406,12 +419,20 @@ class StoreField:
         self.validate_dec_fn()
 
         # ------------------------------------------------------- 03
-        # return wrapped method that will be call instead of decorated method
+        # return wrapped method that will be called instead of decorated method
         # Note that the method used for wrapping will anyways call the
         # original dec_fn
-        return lambda for_hashable, *args, **kwargs: self.on_call(
-            for_hashable=for_hashable, *args, **kwargs
-        )
+        def _wrap_fn(*args, **kwargs):
+            if len(args) != 1:
+                e.code.CodingError(
+                    msgs=[
+                        f"The class methods decorated with {StoreField} do "
+                        f"not allow args ... only use kwargs ..."
+                    ]
+                )
+            return self.on_call(for_hashable=args[0], **kwargs)
+        _wrap_fn._is_store_field = True
+        return _wrap_fn
 
     def on_call(
         self, for_hashable: m.HashableClass, *args, **kwargs

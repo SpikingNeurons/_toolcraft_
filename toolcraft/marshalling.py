@@ -18,6 +18,7 @@ from . import error as e
 if False:
     # noinspection PyUnresolvedReferences
     from . import storage
+    from . import gui
 
 
 _LOGGER = logger.get_logger()
@@ -216,6 +217,16 @@ class Tracker:
         return self.internal.on_call_kwargs is not None
 
     @property
+    def iterable_length(self) -> int:
+        e.code.NotSupported(
+            msgs=[
+                f"Override this property in class if you want to use iterate "
+                f"over tracker"
+            ]
+        )
+        return -1
+
+    @property
     @util.CacheResult
     def dataclass_field_names(self) -> t.List[str]:
         # noinspection PyUnresolvedReferences
@@ -239,7 +250,11 @@ class Tracker:
         # call class_init
         cls.class_init()
 
-    def __call__(self, **kwargs) -> "Tracker":
+    def __call__(
+        self, *,
+        on_iter_show_progress_bar: bool = True,
+        **kwargs,
+    ) -> "Tracker":
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
 
@@ -259,7 +274,10 @@ class Tracker:
                 ]
             )
         else:
-            self.internal.on_call_kwargs = kwargs
+            self.internal.on_call_kwargs = {
+                **kwargs,
+                'on_iter_show_progress_bar': on_iter_show_progress_bar
+            }
 
         self.on_call()
 
@@ -299,8 +317,16 @@ class Tracker:
                         f"iterator"
                     ]
                 )
-            for _ in self.on_iter():
-                yield _
+            _show_progress_bar = \
+                self.internal.on_call_kwargs['on_iter_show_progress_bar']
+            if _show_progress_bar:
+                with logger.ProgressBar(total=self.iterable_length) as pg:
+                    for _ in _iterable:
+                        pg.update(1)
+                        yield _
+            else:
+                for _ in _iterable:
+                    yield _
 
     def on_call(self):
         """
@@ -947,7 +973,9 @@ class HashableClass(YamlRepr, abc.ABC):
                 f"Do you need some grouping?",
                 f"Are you using this for plotting or organizing folders?",
                 f"Then please override this property or else refrain from "
-                f"using this property."
+                f"using this property.",
+                f"Check class {self.__class__} and override its property "
+                f"`group_by_name` is needed"
             ]
         )
         return ""
@@ -1227,6 +1255,48 @@ class HashableClass(YamlRepr, abc.ABC):
 
         """
         ...
+
+    def get_gui_button(
+        self,
+        button_label: str,
+        callable_name: str,
+        receiver: "gui.Widget",
+        allow_refresh: bool,
+        tab_group_name: str = None,
+    ) -> "gui.Button":
+        """
+        todo: support refresh
+        """
+
+        # ---------------------------------------------------- 01
+        # import
+        from . import gui
+
+        # ---------------------------------------------------- 02
+        # test callable name
+        if not util.rhasattr(self, callable_name):
+            e.code.CodingError(
+                msgs=[
+                    f"Callable `{callable_name}` not available for "
+                    f"HashableClass {self.__class__}"
+                ]
+            )
+
+        # ---------------------------------------------------- 03
+        # create callback
+        _callback = gui.callback.HashableMethodRunnerCallback(
+            hashable=self,
+            callable_name=callable_name,
+            receiver=receiver,
+            allow_refresh=allow_refresh,
+            tab_group_name=tab_group_name,
+        )
+
+        # ---------------------------------------------------- 04
+        # create and return button
+        return gui.Button(
+            label=button_label, callback=_callback,
+        )
 
 
 SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[

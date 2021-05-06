@@ -328,7 +328,7 @@ class ProgressBar(tqdm):
         Refer to super class init for allowed kwargs
         >>> tqdm.__init__
 
-        As and when we need som kwargs from there we will document them here
+        As and when we need some kwargs from there we will document them here
         and use it ...
 
         iterable  : iterable, optional
@@ -722,9 +722,12 @@ class Spinner(Yaspin):
     def info(
         self, *, msg: str,
         msgs: MESSAGES_TYPE = None,
+        annotate_with_time_elapsed: bool = True,
     ):
         self.log_on_spinner_console(
-            msg=msg, msgs=msgs, prefix=Emoji.SPINNER_INFO_PREFIX)
+            msg=msg, msgs=msgs, prefix=Emoji.SPINNER_INFO_PREFIX,
+            annotate_with_time_elapsed=annotate_with_time_elapsed
+        )
 
     def abort(self):
         # so that __exit__ can take action

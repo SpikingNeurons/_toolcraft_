@@ -778,7 +778,8 @@ class Folder(StorageHashable):
         if self.contains is None:
             # note that this will also delete folder self.path
             util.pathlib_rmtree(path=self.path, recursive=True, force=False)
-            # remember to make empty dir as per API
+            # remember to make empty dir as per API ... this will be deleted
+            # by delete_post_runner while deleting state files
             self.path.mkdir(exist_ok=True)
         # else since the folder can track items delete them using items and
         # calling the respective delete of items
@@ -797,10 +798,6 @@ class Folder(StorageHashable):
                     f"Check path {self.path}"
                 ]
             )
-
-        # since we are deleting everything here do not forget to delete the
-        # resulting parent empty folder
-        self.path.rmdir()
 
     def warn_about_garbage(self):
         """

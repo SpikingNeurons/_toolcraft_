@@ -6,6 +6,8 @@ The rule for now is to
 import abc
 import dataclasses
 import typing as t
+
+import yaml
 from dearpygui import core as dpg
 import numpy as np
 import enum
@@ -29,6 +31,8 @@ class Color(m.FrozenEnum, enum.Enum):
     WHITE = enum.auto()
     BLACK = enum.auto()
     CUSTOM = enum.auto()
+    GREY = enum.auto()
+    RED = enum.auto()
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -42,6 +46,10 @@ class Color(m.FrozenEnum, enum.Enum):
             return [255., 255., 255., 255.]
         elif self is self.BLACK:
             return [0., 0., 0., 255.]
+        elif self is self.RED:
+            return [255., 0., 0., 255.]
+        elif self is self.GREY:
+            return [127., 127., 127., 127.]
         elif self is self.CUSTOM:
             e.code.CodingError(
                 msgs=[
@@ -54,7 +62,9 @@ class Color(m.FrozenEnum, enum.Enum):
                 msgs=[f"Unknown {self}"]
             )
 
-    # noinspection PyPep8Naming
+    # todo: this does not match with parent signature may be on_iter
+    #  behaviour can be migrated to child class
+    # noinspection PyPep8Naming,PyMethodOverriding
     def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
         """
         This method return fake Color when called with Color.CUSTOM(...)
@@ -304,6 +314,7 @@ class Widget(m.HashableClass, abc.ABC):
 
         # ------------------------------------------------------ 01
         # get field and its default value
+        # noinspection PyUnresolvedReferences
         _field = self.__dataclass_fields__[field_name]
         _default_value = _field.default
 
@@ -338,11 +349,28 @@ class Widget(m.HashableClass, abc.ABC):
             post_method=cls.build_post_runner,
         )
 
+        # hookup delete
+        util.HookUp(
+            cls=cls,
+            silent=True,
+            method=cls.delete,
+            pre_method=cls.delete_pre_runner,
+            post_method=cls.delete_post_runner,
+        )
+
+    def delete_pre_runner(self):
+        ...
+
     def delete(self):
         # delete self from parents children
         del self.parent.children[self.guid]
         # delete the UI counterpart
         dpg.delete_item(item=self.name, children_only=False)
+
+    def delete_post_runner(
+        self, *, hooked_method_return_value: t.Any
+    ):
+        ...
 
     def layout(self):
         """
@@ -537,18 +565,18 @@ class Widget(m.HashableClass, abc.ABC):
     def hide(self, children_only: bool = False):
         # todo: needs testing
         if children_only:
-            for child in dpg.get_item_children(item=self.id):
+            for child in dpg.get_item_children(item=self.guid):
                 dpg.configure_item(item=child, show=False)
         else:
-            dpg.configure_item(item=self.id, show=False)
+            dpg.configure_item(item=self.guid, show=False)
 
     def show(self, children_only: bool = False):
         # todo: needs testing
         if children_only:
-            for child in dpg.get_item_children(item=self.id):
+            for child in dpg.get_item_children(item=self.guid):
                 dpg.configure_item(item=child, show=True)
         else:
-            dpg.configure_item(item=self.id, show=True)
+            dpg.configure_item(item=self.guid, show=True)
 
     def preview(self):
         """
@@ -561,6 +589,17 @@ class Widget(m.HashableClass, abc.ABC):
         _dash.build()
         _dash.add_child(guid="child", widget=self)
         _dash.run()
+
+    def guid_dom(self) -> t.Tuple[str, t.Union[None, t.Dict]]:
+        if not self.is_container:
+            return self.guid, None
+
+        _ret = {}
+        for _w in self.children.values():
+            _name, _children = _w.guid_dom()
+            _ret[_name] = _children
+
+        return self.guid, _ret
 
 
 @dataclasses.dataclass(frozen=True)
@@ -646,11 +685,11 @@ class Dashboard(Widget):
         # dpgc.set_main_window_size(550, 550)
         dpg.set_theme(theme="Dark Grey")
         dpg.set_main_window_pos(x=0, y=0)
-        dpg.set_main_window_size(width=1370, height=740)
+        dpg.set_main_window_size(width=1370, height=1200)
         # dpgc.set_main_window_resizable(False)
         dpg.set_main_window_title(self.title)
 
-        assets.Font.RobotoRegular.set(size=14)
+        assets.Font.RobotoRegular.set(size=16)
 
         # dpg.set_style_window_border_size(0.0)
         # dpg.set_style_child_border_size(0.0)
@@ -673,7 +712,7 @@ class Dashboard(Widget):
             )
 
         # dpgc.start_dearpygui()
-        dpg.set_theme(theme="Dark Grey")
+        dpg.set_theme(theme="Dark sdasdasGrey")
         dpg.start_dearpygui(primary_window=self.name)
 
     def on_close(self, sender, data):

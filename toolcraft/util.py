@@ -1169,6 +1169,9 @@ def download_file(
                     data=None,
                 )
             else:
+                # todo: currently the size foe already downloaded files is
+                #  shown zero see if we can set that progress bar for bytes
+                #  downloaded
                 # as file exists set the pb total
                 pb.total = pb.n
 

@@ -263,7 +263,6 @@ class Config(StateFile):
         if self.internal.start_syncing:
             self.sync()
 
-    # noinspection PyMethodOverriding
     def __call__(self) -> "Config":
         # todo: remove this
         raise Exception("NO LONGER SUPPORTED")

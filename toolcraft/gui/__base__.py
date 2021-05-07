@@ -62,9 +62,6 @@ class Color(m.FrozenEnum, enum.Enum):
                 msgs=[f"Unknown {self}"]
             )
 
-    # todo: this does not match with parent signature may be on_iter
-    #  behaviour can be migrated to child class
-    # noinspection PyPep8Naming,PyMethodOverriding
     def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
         """
         This method return fake Color when called with Color.CUSTOM(...)

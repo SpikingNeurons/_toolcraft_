@@ -251,9 +251,7 @@ class Tracker:
         cls.class_init()
 
     def __call__(
-        self, *,
-        on_iter_show_progress_bar: bool = True,
-        **kwargs,
+        self, **kwargs,
     ) -> "Tracker":
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
@@ -275,8 +273,7 @@ class Tracker:
             )
         else:
             self.internal.on_call_kwargs = {
-                **kwargs,
-                'on_iter_show_progress_bar': on_iter_show_progress_bar
+                **kwargs
             }
 
         self.on_call()
@@ -1104,6 +1101,19 @@ class HashableClass(YamlRepr, abc.ABC):
                 msg=f"Init "
                     f"{self.__class__.__module__}."
                     f"{self.__class__.__name__}")
+
+    def __call__(
+        self, *,
+        on_iter_show_progress_bar: bool = True,
+        **kwargs,
+    ) -> "HashableClass":
+
+        # call super
+        # noinspection PyTypeChecker
+        return super().__call__(
+            on_iter_show_progress_bar=on_iter_show_progress_bar,
+            **kwargs,
+        )
 
     def __str__(self) -> str:
         """

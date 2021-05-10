@@ -53,7 +53,7 @@ def button_bar_from_hashable_callables(
         guid="sub_title",
         widget=widget.Text(
             msgs=[
-                f"{hashable.group_by_name}: {hashable.hex_hash}",
+                f"{hashable.group_by}: {hashable.hex_hash}",
             ],
             bullet=True,
         )

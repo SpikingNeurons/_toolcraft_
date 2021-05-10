@@ -14,6 +14,10 @@ from .. import marshalling as m
 from .. import error as e
 from . import state
 
+# noinspection PyUnreachableCode
+if False:
+    from . import store
+
 _LOGGER = logger.get_logger()
 
 _DOT_DOT_TYPE = t.Literal['..']
@@ -57,8 +61,6 @@ class HashesDict(m.FrozenDict):
 @dataclasses.dataclass(frozen=True)
 class StorageHashable(m.HashableClass, abc.ABC):
 
-    parent_folder: t.Optional["Folder"]
-
     @property
     @util.CacheResult
     def config(self) -> state.Config:
@@ -76,10 +78,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
         )
 
     @property
-    def group_by_name(self) -> str:
-        return self.__module__
-
-    @property
     @util.CacheResult
     def internal(self) -> m.Internal:
         return m.Internal(self)
@@ -87,66 +85,34 @@ class StorageHashable(m.HashableClass, abc.ABC):
     @property
     @util.CacheResult
     def path(self) -> pathlib.Path:
-        # this property should never be called when parent_folder is None as
-        # it will be overridden
-        if self.parent_folder is None:
+        """
+        Never override this.
+        Always resolve folder structure from group_by and name.
+        Note that root_dir can still be overridden if you want different
+        result locations
+        """
+        if isinstance(self.group_by, list):
+            _split_strs = self.group_by
+        elif isinstance(self.group_by, str):
+            _split_strs = [self.group_by]
+        elif self.group_by is None:
+            _split_strs = []
+        else:
             e.code.ShouldNeverHappen(
                 msgs=[
-                    f"This is already validated in init_validate",
-                    f"You are supposed to override property path in class "
-                    f"{self.__class__} if you are not supplying field "
-                    f"parent_folder i.e. when parent_folder=None"
+                    f"unsupported group_by value {self.group_by}"
                 ]
             )
             raise
+        _path = self.root_dir
+        for _ in _split_strs:
+            _path /= _
+        return _path / self.name
 
-        # If parent_folder is provided this property will not be overridden,
-        # hence we will reach here.
-        # In order to avoid creating Folder instance for parent_folder we use
-        # `..` string while saving to disc. This makes sure that there is no
-        # recursive instances of Folder being created. These instances again
-        # tries to sync leading to recursion
-        # But that means the Folder which is creating this instance must set
-        # itself as parent_folder.
-        # Also check documentation for `Folder.sync()` and
-        # `StorageHashable.init_validate()`
-        # Note in init_validate if self.parent_folder is `..` we raise error
-        # stating that you are creating instance from yaml file directly and
-        # it is not allowed as parent_folder should do it while syncing
-        if self.parent_folder == _DOT_DOT:
-            e.code.CodingError(
-                msgs=[
-                    f"Yaml on disc can have `..` string so the Folder which "
-                    f"is creating this instance must update it and then call "
-                    f"__post_init__ over the StorageHashable",
-                    f"{Folder.sync} is responsible to set parent_folder while "
-                    f"syncing.",
-                    f"While in case if you are creating instance "
-                    f"directly from yaml file then "
-                    f"{StorageHashable.init_validate} should ideally block "
-                    f"you as it is not possible to create instance.",
-                    f"Also note that we do all this because hex_hash will be "
-                    f"corrupt if parent_folder is not set appropriately "
-                    f"before `Hashable.init` runs"
-                ]
-            )
-            raise
-
-        # Now if parent_folder is Folder simply return the path of
-        # parent_folder as it is the root plus the name for this StorageHashable
-        if isinstance(self.parent_folder, Folder):
-            return self.parent_folder.path / self.name
-
-        # if above thing does not return that means we have a problem so
-        # raise error
-        e.code.CodingError(
-            msgs=[
-                f"The field parent_folder is not None nor it is valid "
-                f"Folder",
-                f"The type is {type(self.parent_folder)}"
-            ]
-        )
-        raise
+    @property
+    @abc.abstractmethod
+    def root_dir(self) -> pathlib.Path:
+        ...
 
     @property
     def is_created(self) -> bool:
@@ -188,54 +154,10 @@ class StorageHashable(m.HashableClass, abc.ABC):
         )
 
     def init_validate(self):
+
         # ----------------------------------------------------------- 01
-        # If parent_folder is provided this property will not be overridden,
-        # hence we will reach here.
-        # In order to avoid creating Folder instance for parent_folder we use
-        # `..` string while saving to disc. This makes sure that there is no
-        # recursive instances of Folder being created. These instances again
-        # tries to sync leading to recursion
-        # But that means the Folder which is creating this instance must set
-        # itself as parent_folder.
-        # Also check documentation for `Folder.sync()` and
-        # `StorageHashable.init_validate()`
-        # Note in init_validate if self.parent_folder is `..` we raise error
-        # stating that you are creating instance from yaml file directly and
-        # it is not allowed as parent_folder should do it while syncing
-        if self.parent_folder == _DOT_DOT:
-            e.code.CodingError(
-                msgs=[
-                    f"Problem with initializing {self.__class__}",
-                    f"Yaml on disc can have `..` string so the Folder which "
-                    f"is creating this instance must update it and then call "
-                    f"__post_init__ over the StorageHashable",
-                    f"{Folder.sync} is responsible to set parent_folder while "
-                    f"syncing.",
-                    f"While in case if you are creating instance "
-                    f"directly from yaml file then "
-                    f"{StorageHashable.init_validate} should ideally block "
-                    f"you as it is not possible to create instance.",
-                    f"Also note that we do all this because hex_hash will be "
-                    f"corrupt if parent_folder is not set appropriately "
-                    f"before `Hashable.init` runs"
-                ]
-            )
-            raise
-
-        # ----------------------------------------------------------- 02
-        # call super
-        super().init_validate()
-
-        # ----------------------------------------------------------- 03
-        # validate path and hence parent_folder
-        # Note that if parent_folder is not supplied then path must be
-        # overridden
-        _ = self.path
-
-        # ----------------------------------------------------------- 04
         # check for path length
         e.io.LongPath(path=self.path, msgs=[])
-
         # if path exists check if it is a folder
         if self.path.exists():
             if not self.path.is_dir():
@@ -245,53 +167,9 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     ]
                 )
 
-        # ----------------------------------------------------------- 05
-        # wither you override path or else you supply parent_folder
-        _parent_folder_supplied = self.parent_folder is not None
-        _path_overridden = \
-            self.__class__.path != StorageHashable.path
-        if not (_parent_folder_supplied ^ _path_overridden):
-            e.code.CodingError(
-                msgs=[
-                    f"For subclasses of Folder you either need to supply "
-                    f"parent_folder or else override property path",
-                    f"For instances of class {self.__class__} we found that "
-                    f"you: ",
-                    {
-                        "supplied parent_folder": _parent_folder_supplied,
-                        "overrided path property": _path_overridden,
-                    }
-                ]
-            )
-
-        # ----------------------------------------------------------- 06
-        # if parent_folder supplied check what it can contain
-        if self.parent_folder is not None:
-            if self.parent_folder.contains is None:
-                e.code.NotAllowed(
-                    msgs=[
-                        f"The parent_folder is configured to contain arbitrary "
-                        f"things i.e. parent_folder.contains is None",
-                        f"So may be you might not be intending to add instance "
-                        f"of class {self.__class__} to parent_folder of type "
-                        f"{self.parent_folder.__class__}"
-                    ]
-                )
-            # else the parent_folder wants to track specific things
-            else:
-                # note we do not use isinstance() as all folder
-                # subclasses will be concrete and subclassing is not anything
-                # special as there is no hierarchy in folder types
-                if self.__class__ != self.parent_folder.contains:
-                    e.code.NotAllowed(
-                        msgs=[
-                            f"The parent_folder is configured to contain only "
-                            f"instances of class "
-                            f"{self.parent_folder.contains} but you "
-                            f"are trying to add instance of type "
-                            f"{self.__class__}"
-                        ]
-                    )
+        # ----------------------------------------------------------- 02
+        # call super
+        super().init_validate()
 
     def init(self):
         # ----------------------------------------------------------- 01
@@ -307,93 +185,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # if not created create
         if not self.is_created:
             self.create()
-
-        # ----------------------------------------------------------- 04
-        # if has parent_folder add self to items
-        if self.parent_folder is not None:
-            # add item ...
-            # Note that item can already exist due to sync in that case
-            self.parent_folder.add_item(hashable=self)
-
-        # # Note due to sync that gets called when parent_folder instance
-        # # was created the items dict of parent_folder will get instance
-        # # of self if already present on disc ... in that case delete the
-        # # item in dict and replace with self ...
-        # if hashable.name in self.items.keys():
-        #     # Also we do sanity check for integrity to check if hash of
-        #     # existing item matches hashable ... this ensure that this is
-        #     # safe update of dict
-        #     if hashable.hex_hash != self.items[hashable.name].hex_hash:
-        #         e.code.NotAllowed(
-        #             msgs=[
-        #                 f"While syncing from disk the hashable had different "
-        #                 f"hex_hash than one assigned now",
-        #                 f"We expect that while creating objects of "
-        #                 f"StorageHashable it should match with hex_hash of "
-        #                 f"equivalent object that was instantiated from disk",
-        #                 {
-        #                     "yaml_on_dsk": self.items[hashable.name].yaml(),
-        #                     "yaml_in_memory": hashable.yaml(),
-        #                 }
-        #             ]
-        #         )
-        #     # note we do not call delete() method of item as it will delete
-        #     # actual files/folder on disc
-        #     # here we just update dict
-        #     del self.items[hashable.name]
-
-    def as_dict(
-        self
-    ) -> t.Dict[str, m.SUPPORTED_HASHABLE_OBJECTS_TYPE]:
-        # get dict from super
-        _dict = super().as_dict()
-
-        # if there is parent_folder update it to ..
-        if self.parent_folder == _DOT_DOT:
-            e.code.CodingError(
-                msgs=[
-                    f"If loading from yaml on disk make sure that a Folder is "
-                    f"doing that un sync so that parent_folder is set "
-                    f"appropriately before calling __post_init__ on "
-                    f"StorageHashable"
-                ]
-            )
-
-        # modify dict so that representation is change on disc
-        # note that this does not modify self.__dict__ ;)
-        # we do this only when parent_folder is available
-        if self.parent_folder is not None:
-            _dict['parent_folder'] = _DOT_DOT
-
-        # return
-        return _dict
-
-    @classmethod
-    def from_dict(
-        cls,
-        yaml_state: t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-        **kwargs
-    ) -> "StorageHashable":
-        # update .. to parent_folder supplied from kwargs
-        if yaml_state["parent_folder"] == _DOT_DOT:
-            if "parent_folder" not in kwargs.keys():
-                e.code.CodingError(
-                    msgs=[
-                        f"The yaml_state dict loaded from file_or_text does "
-                        f"has parent_folder set to `..`",
-                        f"This means we do not have access to parent_folder "
-                        f"instance so please supply it while Folder syncs "
-                        f"files/folders inside it.",
-                        f"Note that if you are using from_yaml then also you "
-                        f"can supply the extra kwarg so that from|_dict "
-                        f"receives it."
-                    ]
-                )
-            else:
-                yaml_state["parent_folder"] = kwargs["parent_folder"]
-
-        # noinspection PyArgumentList
-        return cls(**yaml_state)
 
     def create_pre_runner(self):
         # check if already created
@@ -521,23 +312,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
                 ]
             )
 
-        # if parent_folder is there try to remove item from the tracking dict
-        # items
-        if self.parent_folder is not None:
-            # just do sanity check if we are having same item
-            if id(self) != id(self.parent_folder.items[self.name]):
-                e.code.CodingError(
-                    msgs=[
-                        f"We expect these objects to be same ... "
-                        f"make sure to add item using "
-                        f"parent_folder.add_item() method for integrity"
-                    ]
-                )
-            # in init() we added self by calling
-            # self.parent_folder.add_item(self) ... now we just remove the
-            # item from tracking dict items so that parent folder is in sync
-            del self.parent_folder.items[self.name]
-
         # now we have removed strong reference to self in parent_folder.items
         # dict ... let us make this instance useless as files are deleted
         # hence we want to make sure any other references will fail to use
@@ -591,7 +365,9 @@ class Folder(StorageHashable):
     + <hash> folder
       - A folder inside which you can have folder's or file_group's
     """
+
     for_hashable: t.Union[str, m.HashableClass]
+    parent_folder: t.Optional["Folder"] = None
 
     @property
     def name(self) -> str:
@@ -631,9 +407,74 @@ class Folder(StorageHashable):
 
     @property
     @util.CacheResult
-    def group_by_name(self) -> str:
-        return f"{logger.module_name_to_emoji(self.for_hashable.__module__)}." \
-               f"{self.for_hashable.__class__.__name__}"
+    def root_dir(self) -> pathlib.Path:
+        # this property should never be called when parent_folder is None as
+        # it will be overridden
+        if self.parent_folder is None:
+            e.code.ShouldNeverHappen(
+                msgs=[
+                    f"This is already validated in init_validate",
+                    f"You are supposed to override property root_dir in class "
+                    f"{self.__class__} if you are not supplying field "
+                    f"parent_folder i.e. when parent_folder=None"
+                ]
+            )
+            raise
+
+        # If parent_folder is provided this property will not be overridden,
+        # hence we will reach here.
+        # In order to avoid creating Folder instance for parent_folder we use
+        # `..` string while saving to disc. This makes sure that there is no
+        # recursive instances of Folder being created. These instances again
+        # tries to sync leading to recursion
+        # But that means the Folder which is creating this instance must set
+        # itself as parent_folder.
+        # Also check documentation for `Folder.sync()` and
+        # `StorageHashable.init_validate()`
+        # Note in init_validate if self.parent_folder is `..` we raise error
+        # stating that you are creating instance from yaml file directly and
+        # it is not allowed as parent_folder should do it while syncing
+        if self.parent_folder == _DOT_DOT:
+            e.code.CodingError(
+                msgs=[
+                    f"Yaml on disk can have `..` string so the Folder which "
+                    f"is creating this instance must update it and then call "
+                    f"__post_init__ over the StorageHashable",
+                    f"{Folder.sync} is responsible to set parent_folder while "
+                    f"syncing.",
+                    f"While in case if you are creating instance "
+                    f"directly from yaml file then "
+                    f"{StorageHashable.init_validate} should ideally block "
+                    f"you as it is not possible to create instance.",
+                    f"Also note that we do all this because hex_hash will be "
+                    f"corrupt if parent_folder is not set appropriately "
+                    f"before `Hashable.init` runs"
+                ]
+            )
+            raise
+
+        # Now if parent_folder is Folder simply return the path of
+        # parent_folder as it is the root plus the name for this StorageHashable
+        if isinstance(self.parent_folder, Folder):
+            return self.parent_folder.path
+
+        # if above thing does not return that means we have a problem so
+        # raise error
+        e.code.CodingError(
+            msgs=[
+                f"The field parent_folder is not None nor it is valid "
+                f"Folder",
+                f"The type is {type(self.parent_folder)}"
+            ]
+        )
+        raise
+
+    @property
+    def group_by(self) -> None:
+        """
+        In general we will not need group_by for Folder
+        """
+        return None
 
     @property
     def is_created(self) -> bool:
@@ -710,32 +551,134 @@ class Folder(StorageHashable):
         return True
 
     def init_validate(self):
+        # ----------------------------------------------------------- 01
+        # If parent_folder is provided this property will not be overridden,
+        # hence we will reach here.
+        # In order to avoid creating Folder instance for parent_folder we use
+        # `..` string while saving to disc. This makes sure that there is no
+        # recursive instances of Folder being created. These instances again
+        # tries to sync leading to recursion
+        # But that means the Folder which is creating this instance must set
+        # itself as parent_folder.
+        # Also check documentation for `Folder.sync()` and
+        # `StorageHashable.init_validate()`
+        # Note in init_validate if self.parent_folder is `..` we raise error
+        # stating that you are creating instance from yaml file directly and
+        # it is not allowed as parent_folder should do it while syncing
+        if self.parent_folder == _DOT_DOT:
+            e.code.CodingError(
+                msgs=[
+                    f"Problem with initializing {self.__class__}",
+                    f"Yaml on disc can have `..` string so the Folder which "
+                    f"is creating this instance must update it and then call "
+                    f"__post_init__ over the StorageHashable",
+                    f"{Folder.sync} is responsible to set parent_folder while "
+                    f"syncing.",
+                    f"While in case if you are creating instance "
+                    f"directly from yaml file then "
+                    f"{StorageHashable.init_validate} should ideally block "
+                    f"you as it is not possible to create instance.",
+                    f"Also note that we do all this because hex_hash will be "
+                    f"corrupt if parent_folder is not set appropriately "
+                    f"before `Hashable.init` runs"
+                ]
+            )
+            raise
 
-        # -----------------------------------------------------------------01
+        # ----------------------------------------------------------- 02
+        # validate root_dir and hence parent_folder
+        # Note that if parent_folder is not supplied then path must be
+        # overridden
+        _ = self.root_dir
+
+        # ----------------------------------------------------------- 03
         # call super
         super().init_validate()
 
-        # -----------------------------------------------------------------02
-        # check if path is dir
-        if self.path.exists():
-            if not self.path.is_dir():
-                e.code.CodingError(
+        # ----------------------------------------------------------- 04
+        # either you override root_dir or else you supply parent_folder
+        _parent_folder_supplied = self.parent_folder is not None
+        _root_dir_overridden = \
+            self.__class__.root_dir != Folder.root_dir
+        if not (_parent_folder_supplied ^ _root_dir_overridden):
+            e.code.CodingError(
+                msgs=[
+                    f"For subclasses of Folder you either need to supply "
+                    f"parent_folder or else override property root_dir",
+                    f"For instances of class {self.__class__} we found that "
+                    f"you: ",
+                    {
+                        "supplied parent_folder": _parent_folder_supplied,
+                        "overrided root_dir property": _root_dir_overridden,
+                    }
+                ]
+            )
+
+        # ----------------------------------------------------------- 05
+        # if parent_folder supplied check what it can contain
+        if self.parent_folder is not None:
+            if self.parent_folder.contains is None:
+                e.code.NotAllowed(
                     msgs=[
-                        f"Found {self.path} which is not a dir ..."
+                        f"The parent_folder is configured to contain arbitrary "
+                        f"things i.e. parent_folder.contains is None",
+                        f"So may be you might not be intending to add instance "
+                        f"of class {self.__class__} to parent_folder of type "
+                        f"{self.parent_folder.__class__}"
                     ]
                 )
-
-        # -----------------------------------------------------------------03
-        # Want to check if there is garbage in folder
-        # don't be tempted to do this check as ,,,, sync also does not do
-        # that .... check method `warn_about_garbage` and we should do that
-        # in standalone mode not while instance are getting created
-        # ;) ;) ;)
-        #   PLEASE DONT BE TEMPTED TO CHECK WHAT IT CONTAINS IN SYNC METHOD
+            # else the parent_folder wants to track specific things
+            else:
+                # note we do not use isinstance() as all folder
+                # subclasses will be concrete and subclassing is not anything
+                # special as there is no hierarchy in folder types
+                if self.__class__ != self.parent_folder.contains:
+                    e.code.NotAllowed(
+                        msgs=[
+                            f"The parent_folder is configured to contain only "
+                            f"instances of class "
+                            f"{self.parent_folder.contains} but you "
+                            f"are trying to add instance of type "
+                            f"{self.__class__}"
+                        ]
+                    )
 
     def init(self):
         # call super
         super().init()
+
+        # if has parent_folder add self to items
+        if self.parent_folder is not None:
+            # add item ...
+            # Note that item can already exist due to sync in that case
+            self.parent_folder.add_item(hashable=self)
+
+        # # Note due to sync that gets called when parent_folder instance
+        # # was created the items dict of parent_folder will get instance
+        # # of self if already present on disc ... in that case delete the
+        # # item in dict and replace with self ...
+        # if hashable.name in self.items.keys():
+        #     # Also we do sanity check for integrity to check if hash of
+        #     # existing item matches hashable ... this ensure that this is
+        #     # safe update of dict
+        #     if hashable.hex_hash != self.items[hashable.name].hex_hash:
+        #         e.code.NotAllowed(
+        #             msgs=[
+        #                 f"While syncing from disk the hashable had different "
+        #                 f"hex_hash than one assigned now",
+        #                 f"We expect that while creating objects of "
+        #                 f"StorageHashable it should match with hex_hash of "
+        #                 f"equivalent object that was instantiated from disk",
+        #                 {
+        #                     "yaml_on_dsk": self.items[hashable.name].yaml(),
+        #                     "yaml_in_memory": hashable.yaml(),
+        #                 }
+        #             ]
+        #         )
+        #     # note we do not call delete() method of item as it will delete
+        #     # actual files/folder on disc
+        #     # here we just update dict
+        #     del self.items[hashable.name]
 
         # this is like `get()` for Folder .... note that all
         # FileGroups/Folders will be added here via add_item
@@ -751,6 +694,59 @@ class Folder(StorageHashable):
 
         # return
         return self.path
+
+    @classmethod
+    def from_dict(
+        cls,
+        yaml_state: t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+        **kwargs
+    ) -> "StorageHashable":
+        # update .. to parent_folder supplied from kwargs
+        if yaml_state["parent_folder"] == _DOT_DOT:
+            if "parent_folder" not in kwargs.keys():
+                e.code.CodingError(
+                    msgs=[
+                        f"The yaml_state dict loaded from file_or_text does "
+                        f"has parent_folder set to `..`",
+                        f"This means we do not have access to parent_folder "
+                        f"instance so please supply it while Folder syncs "
+                        f"files/folders inside it.",
+                        f"Note that if you are using from_yaml then also you "
+                        f"can supply the extra kwarg so that from|_dict "
+                        f"receives it."
+                    ]
+                )
+            else:
+                yaml_state["parent_folder"] = kwargs["parent_folder"]
+
+        # noinspection PyArgumentList
+        return cls(**yaml_state)
+
+    def as_dict(
+        self
+    ) -> t.Dict[str, m.SUPPORTED_HASHABLE_OBJECTS_TYPE]:
+        # get dict from super
+        _dict = super().as_dict()
+
+        # if there is parent_folder update it to ..
+        if self.parent_folder == _DOT_DOT:
+            e.code.CodingError(
+                msgs=[
+                    f"If loading from yaml on disk make sure that a Folder is "
+                    f"doing that un sync so that parent_folder is set "
+                    f"appropriately before calling __post_init__ on "
+                    f"StorageHashable"
+                ]
+            )
+
+        # modify dict so that representation is change on disc
+        # note that this does not modify self.__dict__ ;)
+        # we do this only when parent_folder is available
+        if self.parent_folder is not None:
+            _dict['parent_folder'] = _DOT_DOT
+
+        # return
+        return _dict
 
     def delete(self, *, force: bool = False):
         """
@@ -798,6 +794,32 @@ class Folder(StorageHashable):
                     f"Check path {self.path}"
                 ]
             )
+
+    # noinspection PyUnusedLocal
+    def delete_post_runner(
+        self, *, hooked_method_return_value: t.Any
+    ):
+        # call super
+        super().delete_post_runner(
+            hooked_method_return_value=hooked_method_return_value
+        )
+
+        # if parent_folder is there try to remove item from the tracking dict
+        # items
+        if self.parent_folder is not None:
+            # just do sanity check if we are having same item
+            if id(self) != id(self.parent_folder.items[self.name]):
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect these objects to be same ... "
+                        f"make sure to add item using "
+                        f"parent_folder.add_item() method for integrity"
+                    ]
+                )
+            # in init() we added self by calling
+            # self.parent_folder.add_item(self) ... now we just remove the
+            # item from tracking dict items so that parent folder is in sync
+            del self.parent_folder.items[self.name]
 
     def warn_about_garbage(self):
         """
@@ -914,3 +936,67 @@ class Folder(StorageHashable):
 
         # add item
         self.items[hashable.name] = hashable
+
+
+@dataclasses.dataclass(frozen=True)
+class ResultsFolder(Folder):
+    """
+    A special folder that store results for Hashable class with unique naming
+    convention anu unique path checking.
+
+    It will also be used by StoreField decorator to store the pyarrow results.
+    """
+    # overriding typing here so that user can be warned that this is always
+    # None as path is overridden and it infers from for_hashable
+    parent_folder: None = None
+
+    @property
+    @util.CacheResult
+    def root_dir(self) -> pathlib.Path:
+        """
+        As the results generated by hashable can be deleted ...
+        """
+        return settings.Dir.ROOT_DEL
+
+    @property
+    @util.CacheResult
+    def store(self) -> "store.StoreFieldsFolder":
+        """
+
+        Should return location where you intend to save results of method
+        decorated by StoreField
+
+        todo: This restricts us to have only one possible store location for
+          decorated methods. We can easily have one more argument to
+          StoreField to indicate which property to use while saving the
+          results. But we can plan this later on need basis.
+          Alternative:
+            Every task is special so we can have multiple Hashable Class for
+            each task and then we can afford to have a single
+            store_fields_location. An easy and effective solution.
+
+        """
+        from . import store
+        return store.StoreFieldsFolder(
+            parent_folder=None, for_hashable=self)
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # check if path has the unique name
+        # this is needed as the user need to take care of keeping
+        # store_fields_location unique as then he can decide the possible
+        # sequence of folders under which he can store the storage results
+        if self.path.as_posix().find(
+            self.for_hashable.name
+        ) == -1:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"You need to have unique path for `{self.__class__}` "
+                    f"derived from hashable class"
+                    f" {self.for_hashable.__class__}",
+                    f"Please try to have `self.for_hashable.name` in the "
+                    f"`{self.__class__}` property `path` to avoid this error"
+                ]
+            )

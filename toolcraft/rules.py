@@ -36,7 +36,8 @@ from toolcraft import error as e
 from toolcraft import util
 
 from .marshalling import YamlRepr, HashableClass, FrozenEnum, Tracker
-from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup
+from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
+    ResultsFolder
 from .storage.state import Config, Info, StateFile
 
 
@@ -65,13 +66,14 @@ def check_things_to_be_cached(
     _THINGS_TO_BE_CACHED = {
         Tracker: ['internal', ],
         HashableClass: [
-            'hex_hash', 'store_fields_folder'
+            'hex_hash', 'results_folder',
         ],
         StorageHashable: [
-            'config', 'info', 'path',
+            'config', 'info', 'path', 'root_dir',
         ],
         Folder: ['items'],
         FileGroup: ['file_keys'],
+        ResultsFolder: ['store'],
     }
     if to_check is not None:
         _THINGS_TO_BE_CACHED = to_check
@@ -128,10 +130,12 @@ def check_things_not_to_be_overridden(
 ):
     _THINGS_NOT_TO_BE_OVERRIDDEN = {
         YamlRepr: ['yaml'],
-        HashableClass: ['hex_hash', 'store_fields_folder'],
-        Folder: ['name'],
+        HashableClass: ['hex_hash'],
+        Folder: ['group_by'],
         NpyFileGroup: ['get_files', 'get_file'],
         Tracker: ['is_called'],
+        StorageHashable: ['path'],
+        ResultsFolder: ['store'],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_OVERRIDDEN = to_check

@@ -952,11 +952,14 @@ class HashableClass(YamlRepr, abc.ABC):
         return self.hex_hash
 
     @property
-    def group_by_name(self) -> str:
+    def group_by(self) -> t.Optional[t.Union[str, t.List[str]]]:
         """
         As self.name is hex_hash or else a name which is unique to all
         instances of that class we need some convenient name that can be used
         for grouping.
+
+        This property can return str or list of str. In case of list of str
+        nested folders will be created.
 
         This is a meta property to allow grouping over unique
         HashableClass names.
@@ -964,6 +967,9 @@ class HashableClass(YamlRepr, abc.ABC):
         Example use cases:
           + grouping plots
           + group files under one Folder while storage
+
+        If None is returned then grouping is not used
+
         """
         e.code.CodingError(
             msgs=[
@@ -971,8 +977,10 @@ class HashableClass(YamlRepr, abc.ABC):
                 f"Are you using this for plotting or organizing folders?",
                 f"Then please override this property or else refrain from "
                 f"using this property.",
+                f"If you do not want to use grouping please consider "
+                f"returning None ..."
                 f"Check class {self.__class__} and override its property "
-                f"`group_by_name` is needed"
+                f"`group_by` if needed",
             ]
         )
         return ""
@@ -1005,51 +1013,15 @@ class HashableClass(YamlRepr, abc.ABC):
             f"{self.yaml()}".encode('utf-8')
         ).hexdigest()
 
-    # noinspection PyTypeChecker
-    @property
-    def store_fields_location(self) -> pathlib.Path:
-        """
-        Should return location where you intend to save results of method
-        decorated by StoreField
-
-        todo: This restricts us to have only one possible store location for
-          decorated methods. We can easily have one more argument to
-          StoreField to indicate which property to use while saving the
-          results. But we can plan this later on need basis.
-          Alternative:
-            Every task is special so we can have multiple Hashable Class for
-            each task and then we can afford to have a single
-            store_fields_location. An easy and effective solution.
-
-        Returns:
-            pathlib.Path
-
-        """
-        e.code.CodingError(
-            msgs=[
-                f"Please override this property in class {self.__class__} "
-                f"if you want to save results "
-                f"of methods decorated by StoreField"
-            ]
-        )
-        raise
-
+    # noinspection PyPropertyDefinition,PyTypeChecker
     @property
     @util.CacheResult
-    def store_fields_folder(self) -> "storage.StoreFieldsFolder":
-        """
-        Note that this property is made available to all HashableClasses as
-        we might want to save results for anything even for Folder itself.
-        Why not read contents of one Folder and compute some results and save
-        it somewhere.
-
-        todo: add check so that it is never overridden in external
-          class_validation
-        """
-        from . import storage
-        return storage.StoreFieldsFolder(
-            parent_folder=None,
-            for_hashable=self,
+    def results_folder(self) -> "storage.ResultsFolder":
+        e.code.NotAllowed(
+            msgs=[
+                f"Please override this property if you want to save results "
+                f"or StoreFields for hashable class {self.__class__}"
+            ]
         )
 
     # do not cache as dynamic list will be popped out and the reference to

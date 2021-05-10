@@ -59,6 +59,10 @@ from .. import storage as s
 from . import file_system as our_fs
 from . import Folder
 
+# noinspection PyUnresolvedReferences
+if False:
+    from . import store
+
 _PARTITIONING = "hive"
 # _FILE_FORMAT = pds.ParquetFileFormat()
 # _FILE_FORMAT = pds.CsvFileFormat()
@@ -432,6 +436,7 @@ class DfFileConfig(s.Config):
         )
 
 
+# noinspection PyDataclass
 @dataclasses.dataclass(frozen=True)
 class DfFile(Folder):
     """
@@ -471,6 +476,7 @@ class DfFile(Folder):
     # we override type as this is always method name which was decorated with
     # StoreField
     for_hashable: str
+    parent_folder: "store.StoreFieldsFolder" = None
 
     @property
     @util.CacheResult

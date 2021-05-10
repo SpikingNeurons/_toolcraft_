@@ -1671,8 +1671,8 @@ class TempFileGroup(FileGroup, abc.ABC):
 
     @property
     @util.CacheResult
-    def path(self) -> pathlib.Path:
-        return settings.Dir.TEMPORARY / self.group_by_name / self.name
+    def root_dir(self) -> pathlib.Path:
+        return settings.Dir.TEMPORARY
 
     def get_files(
             self, *, file_keys: t.List[str]
@@ -1714,8 +1714,8 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     @property
     @util.CacheResult
-    def path(self) -> pathlib.Path:
-        return settings.Dir.DOWNLOAD / self.group_by_name / self.name
+    def root_dir(self) -> pathlib.Path:
+        return settings.Dir.DOWNLOAD
 
     @property
     @abc.abstractmethod

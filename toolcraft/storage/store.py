@@ -32,54 +32,42 @@ from .. import error as e
 from .. import util
 from .df_file import \
     DfFile, FILTERS_TYPE, FILTER_VALUE_TYPE, bake_expression
-from . import Folder
+from . import Folder, ResultsFolder
 
 
 MODE_TYPE = t.Literal['r', 'rw', 'd', 'e', 'a', 'w']
 
 
+# noinspection PyDataclass
 @dataclasses.dataclass(frozen=True)
 class StoreFieldsFolder(Folder):
     """
     A special Folder for StoreFields that will be saved as DfFile's
     Note that here we use `for_hashable` to get `path`, so that user can use
     `parent_folder=None`
-
-    This container is accessible via `self.for_hashable.store_fields_location`
     """
-    # overriding typing here so that user can be warned that this is always
-    # None as path is overridden and it infers from for_hashable
-    parent_folder: None
+    for_hashable: ResultsFolder
+    parent_folder: None = None
 
     @property
     @util.CacheResult
-    def path(self) -> pathlib.Path:
-        return self.for_hashable.store_fields_location
+    def name(self) -> str:
+        """
+        This forces the storage to always have store name ... Also note that
+        there is a property named store in ResultsFolder ... that will ensure
+        that we accidentally do not have any field that will make folder with
+        that name.
+        """
+        return "store"
+
+    @property
+    @util.CacheResult
+    def root_dir(self) -> pathlib.Path:
+        return self.for_hashable.path
 
     @property
     def contains(self) -> t.Type[DfFile]:
         return DfFile
-
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # check if path that uses store_field_location from for for_hashable
-        # has the unique name
-        # this is needed as the user need to take care of keeping
-        # store_fields_location unique as then he can decide the possible
-        # sequence of folders under which he can store the storage results
-        if self.for_hashable.store_fields_location.as_posix().find(
-            self.for_hashable.name
-        ) == -1:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"You need to have unique path for `store_field_location` "
-                    f"in hashable class {self.for_hashable.__class__}",
-                    f"Please try to have `self.for_hashable.name` in the "
-                    f"`store_field_location` path to avoid this error"
-                ]
-            )
 
 
 @enum.unique
@@ -305,19 +293,6 @@ class OnCallReturn(t.NamedTuple):
             raise
 
 
-def is_store_field(property_or_fn) -> bool:
-    if inspect.ismethod(property_or_fn) or inspect.isfunction(property_or_fn):
-        return hasattr(property_or_fn, '_is_store_field')
-    elif isinstance(property_or_fn, property):
-        return hasattr(property_or_fn.fget, '_is_store_field')
-    else:
-        e.code.ShouldNeverHappen(
-            msgs=[
-                f"unknown type {type(property_or_fn)}"
-            ]
-        )
-
-
 class StoreField:
     """
     Will be used as a decorator.
@@ -460,7 +435,7 @@ class StoreField:
         # ------------------------------------------------------- 02
         # get store_fields_folder the Folder that manages all DfFiles for
         # for_hashable
-        _folder = for_hashable.store_fields_folder
+        _folder = for_hashable.results_folder.store
 
         # ------------------------------------------------------- 03
         # get DfFile
@@ -924,3 +899,16 @@ class StoreField:
                             f"it is reserved for use by storage.StoreField..."
                         ]
                     )
+
+
+def is_store_field(property_or_fn) -> bool:
+    if inspect.ismethod(property_or_fn) or inspect.isfunction(property_or_fn):
+        return hasattr(property_or_fn, '_is_store_field')
+    elif isinstance(property_or_fn, property):
+        return hasattr(property_or_fn.fget, '_is_store_field')
+    else:
+        e.code.ShouldNeverHappen(
+            msgs=[
+                f"unknown type {type(property_or_fn)}"
+            ]
+        )

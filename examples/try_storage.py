@@ -134,10 +134,10 @@ class DnTestFile(s.DownloadFileGroup):
 def try_download_file():
 
     # noinspection SpellCheckingInspection
-    df = DnTestFile(parent_folder=None)
+    df = DnTestFile()
     if df.is_created:
         df.delete(force=True)
-    df = DnTestFile(parent_folder=None)
+    df = DnTestFile()
     if not df.is_created:
         df.create()
         df.check()
@@ -163,12 +163,12 @@ class DnTestFileAutoHashed(s.DownloadFileGroup):
 
 def try_auto_hashed_download_file():
     # noinspection SpellCheckingInspection
-    df = DnTestFileAutoHashed(parent_folder=None)
+    df = DnTestFileAutoHashed()
     if not df.is_created:
         df.create()
     df.get_file(file_key="file")
 
-    df0 = DnTestFile(parent_folder=None)
+    df0 = DnTestFile()
 
     assert df0.get_hashes() == df.config.auto_hashes.get()
 
@@ -178,10 +178,10 @@ def try_auto_hashed_download_file():
 
 def try_metainfo_file():
     # noinspection SpellCheckingInspection
-    df = DnTestFile(parent_folder=None)
+    df = DnTestFile()
     # note that creating instance above creates file
     df.delete(force=True)
-    df = DnTestFile(parent_folder=None)
+    df = DnTestFile()
     if not df.is_created:
         df.create()
     if df.periodic_check_needed:

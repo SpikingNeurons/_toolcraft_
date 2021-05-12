@@ -476,7 +476,7 @@ class DfFile(Folder):
     # we override type as this is always method name which was decorated with
     # StoreField
     for_hashable: str
-    parent_folder: "store.StoreFieldsFolder" = None
+    parent_folder: "store.StoreFieldsFolder"
 
     @property
     @util.CacheResult
@@ -496,6 +496,10 @@ class DfFile(Folder):
         # we know that the DfFile folder will have unmanageable content
         # managed by pyarrow
         return None
+
+    @property
+    def uses_parent_folder(self) -> bool:
+        return True
 
     @property
     def file_system(self) -> t.Union[

@@ -1019,8 +1019,9 @@ class HashableClass(YamlRepr, abc.ABC):
     def results_folder(self) -> "storage.ResultsFolder":
         e.code.NotAllowed(
             msgs=[
-                f"Please override this property if you want to save results "
-                f"or StoreFields for hashable class {self.__class__}"
+                f"Please override `results_folder` property if you want to "
+                f"save results or StoreFields for hashable class "
+                f"{self.__class__}"
             ]
         )
 

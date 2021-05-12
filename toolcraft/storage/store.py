@@ -46,28 +46,16 @@ class StoreFieldsFolder(Folder):
     Note that here we use `for_hashable` to get `path`, so that user can use
     `parent_folder=None`
     """
-    for_hashable: ResultsFolder
-    parent_folder: None = None
-
-    @property
-    @util.CacheResult
-    def name(self) -> str:
-        """
-        This forces the storage to always have store name ... Also note that
-        there is a property named store in ResultsFolder ... that will ensure
-        that we accidentally do not have any field that will make folder with
-        that name.
-        """
-        return "store"
-
-    @property
-    @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
-        return self.for_hashable.path
+    parent_folder: ResultsFolder
+    for_hashable: str
 
     @property
     def contains(self) -> t.Type[DfFile]:
         return DfFile
+
+    @property
+    def uses_parent_folder(self) -> bool:
+        return True
 
 
 @enum.unique

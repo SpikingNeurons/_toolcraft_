@@ -1006,7 +1006,7 @@ def crosscheck_hash(
                     # set description
                     pb.set_description_str(msg)
                     if correct_hash is not None:
-                        pb.set_postfix_str("⚠")
+                        pb.set_postfix_str("⚠", refresh=True)
 
                     # compute
                     for chunk in iter(lambda: fb.read(_chunk_size), b''):
@@ -1019,7 +1019,7 @@ def crosscheck_hash(
                     if correct_hash is not None:
                         _hash_is_correct = computed_hash == correct_hash
                         _status = "☑" if _hash_is_correct else "❎"
-                        pb.set_postfix_str(_status)
+                        pb.set_postfix_str(_status, refresh=True)
         else:
             e.code.CodingError(
                 msgs=[f"Unknown type for path {path_or_npy_arr}"]
@@ -1148,7 +1148,7 @@ def download_file(
         # ------------------------------------------------------ 02.01
         # set description
         pb.set_description_str(msg)
-        pb.set_postfix_str("⚠")
+        pb.set_postfix_str("⚠", refresh=True)
 
         # ------------------------------------------------------ 02.02
         # retrieve
@@ -1204,7 +1204,7 @@ def download_file(
         # if there is error
         if bool(_error_msgs):
             # set pb
-            pb.set_postfix_str("❎")
+            pb.set_postfix_str("❎", refresh=True)
             # delete if any files created
             if file_path.exists():
                 file_path.unlink()
@@ -1216,7 +1216,7 @@ def download_file(
         # else
         else:
             # set pb
-            pb.set_postfix_str("☑")
+            pb.set_postfix_str("☑", refresh=True)
             # return
             return None
 

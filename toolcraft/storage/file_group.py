@@ -21,7 +21,7 @@ import random
 from .. import util, logger, settings
 from .. import storage as s
 from .. import error as e
-from . import HashesDict, StorageHashable
+from . import HashesDict, StorageHashable, Folder
 
 _LOGGER = logger.get_logger()
 

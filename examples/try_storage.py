@@ -203,8 +203,9 @@ def try_metainfo_file():
 class Folder0(s.Folder):
 
     @property
-    def path(self) -> pathlib.Path:
-        return _TEMP_PATH / self.name
+    @util.CacheResult
+    def root_dir(self) -> pathlib.Path:
+        return _TEMP_PATH
 
     @property
     def contains(self) -> t.Type["Folder1"]:
@@ -214,6 +215,12 @@ class Folder0(s.Folder):
 @dataclasses.dataclass(frozen=True)
 class Folder1(s.Folder):
 
+    parent_folder: s.Folder
+
+    @property
+    def uses_parent_folder(self) -> bool:
+        return True
+
     @property
     def contains(self) -> t.Type["Folder2"]:
         return Folder2
@@ -222,6 +229,12 @@ class Folder1(s.Folder):
 @dataclasses.dataclass(frozen=True)
 class Folder2(s.Folder):
 
+    parent_folder: s.Folder
+
+    @property
+    def uses_parent_folder(self) -> bool:
+        return True
+
     @property
     def contains(self) -> t.Type["Folder3"]:
         return Folder3
@@ -229,7 +242,12 @@ class Folder2(s.Folder):
 
 @dataclasses.dataclass(frozen=True)
 class Folder3(s.Folder):
-    ...
+
+    parent_folder: s.Folder
+
+    @property
+    def uses_parent_folder(self) -> bool:
+        return True
 
 
 @dataclasses.dataclass(frozen=True)
@@ -240,7 +258,7 @@ class ParentTestStorage(m.HashableClass):
 
 def try_creating_folders():
     folder0 = Folder0(
-        parent_folder=None, for_hashable="arrow_storage"
+        for_hashable="arrow_storage"
     )
     folder1 = Folder1(
         parent_folder=folder0, for_hashable="parent_1"
@@ -275,13 +293,24 @@ def try_creating_folders():
 
 
 @dataclasses.dataclass(frozen=True)
+class TestStorageResultsFolder(s.ResultsFolder):
+
+    @property
+    @util.CacheResult
+    def root_dir(self) -> pathlib.Path:
+        return _TEMP_PATH
+
+
+@dataclasses.dataclass(frozen=True)
 class TestStorage(m.HashableClass):
     a: int
     b: float
 
     @property
-    def store_fields_location(self) -> pathlib.Path:
-        return _TEMP_PATH / self.name
+    def results_folder(self) -> TestStorageResultsFolder:
+        return TestStorageResultsFolder(
+            for_hashable=self
+        )
 
     @staticmethod
     def data_vector(
@@ -724,31 +753,32 @@ def try_arrow_storage():
     #     mode='w', epoch=3, data={'a': [3], 'b': [33]}
     # )
     # assert r
-
-    r = ts.store_with_data_kwarg(mode='r')
-    print(r.to_pandas())
-
-    r = ts.store_with_data_kwarg(mode='r', epoch=2)
-    print(r.to_pandas())
-
-    r = ts.store_with_data_kwarg(mode='r', epoch=2, columns=['a'])
-    print(r.to_pandas())
-
-    r = ts.store_with_data_kwarg(mode='d')
-    print("ts.store_with_data_kwarg(mode='d')")
-    assert r
+    #
+    # r = ts.store_with_data_kwarg(mode='r')
+    # print(r.to_pandas())
+    #
+    # r = ts.store_with_data_kwarg(mode='r', epoch=2)
+    # print(r.to_pandas())
+    #
+    # r = ts.store_with_data_kwarg(mode='r', epoch=2, columns=['a'])
+    # print(r.to_pandas())
+    #
+    # r = ts.store_with_data_kwarg(mode='d')
+    # print("ts.store_with_data_kwarg(mode='d')")
+    # assert r
 
     # ---------------------------------------------------------07
     print("---------------------------------------------------------07")
     # finally delete folder for hashable that has StoreFields
-    ts.store_fields_folder.delete()
+    ts.results_folder.store.delete()
+    ts.results_folder.delete()
     print("ts.store_fields_folder.delete()")
 
 
 def try_main():
     global _TEMP_PATH
-    # if _TEMP_PATH.exists():
-    #     util.io_path_delete(_TEMP_PATH, force=True)
+    if _TEMP_PATH.exists():
+        util.io_path_delete(_TEMP_PATH, force=True)
     _TEMP_PATH.mkdir(parents=True, exist_ok=True)
     _TEMP_PATH = _TEMP_PATH.resolve()
     try_hashable_ser()

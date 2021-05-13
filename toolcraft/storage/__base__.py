@@ -183,6 +183,12 @@ class StorageHashable(m.HashableClass, abc.ABC):
         )
         raise
 
+    @property
+    def group_by(self) -> t.Optional[t.Union[str, t.List[str]]]:
+        """
+        Default is use not grouping ... override this if you need grouping
+        """
+        return None
 
     @property
     def uses_parent_folder(self) -> bool:
@@ -548,6 +554,27 @@ class StorageHashable(m.HashableClass, abc.ABC):
                 ]
             )
 
+        # if parent_folder is there try to remove item from the tracking dict
+        # items
+        if self.uses_parent_folder:
+            # get parent folder
+            _parent_folder = getattr(self, 'parent_folder')
+            # if parent folder can track then delete items that it has tracked
+            if _parent_folder.contains is not None:
+                # just do sanity check if we are having same item
+                if id(self) != id(_parent_folder.items[self.name]):
+                    e.code.CodingError(
+                        msgs=[
+                            f"We expect these objects to be same ... "
+                            f"make sure to add item using "
+                            f"parent_folder.add_item() method for integrity"
+                        ]
+                    )
+                # in init() we added self by calling
+                # self.parent_folder.add_item(self) ... now we just remove the
+                # item from tracking dict items so that parent folder is in sync
+                del _parent_folder.items[self.name]
+
         # now we have removed strong reference to self in parent_folder.items
         # dict ... let us make this instance useless as files are deleted
         # hence we want to make sure any other references will fail to use
@@ -555,25 +582,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # To achieve this we just clear out the internal __dict__
         if not settings.FileHash.DEBUG_HASHABLE_STATE:
             self.__dict__.clear()
-
-        # if parent_folder is there try to remove item from the tracking dict
-        # items
-        if self.uses_parent_folder:
-            # get parent folder
-            _parent_folder = getattr(self, 'parent_folder')
-            # just do sanity check if we are having same item
-            if id(self) != id(_parent_folder.items[self.name]):
-                e.code.CodingError(
-                    msgs=[
-                        f"We expect these objects to be same ... "
-                        f"make sure to add item using "
-                        f"parent_folder.add_item() method for integrity"
-                    ]
-                )
-            # in init() we added self by calling
-            # self.parent_folder.add_item(self) ... now we just remove the
-            # item from tracking dict items so that parent folder is in sync
-            del _parent_folder.items[self.name]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -658,13 +666,6 @@ class Folder(StorageHashable):
             # we assume you have taken care of creating unique name for all
             # possible instance of hashable class
             return self.for_hashable.name
-
-    @property
-    def group_by(self) -> None:
-        """
-        In general we will not need group_by for Folder
-        """
-        return None
 
     @property
     def is_created(self) -> bool:
@@ -1004,7 +1005,7 @@ class ResultsFolder(Folder):
           Alternative:
             Every task is special so we can have multiple Hashable Class for
             each task and then we can afford to have a single
-            store_fields_location. An easy and effective solution.
+            path. An easy and effective solution.
 
         """
         from . import store
@@ -1018,7 +1019,7 @@ class ResultsFolder(Folder):
 
         # check if path has the unique name
         # this is needed as the user need to take care of keeping
-        # store_fields_location unique as then he can decide the possible
+        # path unique as then he can decide the possible
         # sequence of folders under which he can store the storage results
         if self.path.as_posix().find(
             self.for_hashable.name

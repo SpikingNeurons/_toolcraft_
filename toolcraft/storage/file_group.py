@@ -565,12 +565,24 @@ class FileGroup(StorageHashable, abc.ABC):
     # noinspection PyUnusedLocal
     def check(self, *, force: bool = False):
 
-        util.crosscheck_hashes_for_paths(
+        _failed_hashes = util.crosscheck_hashes_for_paths(
             paths={fk: self.path / fk for fk in self.file_keys},
             hash_type='sha256',
             correct_hashes=self.get_hashes(),
             msg=f"file group `{self.name}`"
         )
+
+        if bool(_failed_hashes):
+            # wipe state manager files
+            self.info.delete()
+            self.config.delete()
+            # raise error
+            e.code.CodingError(
+                msgs=[
+                    f"Hashes for some files did not match. Check below",
+                    _failed_hashes
+                ]
+            )
 
     # noinspection PyUnusedLocal
     def check_post_runner(

@@ -905,6 +905,8 @@ def crosscheck_hashes_for_paths(
         correct_hashes:
 
     Returns:
+        If correct_hashes were not provided then returns hashes for all files.
+        If correct_hashes then return hashes for files that do not match.
 
     """
     # -------------------------------------------------------- 01
@@ -950,17 +952,7 @@ def crosscheck_hashes_for_paths(
 
     # -------------------------------------------------------- 05
     # handle return
-    if correct_hashes is None:
-        return _store
-    else:
-        if bool(_store):
-            e.code.CodingError(
-                msgs=[
-                    f"Hashes for some files did not match. Check below",
-                    _store
-                ]
-            )
-        return None
+    return _store
 
 
 def crosscheck_hash(

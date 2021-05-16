@@ -67,6 +67,7 @@ class Internal:
     #  know that typing support is difficult to achieve. But we can override
     #  __getitem__ to throw custom error indicating on call kwargs have changed
     on_call_kwargs: t.Union[t.Dict[str, t.Any]] = None
+    progress_bar: logger.ProgressBar = None
 
     class LITERAL:
         store_key = "INTERNAL"
@@ -168,7 +169,7 @@ class Internal:
 
     # noinspection PyMethodMayBeStatic
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return ['on_call_kwargs', "make_me_useless"]
+        return ['on_call_kwargs', "progress_bar"]
 
     def has(self, item: str) -> bool:
         if item not in self.__variable_names__:
@@ -318,9 +319,11 @@ class Tracker:
                 self.internal.on_call_kwargs['on_iter_show_progress_bar']
             if _show_progress_bar:
                 with logger.ProgressBar(total=self.iterable_length) as pg:
+                    self.internal.progress_bar = pg
                     for _ in _iterable:
                         pg.update(1)
                         yield _
+                    self.internal.progress_bar = None
             else:
                 for _ in _iterable:
                     yield _

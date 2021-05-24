@@ -1122,7 +1122,7 @@ def show_demo():
                 sindatay = []
                 for i in range(0, 1000):
                     sindatax.append(i/1000)
-                    sindatay.append(0.5 + 0.5*sin(50*i/1000))
+                    sindatay.append(1.5 + 0.5*sin(50*i/1000))
 
                 # using xy_format
                 x2datax = []
@@ -1131,10 +1131,14 @@ def show_demo():
                     x2datax.append(1/(i+1))
                     x2datay.append((1/(i+1))**2)
 
-                add_plot("Multi Axes Plot##demo", x_axis_name="x", y_axis_name="y", height=400, yaxis2=True, yaxis3=True)
+                add_plot("Multi Axes Plot##demo", x_axis_name="x",
+                         y_axis_name="y", height=400, yaxis2=False,
+                         yaxis3=True)
                 add_line_series("Multi Axes Plot##demo", "Series 1", sindatax, sindatay)
-                add_line_series("Multi Axes Plot##demo", "Series 2", x2datax, x2datay, axis=1)
-                add_line_series("Multi Axes Plot##demo", "Series 3", x2datax, x2datay, axis=2)
+                add_line_series("Multi Axes Plot##demo", "Series 2",
+                    x2datay, [_*2 for _ in x2datay], axis=1)
+                add_line_series("Multi Axes Plot##demo", "Series 3",
+                    x2datay, [_*4 for _ in x2datay], axis=2)
 
             with tree_node("Annotations##demo"):
 

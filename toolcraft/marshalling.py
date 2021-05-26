@@ -1055,28 +1055,22 @@ class HashableClass(YamlRepr, abc.ABC):
 
         # --------------------------------------------------------------01
         # do instance related things
-        # --------------------------------------------------------------01.01
-        # todo: add global flag to start and stop validation
-        # make sure that everything is light weight so that object creation
-        # is fast ...
-        self.init_validate()
-        # --------------------------------------------------------------01.02
-        # call init logic
-        self.init()
-
-        # --------------------------------------------------------------02
-        # log
-        _spinner = logger.Spinner.get_last_spinner()
-        if _spinner is None:
-            _LOGGER.info(
-                msg=f"Init "
+        with logger.Spinner(
+            title=f"Init "
                     f"{self.__class__.__module__}."
-                    f"{self.__class__.__name__}")
-        else:
-            _spinner.info(
-                msg=f"Init "
-                    f"{self.__class__.__module__}."
-                    f"{self.__class__.__name__}")
+                    f"{self.__class__.__name__}",
+            logger=_LOGGER,
+        ) as _s:
+            # ----------------------------------------------------------01.01
+            # todo: add global flag to start and stop validation
+            # make sure that everything is light weight so that object creation
+            # is fast ...
+            _s.text = "validating ..."
+            self.init_validate()
+            # ----------------------------------------------------------01.02
+            # call init logic
+            _s.text = "initiating ..."
+            self.init()
 
     def __call__(
         self, *,

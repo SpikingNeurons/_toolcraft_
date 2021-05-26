@@ -132,7 +132,7 @@ def check_things_not_to_be_overridden(
         YamlRepr: ['yaml'],
         HashableClass: ['hex_hash'],
         Folder: ['group_by'],
-        NpyFileGroup: ['get_files', 'get_file'],
+        NpyFileGroup: ['get_files', ],
         Tracker: ['is_called'],
         StorageHashable: ['path'],
         ResultsFolder: ['store'],

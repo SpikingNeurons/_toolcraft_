@@ -674,11 +674,6 @@ class FileGroup(StorageHashable, abc.ABC):
         # we are getting data so update the access info
         self.config.append_last_accessed_on()
 
-    @abc.abstractmethod
-    def get_file(self, file_key: str) -> t.Any:
-        ...
-        # return self.get_files(file_keys=[file_key])[file_key]
-
     # noinspection PyUnusedLocal
     def create_pre_runner(self):
         """
@@ -1455,10 +1450,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         Used to cache NpyMemMap instances to avoid creating them again and
         again.
         """
-        return {
-            fk: NpyMemMap(file_path=self.path / fk,)
-            for fk in self.file_keys
-        }
+        return self.get_files(file_keys=self.file_keys)
 
     # noinspection PyMethodOverriding
     def __call__(
@@ -1502,15 +1494,31 @@ class NpyFileGroup(FileGroup, abc.ABC):
     def get_files(
         self, *, file_keys: t.List[str]
     ) -> t.Dict[str, NpyMemMap]:
+        # get spinner
+        _spinner = logger.Spinner.get_last_spinner()
+
+        # if spinner is None
+        if _spinner is None:
+            e.code.CodingError(
+                msgs=[
+                    f"We recently added spinner support so we expect that "
+                    f"get_files method is called from with with context of "
+                    f"active Spinner ..."
+                ]
+            )
 
         # container
         _ret = {}
 
         # loop over all files
-        for file_key in file_keys:
+        _num_files = len(file_keys)
+        for i, file_key in enumerate(file_keys):
+            # log
+            _spinner.text = f"{(i+1):03d}/{_num_files:03d} fetching file" \
+                            f" {file_key}"
 
             # get data
-            _data = self.all_npy_mem_maps_cache[file_key]
+            _data = NpyMemMap(file_path=self.path / file_key,)
 
             # redundant check ... this was anyways checked while file creation
             # exists here for extra safety
@@ -1533,9 +1541,6 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # return
         return _ret
-
-    def get_file(self, file_key: str) -> NpyMemMap:
-        return self.get_files(file_keys=[file_key])[file_key]
 
     def save_npy_data(
         self,

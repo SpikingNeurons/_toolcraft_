@@ -62,6 +62,7 @@ class Color(m.FrozenEnum, enum.Enum):
                 msgs=[f"Unknown {self}"]
             )
 
+    # noinspection PyMethodOverriding
     def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
         """
         This method return fake Color when called with Color.CUSTOM(...)

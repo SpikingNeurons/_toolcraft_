@@ -46,8 +46,10 @@ NON_DETERMINISTIC_SHUFFLE = SHUFFLE_SEED_TYPE.__args__[0].__args__[3]
 # noinspection PyUnresolvedReferences
 USE_ALL = slice(None, None, None)
 
+# note that this needs to be yaml serializable so do not have no.ndarray
+# although it is supported by NpyMemMap
 SELECT_TYPE = t.Union[
-    int, slice, t.List[int], np.ndarray
+    int, slice, t.List[int],
 ]
 
 
@@ -1455,13 +1457,16 @@ class NpyFileGroup(FileGroup, abc.ABC):
     # noinspection PyMethodOverriding
     def __call__(
         self, *,
-        on_iter_show_progress_bar: bool = True,
         shuffle_seed: SHUFFLE_SEED_TYPE,
     ) -> "NpyFileGroup":
         # call super
         # noinspection PyTypeChecker
         return super().__call__(
-            on_iter_show_progress_bar=on_iter_show_progress_bar,
+            # Note that we do not use iterating feature so set to None as we
+            # need to satisfy the API requirement
+            iter_show_progress_bar=None,
+            iter_num_parts=None,
+            iter_for_part=None,
             shuffle_seed=shuffle_seed
         )
 
@@ -1476,9 +1481,14 @@ class NpyFileGroup(FileGroup, abc.ABC):
             ]  # type: SHUFFLE_SEED_TYPE
 
         # make NpyMemmaps aware of seed
-        for k, v in self.all_npy_mem_maps_cache.items():
-            v(shuffle_seed=shuffle_seed)
-            v.__enter__()
+        with logger.ProgressBar(
+            iterable=list(self.all_npy_mem_maps_cache.keys())
+        ) as _pg:
+            _pg.set_description(f"Opening NpyMemMap's")
+            for k in _pg:
+                v = self.all_npy_mem_maps_cache[k]
+                v(shuffle_seed=shuffle_seed)
+                v.__enter__()
 
     def on_exit(self):
         # call super
@@ -1487,9 +1497,14 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # exit numpy memmaps
         # We have opened up all NpyMemMap's with shuffle_seed='DO_NOT_USE' ...
         # for use within `with` context ... so now we close it
-        for k, v in self.all_npy_mem_maps_cache.items():
-            # noinspection PyUnresolvedReferences
-            v.__exit__(None, None, None)
+        with logger.ProgressBar(
+            iterable=list(self.all_npy_mem_maps_cache.keys())
+        ) as _pg:
+            _pg.set_description(f"Closing NpyMemMap's")
+            for k in _pg:
+                v = self.all_npy_mem_maps_cache[k]
+                # noinspection PyUnresolvedReferences
+                v.__exit__(None, None, None)
 
     def get_files(
         self, *, file_keys: t.List[str]

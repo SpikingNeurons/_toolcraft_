@@ -100,7 +100,8 @@ def check_things_not_to_be_cached(
     to_check: dict = None
 ):
     _THINGS_NOT_TO_BE_CACHED = {
-        Tracker: ['is_called', 'iterable_length'],
+        Tracker: ['is_called', 'iterable_length', 'on_iter', 'on_call',
+                  'on_enter', 'on_exit'],
         StateFile: ['is_available'],
     }
     if to_check is not None:
@@ -133,7 +134,7 @@ def check_things_not_to_be_overridden(
         HashableClass: ['hex_hash'],
         Folder: ['group_by'],
         NpyFileGroup: ['get_files', ],
-        Tracker: ['is_called'],
+        Tracker: ['is_called', 'is_iterable'],
         StorageHashable: ['path'],
         ResultsFolder: ['store'],
     }

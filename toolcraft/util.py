@@ -998,7 +998,7 @@ def crosscheck_hash(
                     # set description
                     pb.set_description_str(msg)
                     if correct_hash is not None:
-                        pb.set_postfix_str("⚠", refresh=True)
+                        pb.set_postfix_str("⏳", refresh=True)
 
                     # compute
                     for chunk in iter(lambda: fb.read(_chunk_size), b''):
@@ -1140,7 +1140,7 @@ def download_file(
         # ------------------------------------------------------ 02.01
         # set description
         pb.set_description_str(msg)
-        pb.set_postfix_str("⚠", refresh=True)
+        pb.set_postfix_str("📥", refresh=True)
 
         # ------------------------------------------------------ 02.02
         # retrieve

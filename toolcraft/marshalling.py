@@ -169,7 +169,7 @@ class Internal:
 
     # noinspection PyMethodMayBeStatic
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return ['on_call_kwargs', "progress_bar"]
+        return ['on_call_kwargs', "progress_bar", "part_iterator_state"]
 
     def has(self, item: str) -> bool:
         if item not in self.__variable_names__:
@@ -218,10 +218,34 @@ class Tracker:
         return self.internal.on_call_kwargs is not None
 
     @property
+    @util.CacheResult
+    def is_iterable(self) -> bool:
+        """
+        Indicates weather this class can be iterated or not
+        """
+        _iterable_length_overridden = \
+            self.__class__.iterable_length != Tracker.iterable_length
+        _on_iter_overridden = \
+            self.__class__.on_iter != Tracker.on_iter
+        if _iterable_length_overridden ^ _on_iter_overridden:
+            e.code.CodingError(
+                msgs=[
+                    f"Both property iterable_length and method on_iter must "
+                    f"be overridden if you want to support iterating on "
+                    f"instances of class {self.__class__}",
+                    dict(
+                        _iterable_length_overridden=_iterable_length_overridden,
+                        _on_iter_overridden=_on_iter_overridden,
+                    )
+                ]
+            )
+        return _iterable_length_overridden
+
+    @property
     def iterable_length(self) -> int:
         e.code.NotSupported(
             msgs=[
-                f"Override this property in class if you want to use iterate "
+                f"Override this property in class if you want to iterate "
                 f"over tracker"
             ]
         )
@@ -252,7 +276,11 @@ class Tracker:
         cls.class_init()
 
     def __call__(
-        self, **kwargs,
+        self,
+        iter_show_progress_bar: bool = None,
+        iter_start_at: int = None,
+        iter_end_at: int = None,
+        **kwargs,
     ) -> "Tracker":
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
@@ -273,9 +301,31 @@ class Tracker:
                 ]
             )
         else:
-            self.internal.on_call_kwargs = {
-                **kwargs
-            }
+            # if iterating is not supported then make sure that iter_* kwargs
+            # are None
+            if self.is_iterable:
+                if iter_show_progress_bar is None:
+                    # the default when self is iterable is to show progress bar
+                    iter_show_progress_bar = True
+                self.internal.on_call_kwargs = {
+                    'iter_show_progress_bar': iter_show_progress_bar,
+                    'iter_start_at': iter_start_at,
+                    'iter_end_at': iter_end_at,
+                    **kwargs
+                }
+            else:
+                if iter_show_progress_bar is not None or iter_start_at is not\
+                        None or iter_end_at is not None:
+                    e.code.CodingError(
+                        msgs=[
+                            f"The class {self.__class__} does not override "
+                            f"on_iter that is it does not support iterating "
+                            f"so please make sure to set iter related "
+                            f"__call__ kwargs to None"
+                        ]
+                    )
+                    # skip adding iter related kwargs
+                self.internal.on_call_kwargs = kwargs
 
         self.on_call()
 
@@ -305,26 +355,25 @@ class Tracker:
         # hashable class without using with statement ... but nonetheless we
         # expect you to call __call__ while looping over
         with self:
+            # get iterable
             _iterable = self.on_iter()
-            if _iterable is None:
-                e.code.CodingError(
-                    msgs=[
-                        f"Looks like you do not support iterating over "
-                        f"hashable class {self.__class__}",
-                        f"Considering overriding `on_iter` to return a "
-                        f"iterator"
-                    ]
-                )
+
+            # get some vars
             _show_progress_bar = \
-                self.internal.on_call_kwargs['on_iter_show_progress_bar']
+                self.internal.on_call_kwargs['iter_show_progress_bar']
+
+            # iterate
             if _show_progress_bar:
                 with logger.ProgressBar(total=self.iterable_length) as pg:
                     self.internal.progress_bar = pg
+                    pg.set_postfix_str("⏳")
                     for _ in _iterable:
                         pg.update(1)
                         yield _
+                    pg.set_postfix_str("✔")
                     self.internal.progress_bar = None
             else:
+                self.internal.progress_bar = None
                 for _ in _iterable:
                     yield _
 
@@ -332,6 +381,7 @@ class Tracker:
         """
         Override this in case you want to do something when __call__ is called
         """
+        # ----------------------------------------------------- 01
         if not self.is_called:
             e.code.CodingError(
                 msgs=[
@@ -379,23 +429,19 @@ class Tracker:
         # reset on_call_kwargs
         self.internal.on_call_kwargs = None
 
+    # noinspection PyTypeChecker
     def on_iter(self) -> t.Iterable[t.Any]:
         """
         Override this in case you want to do something when __iter__ is called
         """
-        if not self.is_called:
-            e.code.CodingError(
-                msgs=[
-                    f"Internal variable on_call_kwargs is not yet set",
-                    f"Did you miss to call your code from within with context",
-                    f"Also did you miss to use __call__",
-                    f"If iterating over Hashable class make sure that "
-                    f"__call__ is called which sets kwargs related to "
-                    f"iteration or anything else"
-                ]
-            )
-        # noinspection PyTypeChecker
-        return None
+        e.code.CodingError(
+            msgs=[
+                f"Looks like you do not support iterating over "
+                f"hashable class {self.__class__}",
+                f"Considering overriding `on_iter` in class {self.__class__} "
+                f"to return an iterator"
+            ]
+        )
 
     @classmethod
     def class_init(cls):
@@ -1071,19 +1117,6 @@ class HashableClass(YamlRepr, abc.ABC):
             # call init logic
             _s.text = "initiating ..."
             self.init()
-
-    def __call__(
-        self, *,
-        on_iter_show_progress_bar: bool = True,
-        **kwargs,
-    ) -> "HashableClass":
-
-        # call super
-        # noinspection PyTypeChecker
-        return super().__call__(
-            on_iter_show_progress_bar=on_iter_show_progress_bar,
-            **kwargs,
-        )
 
     def __str__(self) -> str:
         """

@@ -32,6 +32,7 @@ pandas = "^1.2.3"
 pyarrow = "^3.0.0"
 
 [tool.poetry.dev-dependencies]
+pydoc-markdown = "^3.13.0"
 nbformat = "^5.1.2"
 beautifulsoup4 = "^4.9.3"
 nbconvert = "^5.6.1"
@@ -48,6 +49,7 @@ tox = "*"
 yapf = "*"
 safety = "*"
 bs4 = "*"
+mkdocs = "^1.1.2"
 
 [tool.poetry.scripts]
 toolcraft = 'toolcraft.cli:main'

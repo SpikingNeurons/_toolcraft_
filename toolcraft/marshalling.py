@@ -377,6 +377,9 @@ class Tracker:
                 for _ in _iterable:
                     yield _
 
+    def __del__(self):
+        self.on_del()
+
     def on_call(self):
         """
         Override this in case you want to do something when __call__ is called
@@ -442,6 +445,9 @@ class Tracker:
                 f"to return an iterator"
             ]
         )
+
+    def on_del(self):
+        ...
 
     @classmethod
     def class_init(cls):

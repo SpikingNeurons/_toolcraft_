@@ -633,7 +633,7 @@ class FileGroup(StorageHashable, abc.ABC):
             e.validation.NotAllowed(
                 msgs=[
                     f"Make sure to create files for instance of type "
-                    f"{self.__class__} before calling `get_file()`"
+                    f"{self.__class__} before calling `get_files()`"
                 ]
             )
 
@@ -659,8 +659,8 @@ class FileGroup(StorageHashable, abc.ABC):
 
     @abc.abstractmethod
     def get_files(
-            self, *,
-            file_keys: t.List[str]
+        self, *,
+        file_keys: t.List[str]
     ) -> t.Dict[str, t.Any]:
         """
         Note we return t.Any as you can return anything like file path
@@ -1452,7 +1452,14 @@ class NpyFileGroup(FileGroup, abc.ABC):
         Used to cache NpyMemMap instances to avoid creating them again and
         again.
         """
-        return self.get_files(file_keys=self.file_keys)
+        _ret = {}
+        with logger.ProgressBar(
+            iterable=self.file_keys
+        ) as _pg:
+            _pg.set_description(f"Loading NpyMemMap's")
+            for fk in _pg:
+                _ret[fk] = NpyMemMap(file_path=self.path / fk,)
+        return _ret
 
     # noinspection PyMethodOverriding
     def __call__(
@@ -1480,13 +1487,16 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 'shuffle_seed'
             ]  # type: SHUFFLE_SEED_TYPE
 
+        # get property
+        _all_npy_mem_maps_cache = self.all_npy_mem_maps_cache
+
         # make NpyMemmaps aware of seed
         with logger.ProgressBar(
-            iterable=list(self.all_npy_mem_maps_cache.keys())
+            iterable=self.file_keys
         ) as _pg:
             _pg.set_description(f"Opening NpyMemMap's")
             for k in _pg:
-                v = self.all_npy_mem_maps_cache[k]
+                v = _all_npy_mem_maps_cache[k]
                 v(shuffle_seed=shuffle_seed)
                 v.__enter__()
 
@@ -1498,7 +1508,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # We have opened up all NpyMemMap's with shuffle_seed='DO_NOT_USE' ...
         # for use within `with` context ... so now we close it
         with logger.ProgressBar(
-            iterable=list(self.all_npy_mem_maps_cache.keys())
+            iterable=self.file_keys
         ) as _pg:
             _pg.set_description(f"Closing NpyMemMap's")
             for k in _pg:

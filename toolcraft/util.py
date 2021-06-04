@@ -912,8 +912,6 @@ def crosscheck_hashes_for_paths(
     # -------------------------------------------------------- 01
     # handle spinner enter
     _last_spinner = logger.Spinner.get_last_spinner()
-    if _last_spinner is not None:
-        _last_spinner.hide()
 
     # -------------------------------------------------------- 02
     # log
@@ -922,6 +920,8 @@ def crosscheck_hashes_for_paths(
             msg=f"Computing hashes for {msg}",
             annotate_with_time_elapsed=False,
         )
+        # also hide it as hash check progress bar will appear
+        _last_spinner.hide()
     else:
         _LOGGER.info(msg=f"Computing hashes for {msg}")
 

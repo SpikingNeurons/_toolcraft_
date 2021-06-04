@@ -308,7 +308,7 @@ class ProgressBar(tqdm):
         miniters: t.Union[int, float] = None,
         ascii: t.Union[str, bool] = None,
         disable=False,
-        unit: str = 'it',
+        unit: str = ' it',
         unit_scale: t.Union[bool, int, float] = False,
         dynamic_ncols: bool = False,
         smoothing: float = 0.3,

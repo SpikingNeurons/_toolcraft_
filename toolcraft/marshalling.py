@@ -241,15 +241,27 @@ class Tracker:
             )
         return _iterable_length_overridden
 
+    # noinspection PyPropertyDefinition,PyTypeChecker
     @property
     def iterable_length(self) -> int:
         e.code.NotSupported(
             msgs=[
-                f"Override this property in class if you want to iterate "
+                f"Override this property in class "
+                f"{self.__class__} if you want to iterate "
                 f"over tracker"
             ]
         )
-        return -1
+
+    # noinspection PyPropertyDefinition,PyTypeChecker
+    @property
+    def iterable_unit(self) -> str:
+        e.code.NotSupported(
+            msgs=[
+                f"Override this property in class "
+                f"{self.__class__} if you want to iterate "
+                f"over tracker"
+            ]
+        )
 
     @property
     @util.CacheResult
@@ -364,7 +376,10 @@ class Tracker:
 
             # iterate
             if _show_progress_bar:
-                with logger.ProgressBar(total=self.iterable_length) as pg:
+                with logger.ProgressBar(
+                    total=self.iterable_length,
+                    unit=self.iterable_unit,
+                ) as pg:
                     self.internal.progress_bar = pg
                     pg.set_postfix_str("⏳")
                     for _ in _iterable:

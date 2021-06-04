@@ -290,6 +290,7 @@ class Tracker:
     def __call__(
         self,
         iter_show_progress_bar: bool = None,
+        iter_desc: str = None,
         iter_start_at: int = None,
         iter_end_at: int = None,
         **kwargs,
@@ -321,13 +322,16 @@ class Tracker:
                     iter_show_progress_bar = True
                 self.internal.on_call_kwargs = {
                     'iter_show_progress_bar': iter_show_progress_bar,
+                    'iter_desc': iter_desc,
                     'iter_start_at': iter_start_at,
                     'iter_end_at': iter_end_at,
                     **kwargs
                 }
             else:
-                if iter_show_progress_bar is not None or iter_start_at is not\
-                        None or iter_end_at is not None:
+                if iter_show_progress_bar is not None or \
+                    iter_desc is not None or \
+                    iter_start_at is not None or \
+                        iter_end_at is not None:
                     e.code.CodingError(
                         msgs=[
                             f"The class {self.__class__} does not override "
@@ -373,19 +377,19 @@ class Tracker:
             # get some vars
             _show_progress_bar = \
                 self.internal.on_call_kwargs['iter_show_progress_bar']
+            _iter_desc = self.internal.on_call_kwargs['iter_desc']
 
             # iterate
             if _show_progress_bar:
                 with logger.ProgressBar(
                     total=self.iterable_length,
                     unit=self.iterable_unit,
+                    desc=_iter_desc,
                 ) as pg:
                     self.internal.progress_bar = pg
-                    pg.set_postfix_str("⏳")
                     for _ in _iterable:
                         pg.update(1)
                         yield _
-                    pg.set_postfix_str("✔")
                     self.internal.progress_bar = None
             else:
                 self.internal.progress_bar = None

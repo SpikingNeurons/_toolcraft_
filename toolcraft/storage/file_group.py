@@ -1454,9 +1454,8 @@ class NpyFileGroup(FileGroup, abc.ABC):
         """
         _ret = {}
         with logger.ProgressBar(
-            iterable=self.file_keys, unit=" files"
+            iterable=self.file_keys, unit=" files", desc="Loading NpyMemMap's"
         ) as _pg:
-            _pg.set_description(f"Loading NpyMemMap's")
             for fk in _pg:
                 _ret[fk] = NpyMemMap(file_path=self.path / fk,)
         return _ret
@@ -1472,6 +1471,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # Note that we do not use iterating feature so set to None as we
             # need to satisfy the API requirement
             iter_show_progress_bar=None,
+            iter_desc=None,
             iter_num_parts=None,
             iter_for_part=None,
             shuffle_seed=shuffle_seed
@@ -1492,9 +1492,8 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # make NpyMemmaps aware of seed
         with logger.ProgressBar(
-            iterable=self.file_keys, unit=" files"
+            iterable=self.file_keys, unit=" files", desc="Opening NpyMemMap's"
         ) as _pg:
-            _pg.set_description(f"Opening NpyMemMap's")
             for k in _pg:
                 v = _all_npy_mem_maps_cache[k]
                 v(shuffle_seed=shuffle_seed)
@@ -1508,7 +1507,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # We have opened up all NpyMemMap's with shuffle_seed='DO_NOT_USE' ...
         # for use within `with` context ... so now we close it
         with logger.ProgressBar(
-            iterable=self.file_keys, unit=" files"
+            iterable=self.file_keys, unit=" files", desc="Closing NpyMemMap's"
         ) as _pg:
             _pg.set_description(f"Closing NpyMemMap's")
             for k in _pg:

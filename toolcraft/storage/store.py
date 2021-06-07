@@ -37,6 +37,8 @@ from . import Folder, ResultsFolder
 
 MODE_TYPE = t.Literal['r', 'rw', 'd', 'e', 'a', 'w']
 
+_IS_STORE_FIELD = '_is_store_field'
+
 
 # noinspection PyDataclass
 @dataclasses.dataclass(frozen=True)
@@ -394,7 +396,7 @@ class StoreField:
                     ]
                 )
             return self.on_call(for_hashable=args[0], **kwargs)
-        _wrap_fn._is_store_field = True
+        setattr(_wrap_fn, _IS_STORE_FIELD, True)
         return _wrap_fn
 
     def on_call(
@@ -423,7 +425,7 @@ class StoreField:
         # ------------------------------------------------------- 02
         # get store_fields_folder the Folder that manages all DfFiles for
         # for_hashable
-        _folder = for_hashable.results_folder.store
+        _folder = for_hashable.results_folder.store  # type: StoreFieldsFolder
 
         # ------------------------------------------------------- 03
         # get DfFile
@@ -889,14 +891,8 @@ class StoreField:
                     )
 
 
-def is_store_field(property_or_fn) -> bool:
-    if inspect.ismethod(property_or_fn) or inspect.isfunction(property_or_fn):
-        return hasattr(property_or_fn, '_is_store_field')
-    elif isinstance(property_or_fn, property):
-        return hasattr(property_or_fn.fget, '_is_store_field')
+def is_store_field(_fn) -> bool:
+    if inspect.ismethod(_fn) or inspect.isfunction(_fn):
+        return hasattr(_fn, _IS_STORE_FIELD)
     else:
-        e.code.ShouldNeverHappen(
-            msgs=[
-                f"unknown type {type(property_or_fn)}"
-            ]
-        )
+        return False

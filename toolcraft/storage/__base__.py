@@ -982,6 +982,8 @@ class ResultsFolder(Folder):
     It will also be used by StoreField decorator to store the pyarrow results.
     """
 
+    for_hashable: m.HashableClass
+
     @property
     @util.CacheResult
     def root_dir(self) -> pathlib.Path:
@@ -1013,6 +1015,25 @@ class ResultsFolder(Folder):
             parent_folder=self, for_hashable="store"
         )
 
+    @property
+    @util.CacheResult
+    def store_fields(self) -> t.List[str]:
+        """
+        Gets you the DfFiles that will be stored under store
+        That is returns properties/methods decorated by StoreField where each
+        of them will have a sub-folder under Store
+        """
+        from . import store
+        _ret = []
+        for _name in dir(self.for_hashable.__class__):
+            if _name.startswith("_"):
+                continue
+            if store.is_store_field(
+                getattr(self.for_hashable.__class__, _name)
+            ):
+                _ret.append(_name)
+        return _ret
+
     def init_validate(self):
         # call super
         super().init_validate()
@@ -1033,3 +1054,7 @@ class ResultsFolder(Folder):
                     f"`{self.__class__}` property `path` to avoid this error"
                 ]
             )
+
+    def init_store_df_files(self):
+        for _sf in self.store_fields:
+            getattr(self.for_hashable, _sf)(mode='e')

@@ -155,4 +155,79 @@ class HashableMethodRunnerCallback(Callback):
         )
 
 
+@dataclasses.dataclass(frozen=True)
+class HashableMethodsRunnerCallback(Callback):
+    """
+    Special class just to create a button bar if you do not want to have a
+    special method that generates button bar
+    """
+    tab_group_name: str
+    hashable: m.HashableClass
+    title: str
+    close_button: bool
+    callable_names: t.List[str]
+    callable_labels: t.List[str]
+    receiver: Widget
+    allow_refresh: bool
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # check if receiver can accept child
+        if not self.receiver.is_container:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"We expect a receiver that can accept children..."
+                ]
+            )
+
+        # length must be same
+        if len(self.callable_names) != len(self.callable_labels):
+            e.validation.NotAllowed(
+                msgs=[
+                    f"We expect fields `callable_names` and `callable_labels` "
+                    f"to have same length"
+                ]
+            )
+
+    def fn(self):
+        # import
+        from . import helper
+
+        # get some vars
+        _sender = self.sender
+        _hashable = self.hashable
+        _receiver = self.receiver
+        # this make sure that same guid is shared across multiple
+        # callbacks that use same tab_group_name.
+        # Note this applies if _hashable and receiver are same
+        _unique_guid = f"{_hashable.hex_hash}_{self.tab_group_name}"
+
+        # if present in children
+        if _unique_guid in _receiver.children.keys():
+            # if allow refresh delete so that it can be deleted later
+            if self.allow_refresh:
+                _receiver.children[_unique_guid].delete()
+            # else return as nothing to do
+            else:
+                return
+
+        # get actual result widget we are interested to display ... and make
+        # it child to receiver
+        _result_widget = helper.button_bar_from_hashable_callables(
+            tab_group_name=self.tab_group_name,
+            hashable=self.hashable,
+            title=self.title,
+            close_button=self.close_button,
+            callable_names={
+                k: v for k, v in zip(self.callable_labels, self.callable_names)
+            },
+        )
+        _receiver.add_child(
+            guid=_unique_guid,
+            widget=_result_widget
+        )
+
+
 

@@ -169,7 +169,7 @@ def pip_downloader(
             f"pip install " \
             f"--index-url {index_url} " \
             f"--trusted-host {trusted_host} " \
-            f"pip setuptools "
+            f"pip setuptools"
         for package_name, package_version in packages:
             install_from_internal_repo_script_str += \
                 f" {package_name}=={package_version}"

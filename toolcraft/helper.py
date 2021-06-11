@@ -132,19 +132,23 @@ def pip_downloader(
             _command
         )
 
+    # derive all pip installs
+    pip_installs = [
+        'python -m pip install --upgrade pip',
+        'pip install setuptools -U',
+    ]
+    for package_name, package_version in packages:
+        pip_installs.append(
+            f"pip install {package_name}=={package_version}"
+        )
+
     # create installation bats
     install_from_local_dir_script = \
         store_dir / 'install_from_local_dir.bat'
-    _pip_installs = [
-        'python -m pip install --upgrade pip',
-        'pip install setuptools -U -f .',
-    ]
-    for package_name, package_version in packages:
-        _pip_installs.append(
-            f"pip install {package_name}=={package_version} -f ."
-        )
     install_from_local_dir_script.write_text(
-        "\n".join(_pip_installs)
+        "\n".join(
+            [f"{_} -f ." for _ in pip_installs]
+        )
     )
 
     # if behind firewall setting are provided create bat script for it
@@ -157,7 +161,7 @@ def pip_downloader(
             "\n".join(
                 [
                     f"{_} --index-url {index_url} --trusted-host {trusted_host}"
-                    for _ in _pip_installs
+                    for _ in pip_installs
                 ]
             )
         )

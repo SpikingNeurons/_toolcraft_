@@ -29,7 +29,8 @@ def move_packages(pypi_root_dir: str):
         f for f in all_fs
         if f.is_file() and
         f.name not in [
-           'pip_detect_redundant_packages.py', 'pip_package_mover.py'
+            'pip_detect_redundant_packages.py', 'pip_package_mover.py',
+            'install_from_internal_repo.bat', 'install_from_local_dir.bat',
         ]
     ]
 
@@ -42,6 +43,8 @@ def move_packages(pypi_root_dir: str):
         # todo: figure out why ... temporary fix
         if package_name == "PyYAML":
             package_name = "pyyaml"
+        if package_name == "Keras":
+            package_name = "keras"
 
         # make dirs for pypi
         pypi_dir = pathlib.Path(pypi_root_dir) / package_name

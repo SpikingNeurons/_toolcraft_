@@ -35,7 +35,7 @@ class PythonDownloader(s.DownloadFileGroup):
     @property
     @util.CacheResult
     def root_dir(self) -> pathlib.Path:
-        return pathlib.Path.home() / "Downloads" / "Python"
+        return pathlib.Path.home() / "Downloads" / ".python"
 
     def get_urls(self) -> t.Dict[str, str]:
         return {
@@ -84,12 +84,25 @@ def pip_downloader(
     packages: t.List[t.Tuple[str, str]],
     python_installation_dir: str,
     store_for: str,
+    force: bool = False,
     behind_firewall_settings: t.Dict[str, str] = None,
-):
+) -> pathlib.Path:
     # pip exe
     pip_exe = pathlib.Path(python_installation_dir) / "Scripts" / "pip.exe"
     python_exe = pathlib.Path(python_installation_dir) / "python.exe"
     pip_exe = pip_exe.resolve().as_posix()
+
+    # create dir
+    store_dir = pathlib.Path.home() / "Downloads" / ".pip_downloads" / store_for
+    store_dir.mkdir(parents=True, exist_ok=True)
+    zip_path = store_dir.parent / f"{store_for}.zip"
+
+    # if zip exists return
+    if force:
+        if zip_path.exists():
+            zip_path.unlink()
+    if zip_path.exists():
+        return zip_path
 
     # first let us upgrade pip and setuptools
     os.system(
@@ -98,11 +111,6 @@ def pip_downloader(
     os.system(
         f"{pip_exe} install setuptools -U"
     )
-
-    # create dir
-    store_dir = pathlib.Path.home() / "Downloads" / "pip_downloads" / store_for
-    store_dir.mkdir(parents=True, exist_ok=True)
-    zip_path = store_dir.parent / f"{store_for}.zip"
 
     # also download latest packages
     _pip_command = f"{pip_exe} download pip setuptools"
@@ -184,6 +192,9 @@ def pip_downloader(
     for _f in store_dir.iterdir():
         _zip.write(_f, _f.name)
     _zip.close()
+
+    # return
+    return zip_path
 
 
 

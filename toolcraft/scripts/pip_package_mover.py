@@ -45,6 +45,10 @@ def move_packages(pypi_root_dir: str):
             package_name = "pyyaml"
         if package_name == "Keras":
             package_name = "keras"
+        if package_name == "Keras_Applications":
+            package_name = "keras-applications"
+        if package_name == "Keras_Preprocessing":
+            package_name = "keras-preprocessing"
 
         # make dirs for pypi
         pypi_dir = pathlib.Path(pypi_root_dir) / package_name

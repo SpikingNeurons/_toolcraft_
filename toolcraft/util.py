@@ -484,12 +484,14 @@ def rgetattr(obj, attr, *args):
 
 
 def rhasattr(obj, attr):
-    """
-    Inspired from
-    https://stackoverflow.com/questions/31174295/
-    """
-    pre, _, post = attr.rpartition('.')
-    return hasattr(rgetattr(obj, pre) if pre else obj, post)
+    _nested_attrs = attr.split(".")
+    _curr_obj = obj
+    for _a in _nested_attrs[:-1]:
+        if hasattr(_curr_obj, _a):
+            _curr_obj = getattr(_curr_obj, _a)
+        else:
+            return False
+    return hasattr(_curr_obj, _nested_attrs[-1])
 
 
 def load_class_from_strs(

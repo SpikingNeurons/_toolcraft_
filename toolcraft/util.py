@@ -478,8 +478,8 @@ def rgetattr(obj, attr, *args):
     Inspired from
     https://stackoverflow.com/questions/31174295/
     """
-    def _getattr(obj, attr):
-        return getattr(obj, attr, *args)
+    def _getattr(_obj, _attr):
+        return getattr(_obj, _attr, *args)
     return functools.reduce(_getattr, [obj] + attr.split('.'))
 
 

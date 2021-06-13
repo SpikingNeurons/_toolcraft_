@@ -40,15 +40,8 @@ def move_packages(pypi_root_dir: str):
         package_name = _return_package_name(f.name)
         # the underscores need to be replaced (might not work for tar files)
         package_name = package_name.replace("_", "-")
-        # todo: figure out why ... temporary fix
-        if package_name == "PyYAML":
-            package_name = "pyyaml"
-        if package_name == "Keras":
-            package_name = "keras"
-        if package_name == "Keras_Applications":
-            package_name = "keras-applications"
-        if package_name == "Keras_Preprocessing":
-            package_name = "keras-preprocessing"
+        # make package name lower case
+        package_name = package_name.lower()
 
         # make dirs for pypi
         pypi_dir = pathlib.Path(pypi_root_dir) / package_name

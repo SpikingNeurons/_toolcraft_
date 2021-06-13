@@ -17,6 +17,9 @@ todo: find a way to get info in `pyproject.toml` to update this file so we have 
   + See the author and email info here ... it looks ugly to update it ...
   + We might want it as in sphinx documentation we can access this variables
 
+todo: Also refer
+  https://guild.ai/
+  https://github.com/ml-tooling/ml-workspace
 
 """
 

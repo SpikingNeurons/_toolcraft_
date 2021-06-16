@@ -147,10 +147,10 @@ def pip_downloader(
         'python -m pip install --upgrade pip',
         'pip install setuptools -U',
     ]
+    _pip_install_line = "pip install"
     for package_name, package_version in packages:
-        pip_installs.append(
-            f"pip install {package_name}=={package_version}"
-        )
+        _pip_install_line += f" {package_name}=={package_version}"
+    pip_installs.append(_pip_install_line)
 
     # create installation bats
     install_from_local_dir_script = \

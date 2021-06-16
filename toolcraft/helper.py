@@ -163,20 +163,17 @@ def pip_downloader(
 
     # if behind firewall setting are provided create bat script for it
     if behind_firewall_settings is not None:
-        index_url: str = behind_firewall_settings['index_url']
-        trusted_host: str = behind_firewall_settings['trusted_host']
         install_from_internal_repo_script = \
             store_dir / 'install_from_internal_repo.bat'
-        install_from_internal_repo_script_str = \
-            f"pip install " \
-            f"--index-url {index_url} " \
-            f"--trusted-host {trusted_host} " \
-            f"pip setuptools"
-        for package_name, package_version in packages:
-            install_from_internal_repo_script_str += \
-                f" {package_name}=={package_version}"
+        index_url: str = behind_firewall_settings['index_url']
+        trusted_host: str = behind_firewall_settings['trusted_host']
         install_from_internal_repo_script.write_text(
-            install_from_internal_repo_script_str
+            "\n".join(
+                [
+                    f'pip config set global.index-url "{index_url}"',
+                    f'pip config set global.trusted-host "{trusted_host}"',
+                ] + pip_installs
+            )
         )
 
     # copy python pip scripts

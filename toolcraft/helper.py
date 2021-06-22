@@ -101,10 +101,10 @@ def pip_downloader(
     if force:
         if zip_path.exists():
             zip_path.unlink()
-        for _f in store_dir.iterdir():
-            _f.unlink()
     if zip_path.exists():
         return zip_path
+    for _f in store_dir.iterdir():
+        _f.unlink()
 
     # first let us upgrade pip and setuptools
     os.system(

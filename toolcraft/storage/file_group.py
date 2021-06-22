@@ -1574,6 +1574,11 @@ class NpyFileGroup(FileGroup, abc.ABC):
         file_key: str,
         npy_data: t.Union[np.ndarray, t.Dict[str, np.ndarray]],
     ) -> pathlib.Path:
+        # get spinner and log
+        _s = logger.Spinner.get_last_spinner()
+        if _s is not None:
+            _s.text = f"Saving numpy data for `{file_key}`"
+
         # get file from a file_key
         _file = self.path / file_key
 

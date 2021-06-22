@@ -1002,7 +1002,7 @@ def crosscheck_hash(
                     # test
                     if correct_hash is not None:
                         _hash_is_correct = computed_hash == correct_hash
-                        _status = "☑" if _hash_is_correct else "❎"
+                        _status = "✅" if _hash_is_correct else "❌"
                         pb.set_postfix_str(_status, refresh=True)
         else:
             e.code.CodingError(

@@ -310,7 +310,7 @@ class ProgressBar(tqdm):
         disable=False,
         unit: str = ' it',
         unit_scale: t.Union[bool, int, float] = False,
-        dynamic_ncols: bool = False,
+        dynamic_ncols: bool = True,
         smoothing: float = 0.3,
         bar_format: str = None,
         initial: int = 0,

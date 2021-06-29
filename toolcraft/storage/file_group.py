@@ -85,7 +85,7 @@ class FileGroupConfig(s.Config):
     #  is out of scope and we need to have more better reason to have it ...
     #  as of now *.config will suffice.
     auto_hashes: HashesDict = dataclasses.field(
-        default=None
+        default_factory=dict
     )
 
     @property
@@ -338,7 +338,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 )
 
             # return
-            return self.config.auto_hashes.get()
+            return self.config.auto_hashes
 
         # if not auto hash then raise error to inform to override this method
         else:

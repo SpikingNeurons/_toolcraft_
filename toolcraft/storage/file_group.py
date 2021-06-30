@@ -21,7 +21,7 @@ import random
 from .. import util, logger, settings
 from .. import storage as s
 from .. import error as e
-from . import HashesDict, StorageHashable, Folder
+from . import StorageHashable
 
 _LOGGER = logger.get_logger()
 
@@ -84,9 +84,7 @@ class FileGroupConfig(s.Config):
     #  The workaround is to have one more file like *.info or *.meta but that
     #  is out of scope and we need to have more better reason to have it ...
     #  as of now *.config will suffice.
-    auto_hashes: HashesDict = dataclasses.field(
-        default_factory=dict
-    )
+    auto_hashes: dict = None
 
     @property
     @util.CacheResult
@@ -854,7 +852,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 msg=f"file group {self.name}",
                 correct_hashes=None,
             )
-            self.config.auto_hashes = HashesDict(_auto_hashes)
+            self.config.auto_hashes = _auto_hashes
 
         # ----------------------------------------------------------------06
         # return

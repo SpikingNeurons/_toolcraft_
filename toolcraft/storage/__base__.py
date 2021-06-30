@@ -25,39 +25,6 @@ _DOT_DOT_TYPE = t.Literal['..']
 _DOT_DOT = _DOT_DOT_TYPE.__args__[0]
 
 
-class HashesDict(m.FrozenDict):
-
-    @property
-    def allowed_types(self) -> t.Tuple[t.Type]:
-        return str,
-
-    @property
-    def allowed_nesting(self) -> bool:
-        return False
-
-    def __init__(
-            self,
-            item: t.Dict[str, str]
-    ):
-
-        # call super
-        super().__init__(item=item)
-
-        # validate - all values need to be string of len 64
-        for k, v in item.items():
-            if len(v) != 64:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"The hashes dict must have a string value with "
-                        f"length 64"
-                    ]
-                )
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"!frozen_hashes_dict"
-
-
 @dataclasses.dataclass(frozen=True)
 class StorageHashable(m.HashableClass, abc.ABC):
 

@@ -1,4 +1,4 @@
-from .__base__ import Folder, ResultsFolder, HashesDict, StorageHashable
+from .__base__ import Folder, ResultsFolder, StorageHashable
 from .state import Info, Config
 from .file_group import FileGroup, NpyMemMap, SHUFFLE_SEED_TYPE, \
     DETERMINISTIC_SHUFFLE, NO_SHUFFLE, DO_NOT_USE, USE_ALL, \

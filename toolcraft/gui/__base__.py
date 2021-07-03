@@ -32,6 +32,7 @@ class Color(m.FrozenEnum, enum.Enum):
     BLACK = enum.auto()
     CUSTOM = enum.auto()
     GREY = enum.auto()
+    GREEN = enum.auto()
     RED = enum.auto()
 
     @classmethod
@@ -48,6 +49,8 @@ class Color(m.FrozenEnum, enum.Enum):
             return [0., 0., 0., 255.]
         elif self is self.RED:
             return [255., 0., 0., 255.]
+        elif self is self.GREEN:
+            return [0., 255., 0., 255.]
         elif self is self.GREY:
             return [127., 127., 127., 127.]
         elif self is self.CUSTOM:

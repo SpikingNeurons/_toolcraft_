@@ -1450,7 +1450,6 @@ class NpyFileGroup(FileGroup, abc.ABC):
         Used to cache NpyMemMap instances to avoid creating them again and
         again.
         """
-        print(">>>>>>>>>>>>>>> llllllllll", self.name, self.group_by)
         _ret = {}
         with logger.ProgressBar(
             iterable=self.file_keys, unit=" files", desc="Loading NpyMemMap's"
@@ -1477,7 +1476,6 @@ class NpyFileGroup(FileGroup, abc.ABC):
         )
 
     def on_enter(self):
-        print(">>>>>>>>>>>>>>> eeeee", self.name, self.group_by)
         # call super
         super().on_enter()
 
@@ -1500,7 +1498,6 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 v.__enter__()
 
     def on_exit(self):
-        print(">>>>>>>>>>>>>>> xxxxx", self.name, self.group_by)
         # call super
         super().on_exit()
 

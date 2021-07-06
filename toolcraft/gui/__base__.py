@@ -546,18 +546,34 @@ class Widget(m.HashableClass, abc.ABC):
                 ]
             )
 
-        # -------------------------------------------------- 03
+        # -------------------------------------------------- 04
+        # If widget is already assigned to some parent then raise error
+        # Note that this is not similar to being is_built ... this simple
+        # does mean that you cannot share widgets in multiple places i.e. it
+        # must have only one parent and will be unique with peer children of
+        # that parent
+        if widget.internal.has('guid'):
+            e.code.CodingError(
+                msgs=[
+                    f"Seems like widget was already assigned to some parent "
+                    f"and has guid `{widget.guid}`",
+                    f"Your attempt to add to some new parent with guid "
+                    f"`{guid}` is not possible.",
+                ]
+            )
+
+        # -------------------------------------------------- 05
         # set internals
         widget.internal.guid = guid
         widget.internal.parent = self
         widget.internal.before = before
 
-        # -------------------------------------------------- 04
+        # -------------------------------------------------- 06
         # we can now store widget to children
         # Note that guid is used as it is for dict key
         self.children[guid] = widget
 
-        # -------------------------------------------------- 05
+        # -------------------------------------------------- 07
         # if this widget is already built we need to build this widget here
         # else it will be built when build() on super parent is called
         if self.is_built:

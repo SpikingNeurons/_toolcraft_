@@ -139,6 +139,7 @@ class Internal:
                         f"object.",
                         f"Please refrain from overwriting it as it is "
                         f"configured to be written only once.",
+                        f"You are overwriting it with value `{value}`",
                         f"In case you want to overwrite it then override "
                         f"method `self.vars_that_can_be_overwritten` so "
                         f"that we allow you to overwrite it."

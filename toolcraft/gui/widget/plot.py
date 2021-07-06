@@ -236,7 +236,7 @@ class Plot(Widget):
                 e.code.NotAllowed(
                     msgs=[
                         f"Looks like you have already added item with "
-                        f"label {item.label}"
+                        f"label `{item.label}`"
                     ]
                 )
             else:

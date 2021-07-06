@@ -1675,7 +1675,8 @@ class HookUp:
             _kwargs_str = "..."
         else:
             _kwargs_str = ""
-        _title = f"{self.cls.__name__}.{self.method.__name__}" \
+        _title = f"<{self.method_self.name}> {self.cls.__name__}." \
+                 f"{self.method.__name__}" \
                  f"({_kwargs_str})"
         # _title = logger.replace_with_emoji(_title)
 

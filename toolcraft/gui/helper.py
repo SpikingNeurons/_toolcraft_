@@ -46,11 +46,11 @@ def button_bar_from_hashable_callables(
     # ----------------------------------------------------- 02
     # make title and add it main ui
     _main_ui.add_child(
-        guid="title",
+        guid="bb_title",
         widget=widget.Text(msgs=title)
     )
     _main_ui.add_child(
-        guid="sub_title",
+        guid="bb_sub_title",
         widget=widget.Text(
             msgs=[
                 f"{hashable.group_by}: {hashable.hex_hash}",
@@ -81,18 +81,18 @@ def button_bar_from_hashable_callables(
         )
         _buttons.append(_b)
     # add buttons to _main_ui
-    add_widgets_in_line(guid="line1", receiver=_main_ui, widgets=_buttons)
+    add_widgets_in_line(guid="bb_line1", receiver=_main_ui, widgets=_buttons)
     # add separator
     _main_ui.add_child(
-        guid='separator1', widget=widget.Separator()
+        guid='bb_sep1', widget=widget.Separator()
     )
     # add _button_receiver display to _main_ui
     _main_ui.add_child(
-        guid="display", widget=_button_receiver,
+        guid="bb_r", widget=_button_receiver,
     )
     # add separator
     _main_ui.add_child(
-        guid='separator2', widget=widget.Separator()
+        guid='bb_sep2', widget=widget.Separator()
     )
 
     # ----------------------------------------------------- 04

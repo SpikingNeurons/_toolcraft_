@@ -68,10 +68,10 @@ class RefreshWidgetCallback(Callback):
 
     @classmethod
     def get_button_widget(
-        cls, refresh_callback: Callback
+        cls, refresh_callback: Callback, label: str = "Refresh [R]"
     ) -> widget.Button:
         return widget.Button(
-            label="Refresh [R]",
+            label=label,
             callback=cls(refresh_callback=refresh_callback)
         )
 
@@ -124,20 +124,20 @@ class HashableMethodRunnerCallback(Callback):
 
     def fn(self):
         # get some vars
-        _sender = self.sender
+        # _sender = self.sender
         _hashable = self.hashable
         _receiver = self.receiver
         if self.tab_group_name is None:
-            _unique_guid = f"{_hashable.hex_hash}_{self.callable_name}"
+            _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.callable_name}"
         else:
             # this make sure that same guid is shared across multiple
             # callbacks that use same tab_group_name.
             # Note this applies if _hashable and receiver are same
-            _unique_guid = f"{_hashable.hex_hash}_{self.tab_group_name}"
+            _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.tab_group_name}"
 
         # if present in children
         if _unique_guid in _receiver.children.keys():
-            # if allow refresh delete so that it can be deleted later
+            # if allow refresh delete so that it can be added later
             if self.allow_refresh:
                 _receiver.children[_unique_guid].delete()
             # else return as nothing to do
@@ -196,13 +196,13 @@ class HashableMethodsRunnerCallback(Callback):
         from . import helper
 
         # get some vars
-        _sender = self.sender
+        # _sender = self.sender
         _hashable = self.hashable
         _receiver = self.receiver
         # this make sure that same guid is shared across multiple
         # callbacks that use same tab_group_name.
         # Note this applies if _hashable and receiver are same
-        _unique_guid = f"{_hashable.hex_hash}_{self.tab_group_name}"
+        _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.tab_group_name}"
 
         # if present in children
         if _unique_guid in _receiver.children.keys():

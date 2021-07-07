@@ -347,6 +347,7 @@ class Plot(Widget):
 
     def clear(self):
         dpg.clear_plot(plot=self.name)
+        self.items.clear()
 
     def is_plot_queried(self) -> bool:
         return dpg.is_plot_queried(plot=self.name)

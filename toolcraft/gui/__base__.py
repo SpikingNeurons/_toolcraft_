@@ -23,8 +23,6 @@ if False:
 
 _LOGGER = logger.get_logger()
 
-MANDATORY = "__IT_IS_MANDATORY__"
-
 
 class Color(m.FrozenEnum, enum.Enum):
     DEFAULT = enum.auto()
@@ -129,21 +127,6 @@ class Callback(m.HashableClass, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"!{cls.__name__}"
 
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # check for MANDATORY
-        for f_name in self.dataclass_field_names:
-            v = getattr(self, f_name)
-            if v == MANDATORY:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Please supply value for mandatory field {f_name} "
-                        f"of class {self.__class__}"
-                    ]
-                )
-
     def set_sender(self, sender: "Widget"):
         self.internal.sender = sender
 
@@ -235,21 +218,6 @@ class Widget(m.HashableClass, abc.ABC):
             )
         # this will be populated when add_child is called
         return {}
-
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # check for MANDATORY
-        for f_name in self.dataclass_field_names:
-            v = getattr(self, f_name)
-            if v == MANDATORY:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Please supply value for mandatory field {f_name} "
-                        f"of class {self.__class__}"
-                    ]
-                )
 
     def init(self):
         # ------------------------------------------------------- 01

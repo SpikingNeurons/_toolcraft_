@@ -161,6 +161,21 @@ class Button(Widget):
 
     callback: Callback = None
 
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # if callback_fn is overridden then never supply field callback
+        if Button.callback_fn != self.__class__.callback_fn:
+            if self.callback is not None:
+                e.code.CodingError(
+                    msgs=[
+                        f"Please do not supply `callback` field as you have "
+                        f"overridden method `callback_fn` in class "
+                        f"{self.__class__}"
+                    ]
+                )
+
     @property
     def is_container(self) -> bool:
         return False
@@ -180,9 +195,18 @@ class Button(Widget):
             label=self.label,
             show=self.show,
             enabled=self.enabled,
-            callback=None if self.callback is None else self.callback.fn,
+            callback=self.callback_fn,
             # callback_data=self.callback_data,
         )
+
+    def callback_fn(self, **kwargs):
+        """
+        todo: we should add such function for all widgets that use callback
+          This can help when you override this method by defining a subclass
+          instead of supplying Callback instance for field callback
+        """
+        if self.callback is not None:
+            self.callback.fn()
 
 
 @dataclasses.dataclass(frozen=True)

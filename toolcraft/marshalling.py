@@ -68,6 +68,7 @@ class Internal:
     #  __getitem__ to throw custom error indicating on call kwargs have changed
     on_call_kwargs: t.Union[t.Dict[str, t.Any]] = None
     progress_bar: logger.ProgressBar = None
+    prefetched_on_first_call: bool
 
     class LITERAL:
         store_key = "INTERNAL"
@@ -305,6 +306,13 @@ class Tracker:
 
         """
 
+        # prefetch if not done
+        # handle expensive things that can reduce load on consecutive calls
+        # on same instance
+        if not self.internal.has('prefetched_on_first_call'):
+            self.prefetch_stuff_before_first_call()
+
+        # set call
         if self.is_called:
             e.code.CodingError(
                 msgs=[
@@ -344,8 +352,10 @@ class Tracker:
                     # skip adding iter related kwargs
                 self.internal.on_call_kwargs = kwargs
 
+        # do something once kwargs are available
         self.on_call()
 
+        # return
         return self
 
     def __enter__(self) -> "Tracker":
@@ -400,6 +410,33 @@ class Tracker:
     def __del__(self):
         self.on_del()
 
+    def prefetch_stuff_before_first_call(self):
+        """
+        Handle expensive things that can reduce load on consecutive calls
+        on same instance.
+
+        Prefetch in advance i.e. on first call to avoid pollution of logs
+        This happens only once first time and things will be mostly cached
+        You can also add any more code for performing prefetch
+        Currently we do things like (mostly for foster data)
+        + prefetch foster_data properties like shape dtype trace key ptx ...
+        + cache memmaps in `foster_data.all_npy_mem_maps_cache`
+        + call foster_data and open up
+
+        WARNING: Never have prefetch stuff depend on kwargs passed during
+        on_call
+
+        """
+        if self.internal.has('prefetched_on_first_call'):
+            e.code.CodingError(
+                msgs=[
+                    f"The method `prefetch_stuff` can be called only once ..."
+                ]
+            )
+        else:
+            # set var
+            self.internal.prefetched_on_first_call = True
+
     def on_call(self):
         """
         Override this in case you want to do something when __call__ is called
@@ -440,7 +477,7 @@ class Tracker:
         if not self.is_called:
             e.code.CodingError(
                 msgs=[
-                    f"Internal variable on_call_kwargs is not yet set",
+                    f"Internal variable `on_call_kwargs` is not yet set",
                     f"Did you miss to call your code from within with context",
                     f"Also did you miss to use __call__",
                     f"If iterating over Hashable class make sure that "

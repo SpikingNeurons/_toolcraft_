@@ -660,30 +660,6 @@ class HeatSeries(PlotItem):
 
 
 @dataclasses.dataclass(frozen=True)
-class HorizLineSeries(PlotItem):
-    """
-    Refer to
-    >>> dpg.add_hline_series
-    """
-    x: PLOT_DATA_TYPE
-    color: Color = Color.DEFAULT
-    weight: float = 1.
-    update_bounds: bool = True
-    axis: int = 0
-
-    def plot(self, parent_plot: Plot):
-        dpg.add_hline_series(
-            plot=parent_plot.name,
-            name=self.label,
-            x=self.x,
-            color=self.color.dpg_value,
-            weight=self.weight,
-            update_bounds=self.update_bounds,
-            axis=self.axis,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
 class ImageSeries(PlotItem):
     """
     Refer to

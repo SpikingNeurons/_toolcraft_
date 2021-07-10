@@ -18,7 +18,6 @@ from .. import logger
 from .. import util
 from .. import marshalling as m
 from . import assets
-from . import themes
 
 if False:
     from . import Window
@@ -602,6 +601,9 @@ class Widget(m.HashableClass, abc.ABC):
             _ret[_name] = _children
 
         return self.guid, _ret
+
+    def set_theme(self, theme: assets.Theme):
+        dpg.set_item_theme(item=self.dpg_id, theme=theme.dpg_id)
 
 
 @dataclasses.dataclass(frozen=True)

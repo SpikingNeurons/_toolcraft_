@@ -6,27 +6,32 @@ from .. import util
 from .. import marshalling as m
 from .. import error as e
 from . import Widget, Callback, widget
-from . import themes
+from . import assets
 
 
 @dataclasses.dataclass(frozen=True)
 class SetThemeCallback(Callback):
+    """
+    todo: we will get rid of this callback in favour of assets module ...
+      once we understand theme, icon, font, background, color etc styling
+      related things
+    """
 
     @staticmethod
     def themes() -> t.List[str]:
         return [
-            "Dark", "Light", "Classic",
+            "dark", "light",
+            # "Classic",
             # "Dark 2", "Grey", "Purple",
-            "Dark Grey", "Cherry", "Gold", "Red"
+            # "Dark Grey", "Cherry", "Gold", "Red"
         ]
 
     @staticmethod
     def default_theme() -> str:
-        return "Dark Grey"
+        return "dark"
 
     @classmethod
     def get_combo_widget(cls) -> widget.Combo:
-        themes.set_theme(theme=cls.default_theme())
         return widget.Combo(
             items=cls.themes(),
             default_value=cls.default_theme(),
@@ -34,9 +39,20 @@ class SetThemeCallback(Callback):
         )
 
     def fn(self):
-        _theme = dpg.get_value(item=self.sender.dpg_id)
-        print(_theme)
-        dpg.set_theme(theme=_theme)
+        _theme_str = dpg.get_value(item=self.sender.dpg_id)
+        if _theme_str == "dark":
+            _theme = assets.Theme.dark
+        elif _theme_str == "light":
+            _theme = assets.Theme.light
+        else:
+            e.code.CodingError(
+                msgs=[
+                    f"unknown theme {_theme_str}"
+                ]
+            )
+            raise
+        # we change theme of parent to which this Combo widget is child
+        self.sender.parent.set_theme(theme=_theme)
 
 
 @dataclasses.dataclass(frozen=True)

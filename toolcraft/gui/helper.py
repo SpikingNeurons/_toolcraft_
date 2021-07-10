@@ -1,5 +1,5 @@
 import typing as t
-from dearpygui import core as dpg
+import dearpygui.dearpygui as dpg
 from . import widget, Widget, callback
 from .. import marshalling as m
 

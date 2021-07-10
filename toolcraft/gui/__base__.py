@@ -8,7 +8,8 @@ import dataclasses
 import typing as t
 
 import yaml
-from dearpygui import core as dpg
+import dearpygui.dearpygui as dpg
+import dearpygui.core as internal_dpg
 import numpy as np
 import enum
 
@@ -17,6 +18,7 @@ from .. import logger
 from .. import util
 from .. import marshalling as m
 from . import assets
+from . import themes
 
 if False:
     from . import Window
@@ -137,6 +139,7 @@ class Callback(m.HashableClass, abc.ABC):
 
 class WidgetInternal(m.Internal):
     guid: str
+    dpg_id: int
     parent: t.Union["Dashboard", "Widget"]
     before: t.Optional["Widget"]
     is_build_done: bool
@@ -148,9 +151,8 @@ class WidgetInternal(m.Internal):
     @property
     def dpg_kwargs(self) -> t.Dict[str, t.Any]:
         return dict(
-            name=self.name,
-            parent=self.parent.name,
-            before="" if self.before is None else self.before.name
+            parent=self.parent.dpg_id,
+            before=0 if self.before is None else self.before.dpg_id,
         )
 
 
@@ -160,6 +162,10 @@ class Widget(m.HashableClass, abc.ABC):
     @property
     def guid(self) -> str:
         return self.internal.guid
+
+    @property
+    def dpg_id(self) -> int:
+        return self.internal.dpg_id
 
     @property
     def name(self) -> str:
@@ -188,9 +194,8 @@ class Widget(m.HashableClass, abc.ABC):
         If the dpg component needs a call to end
         Needed when the component is container and is used in with context
         To figure out which component is container refer to
-        >>> from dearpygui import simple
-        And check which methods decorated with `@contextmanager` are making
-        call to `end()`
+        >>> import dearpygui.dearpygui as _dpg
+        And check which methods decorated with `@contextmanager` are yielding
         """
         ...
 
@@ -438,23 +443,35 @@ class Widget(m.HashableClass, abc.ABC):
                 self.children[k] = v
 
     @abc.abstractmethod
-    def build(self):
+    def build(self) -> int:
         ...
 
     def build_post_runner(
-        self, *, hooked_method_return_value: t.Any
+        self, *, hooked_method_return_value: int
     ):
+        # if None raise error ... we expect int
+        if hooked_method_return_value is None:
+            e.code.CodingError(
+                msgs=[
+                    f"We expect build to return int which happens to be dpg_id"
+                ]
+            )
+
+        # set dpg_id
+        self.internal.dpg_id = hooked_method_return_value
 
         # if container build children
         if self.is_container:
+            # push_container_stack
+            internal_dpg.push_container_stack(hooked_method_return_value)
 
             # now as layout is completed and build for this widget is completed,
             # now it is time to render children
             for child in self.children.values():
                 child.build()
 
-            # also close the dpg based end as we do not use with context
-            dpg.end()
+            # also pop_container_stack as we do not use with context
+            internal_dpg.pop_container_stack()
 
         # set flag to indicate build is done
         self.internal.is_build_done = True
@@ -655,35 +672,26 @@ class Dashboard(Widget):
         )
 
     # noinspection PyMethodMayBeStatic,PyMethodOverriding
-    def build(self):
+    def build(self) -> int:
 
         # -------------------------------------------------- 01
         # add window
-        dpg.add_window(
-            name=self.name,
+        _ret = dpg.add_window(
             label=self.title,
             on_close=self.on_close,
+            width=1370, height=1200,
         )
 
         # -------------------------------------------------- 02
         # set the things for primary window
-        # dpgc.set_main_window_size(550, 550)
-        dpg.set_theme(theme="Dark Grey")
-        dpg.set_main_window_pos(x=0, y=0)
-        dpg.set_main_window_size(width=1370, height=1200)
-        # dpgc.set_main_window_resizable(False)
-        dpg.set_main_window_title(self.title)
+        dpg.set_primary_window(window=_ret, value=True)
+        # todo: have to figure out theme, font etc.
+        # themes.set_theme(theme="Dark Grey")
+        # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
 
-        assets.Font.RobotoRegular.set(size=16)
-
-        # dpg.set_style_window_border_size(0.0)
-        # dpg.set_style_child_border_size(0.0)
-        # dpg.set_style_window_title_align(0.5, 0.5)
-        dpg.set_style_window_rounding(0.0)
-        dpg.set_style_frame_rounding(0.0)
-
-        # dpg.set_theme_item(dpg.mvGuiCol_TextDisabled, 143, 143, 143, 255)
-        # dpg.set_theme_item(dpg.mvGuiCol_Separator, 127, 127, 127, 255)
+        # -------------------------------------------------- 03
+        # return
+        return _ret
 
     def run(self):
 
@@ -696,9 +704,9 @@ class Dashboard(Widget):
                 ]
             )
 
-        # dpgc.start_dearpygui()
-        dpg.set_theme(theme="Dark sdasdasGrey")
-        dpg.start_dearpygui(primary_window=self.name)
+        # setup and start
+        dpg.setup_viewport()
+        dpg.start_dearpygui()
 
     def on_close(self, sender, data):
         self.delete()

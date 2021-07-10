@@ -1,6 +1,7 @@
 import abc
 import dataclasses
-import dearpygui.core as dpg
+import dearpygui.dearpygui as dpg
+import dearpygui.core as internal_dpg
 import typing as t
 import enum
 import numpy as np
@@ -99,12 +100,12 @@ class _SimplePlot(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self):
+    def build(self) -> int:
         # there is nothing to do here as it will happen when you call plot()
         ...
 
     def plot(self, value: PLOT_DATA_TYPE, before: str = ""):
-        dpg.add_simple_plot(
+        return dpg.add_simple_plot(
             **self.internal.dpg_kwargs,
             value=value,
             overlay=self.overlay,
@@ -124,7 +125,7 @@ class _SimplePlot(Widget):
 class Plot(Widget):
     """
     Refer to
-    >>> dpg.add_plot
+    >>> dpg.plot
     """
     label: str = ''
     x_axis_name: str = ''
@@ -246,9 +247,9 @@ class Plot(Widget):
             if self.is_built:
                 item.plot(parent_plot=self)
 
-    def build(self):
+    def build(self) -> int:
         # call add plot
-        dpg.add_plot(
+        _ret = dpg.add_plot(
             **self.internal.dpg_kwargs,
             x_axis_name=self.x_axis_name,
             y_axis_name=self.y_axis_name,
@@ -312,6 +313,9 @@ class Plot(Widget):
         # add_items if the self is not built
         for item in self.items.values():
             item.plot(parent_plot=self)
+
+        # return
+        return _ret
 
     def get_plot_xlimits(self) -> t.Tuple[float, float]:
         _ = dpg.get_plot_xlimits(plot=self.name)

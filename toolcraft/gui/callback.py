@@ -1,15 +1,12 @@
 import dataclasses
-import pathlib
-from dearpygui import core as dpg
-import abc
+import dearpygui.dearpygui as dpg
 import typing as t
 
 from .. import util
 from .. import marshalling as m
-from .. import storage as s
-from .. import gui
 from .. import error as e
 from . import Widget, Callback, widget
+from . import themes
 
 
 @dataclasses.dataclass(frozen=True)
@@ -18,8 +15,9 @@ class SetThemeCallback(Callback):
     @staticmethod
     def themes() -> t.List[str]:
         return [
-            "Dark", "Light", "Classic", "Dark 2", "Grey",
-            "Dark Grey", "Cherry", "Purple", "Gold", "Red"
+            "Dark", "Light", "Classic",
+            # "Dark 2", "Grey", "Purple",
+            "Dark Grey", "Cherry", "Gold", "Red"
         ]
 
     @staticmethod
@@ -28,7 +26,7 @@ class SetThemeCallback(Callback):
 
     @classmethod
     def get_combo_widget(cls) -> widget.Combo:
-        dpg.set_theme(theme=cls.default_theme())
+        themes.set_theme(theme=cls.default_theme())
         return widget.Combo(
             items=cls.themes(),
             default_value=cls.default_theme(),
@@ -36,7 +34,8 @@ class SetThemeCallback(Callback):
         )
 
     def fn(self):
-        _theme = dpg.get_value(name=self.sender.name)
+        _theme = dpg.get_value(item=self.sender.dpg_id)
+        print(_theme)
         dpg.set_theme(theme=_theme)
 
 

@@ -1,6 +1,6 @@
 import abc
 import dataclasses
-import dearpygui.core as dpg
+import dearpygui.dearpygui as dpg
 import typing as t
 
 from ... import error as e
@@ -212,78 +212,128 @@ class Button(Widget):
 @dataclasses.dataclass(frozen=True)
 class Combo(Widget):
     """
-    Refer to
+    Refer:
     >>> dpg.add_combo
+
+    Adds a combo dropdown that allows a user to select a single option
+    from a drop down window.
     """
 
-    items: t.List[str]
+    # A tuple of items to be shown in the drop down window. Can consist of
+    # any combination of types.
+    items: t.List[str] = ()
 
-    default_value: str = ''
+    # Overrides 'name' as label.
+    label: str = None
 
-    tip: str = ''
-
-    # Overrides 'name' as value storage key
-    source: str = ''
-
-    # Display grayed out text so selectable cannot be selected
-    enabled: bool = True
-
+    # Width of the item.
     width: int = 0
 
-    # Overrides 'name' as label
-    label: str = ''
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
 
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
     show: bool = True
 
-    # Align the popup toward the left by default
+    # Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Any = None
+
+    # ...
+    default_value: str = ''
+
+    # Align the popup toward the left.
     popup_align_left: bool = False
 
-    # Max ~4 items visible
-    height_small: bool = False
-
-    # Max ~8 items visible (default)
-    height_regular: bool = False
-
-    # Max ~20 items visible
-    height_large: bool = False
-
-    # As many items visible as possible
-    height_largest: bool = False
-
-    # Display on the preview box without the square arrow button
+    # Display the preview box without the square arrow button.
     no_arrow_button: bool = False
 
-    # Display only a square arrow button
+    # Display only the square arrow button.
     no_preview: bool = False
 
-    callback: Callback = None
+    # mvComboHeight_Small, _Regular, _Large, _Largest
+    height_mode: int = 1
 
     @property
     def is_container(self) -> bool:
         return False
 
-    def build(self):
-        # add_combo
-        dpg.add_combo(
+    def build(self) -> int:
+        _ret = dpg.add_combo(
             **self.internal.dpg_kwargs,
             items=self.items,
-            default_value=self.default_value,
-            callback=None if self.callback is None else self.callback.fn,
-            # callback_data=self.callback_data,
-            tip=self.tip,
-            source=self.source,
-            enabled=self.enabled,
-            width=self.width,
             label=self.label,
+            width=self.width,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
             show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            default_value=self.default_value,
             popup_align_left=self.popup_align_left,
-            height_small=self.height_small,
-            height_regular=self.height_regular,
-            height_large=self.height_large,
-            height_largest=self.height_largest,
             no_arrow_button=self.no_arrow_button,
             no_preview=self.no_preview,
+            height_mode=self.height_mode,
         )
+
+        return _ret
+
+    def callback_fn(self, **kwargs):
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn()
+
+    def drag_callback_fn(self, **kwargs):
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn()
+
+    def drop_callback_fn(self, **kwargs):
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn()
 
 
 @dataclasses.dataclass(frozen=True)

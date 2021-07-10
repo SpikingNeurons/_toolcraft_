@@ -3,7 +3,7 @@ import numpy as np
 import time
 import datetime
 import typing as t
-from dearpygui import core as dpg
+import dearpygui.dearpygui as dpg
 
 from toolcraft import gui, util
 
@@ -232,55 +232,53 @@ class ButtonPlot(gui.CollapsingHeader):
 class MyDashboard(gui.Dashboard):
 
     theme_selector: gui.Combo = gui.callback.SetThemeCallback.get_combo_widget()
-
-    welcome_msg: gui.Text = gui.Text(
-        msgs=[
-            "Welcome to my dashboard",
-            " ..... toolcraft ..... "
-        ],
-    )
-
-    topic1: Info = Info()
-
-    topic2: Plotting = Plotting()
-
-    topic3: ButtonPlot = ButtonPlot()
+    #
+    # welcome_msg: gui.Text = gui.Text(
+    #     msgs=[
+    #         "Welcome to my dashboard",
+    #         " ..... toolcraft ..... "
+    #     ],
+    # )
+    #
+    # topic1: Info = Info()
+    #
+    # topic2: Plotting = Plotting()
+    #
+    # topic3: ButtonPlot = ButtonPlot()
 
     def layout(self):
         self.add_child(
             guid='theme_selector', widget=self.theme_selector
         )
-        self.add_child(
-            guid='welcome_msg', widget=self.welcome_msg
-        )
-        self.add_child(
-            guid='topic2', widget=self.topic2
-        )
-        self.add_child(
-            guid='topic1', widget=self.topic1, before=self.topic2
-        )
-        self.add_child(
-            guid='topic3', widget=self.topic3
-        )
+        # self.add_child(
+        #     guid='welcome_msg', widget=self.welcome_msg
+        # )
+        # self.add_child(
+        #     guid='topic2', widget=self.topic2
+        # )
+        # self.add_child(
+        #     guid='topic1', widget=self.topic1, before=self.topic2
+        # )
+        # self.add_child(
+        #     guid='topic3', widget=self.topic3
+        # )
 
 
 def basic_dashboard():
     _dash = MyDashboard(dash_guid="my_dashboard", title="My Dashboard")
     _dash.build()
-    _dash.topic2.plot_some_examples()
+    # _dash.topic2.plot_some_examples()
     _dash.run()
 
 
 def demo():
-    from dearpygui import core as dpgc
     gui.demo.show_demo()
-    # dpgc.start_dearpygui(primary_window="Dear PyGui Demo")
-    dpgc.start_dearpygui()
+    dpg.start_dearpygui()
 
 
 def main():
     basic_dashboard()
-    demo()
+    # demo()
 
 
 if __name__ == '__main__':

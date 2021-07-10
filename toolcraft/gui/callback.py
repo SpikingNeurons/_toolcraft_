@@ -20,7 +20,7 @@ class SetThemeCallback(Callback):
     @staticmethod
     def themes() -> t.List[str]:
         return [
-            "dark", "light",
+            "Dark", "Light",
             # "Classic",
             # "Dark 2", "Grey", "Purple",
             # "Dark Grey", "Cherry", "Gold", "Red"
@@ -28,7 +28,7 @@ class SetThemeCallback(Callback):
 
     @staticmethod
     def default_theme() -> str:
-        return "dark"
+        return "Dark"
 
     @classmethod
     def get_combo_widget(cls) -> widget.Combo:
@@ -40,10 +40,10 @@ class SetThemeCallback(Callback):
 
     def fn(self):
         _theme_str = dpg.get_value(item=self.sender.dpg_id)
-        if _theme_str == "dark":
-            _theme = assets.Theme.dark
-        elif _theme_str == "light":
-            _theme = assets.Theme.light
+        if _theme_str == "Dark":
+            _theme = assets.Theme.Dark
+        elif _theme_str == "Light":
+            _theme = assets.Theme.Light
         else:
             e.code.CodingError(
                 msgs=[

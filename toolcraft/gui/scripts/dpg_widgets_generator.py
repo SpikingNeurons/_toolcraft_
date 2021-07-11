@@ -3,8 +3,7 @@ import pathlib
 import textwrap
 import dearpygui.dearpygui as dpg
 
-_method = dpg.add_line_series
-_is_plot_item = True
+_method = dpg.add_simple_plot
 
 
 _signature = inspect.signature(_method)
@@ -75,7 +74,8 @@ for _param in _signature.parameters.values():
     _parm_str = f"\t{_param_name}: {_param_type}"
     # noinspection PyUnresolvedReferences,PyProtectedMember
     if _param_value != inspect._empty:
-        if _param_value in ["", "$$DPG_PAYLOAD"]:
+        if _param_value in ["", "$$DPG_PAYLOAD"] or \
+                str(_param_value).startswith('%'):
             _parm_str += f" = '{_param_value}'"
         elif _param_value == []:
             _parm_str += f" = dataclasses.field(default_factory=list)"
@@ -126,6 +126,9 @@ for _cp in _callback_params:
         f"\t\telse:",
         f"\t\t\treturn self.{_cp}.fn()",
     ]
+
+# replace \t to 4 spaces
+_lines = [_.replace("\t", "    ") for _ in _lines]
 
 # write to disk
 _result = "\n".join(_lines + [""])

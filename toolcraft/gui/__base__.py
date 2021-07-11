@@ -65,7 +65,7 @@ class Color(m.FrozenEnum, enum.Enum):
             )
 
     # noinspection PyMethodOverriding
-    def __call__(self, r: float, g: float, b: float, a: float) -> "Color":
+    def __call__(self, r: int, g: int, b: int, a: int) -> "Color":
         """
         This method return fake Color when called with Color.CUSTOM(...)
         """
@@ -149,10 +149,10 @@ class WidgetInternal(m.Internal):
 
     @property
     def dpg_kwargs(self) -> t.Dict[str, t.Any]:
-        return dict(
-            parent=self.parent.dpg_id,
-            before=0 if self.before is None else self.before.dpg_id,
-        )
+        _ret = {'parent': self.parent.dpg_id}
+        if self.before is not None:
+            _ret['before'] = self.before.dpg_id
+        return _ret
 
 
 @dataclasses.dataclass(frozen=True)

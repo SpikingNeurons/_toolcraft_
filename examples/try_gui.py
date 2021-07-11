@@ -60,6 +60,17 @@ class Plotting(gui.CollapsingHeader):
         # ------------------------------------------------------- 02
         # _line_plot
         _line_plot = self.line_plot
+        _line_plot.add_line_series(
+            label="line 1",
+            x=np.arange(100),
+            y=np.random.normal(0.0, scale=2.0, size=100)
+        )
+        _line_plot.add_line_series(
+                label="line 2",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100)
+        )
+        return
         # noinspection PyTypeChecker
         _line_plot_items = [
             gui.LineSeries(
@@ -264,7 +275,7 @@ class MyDashboard(gui.Dashboard):
 def basic_dashboard():
     _dash = MyDashboard(dash_guid="my_dashboard", title="My Dashboard")
     _dash.build()
-    # _dash.topic2.plot_some_examples()
+    _dash.topic2.plot_some_examples()
     _dash.run()
 
 

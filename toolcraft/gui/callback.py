@@ -35,7 +35,8 @@ class SetThemeCallback(Callback):
         return widget.Combo(
             items=cls.themes(),
             default_value=cls.default_theme(),
-            callback=cls()
+            callback=cls(),
+            label="Select Theme"
         )
 
     def fn(self):

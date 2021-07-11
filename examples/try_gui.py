@@ -46,14 +46,11 @@ class Plotting(gui.CollapsingHeader):
 
     subplot_msg: gui.Text = gui.Text(
         msgs=[
-            "This is sub plot with ManagedColumn ..."
+            "This is sub plot with Group ..."
         ],
     )
 
-    subplot: gui.ManagedColumn = gui.ManagedColumn(
-        columns=2,
-        border=True,
-    )
+    subplot: gui.Group = gui.Group()
 
     def plot_some_examples(self):
         # ------------------------------------------------------- 01
@@ -207,7 +204,7 @@ class ButtonPlot(gui.CollapsingHeader):
     display_window: gui.Child = gui.Child()
 
     def layout(self):
-        _columns = gui.ManagedColumn(columns=2)
+        _columns = gui.Group()
         _columns.add_child(
             guid="button_window", widget=self.button_window
         )
@@ -232,36 +229,36 @@ class ButtonPlot(gui.CollapsingHeader):
 class MyDashboard(gui.Dashboard):
 
     theme_selector: gui.Combo = gui.callback.SetThemeCallback.get_combo_widget()
-    #
-    # welcome_msg: gui.Text = gui.Text(
-    #     msgs=[
-    #         "Welcome to my dashboard",
-    #         " ..... toolcraft ..... "
-    #     ],
-    # )
-    #
-    # topic1: Info = Info()
-    #
-    # topic2: Plotting = Plotting()
-    #
-    # topic3: ButtonPlot = ButtonPlot()
+
+    welcome_msg: gui.Text = gui.Text(
+        msgs=[
+            "Welcome to my dashboard",
+            " ..... toolcraft ..... "
+        ],
+    )
+
+    topic1: Info = Info()
+
+    topic2: Plotting = Plotting()
+
+    topic3: ButtonPlot = ButtonPlot()
 
     def layout(self):
         self.add_child(
             guid='theme_selector', widget=self.theme_selector
         )
-        # self.add_child(
-        #     guid='welcome_msg', widget=self.welcome_msg
-        # )
-        # self.add_child(
-        #     guid='topic2', widget=self.topic2
-        # )
-        # self.add_child(
-        #     guid='topic1', widget=self.topic1, before=self.topic2
-        # )
-        # self.add_child(
-        #     guid='topic3', widget=self.topic3
-        # )
+        self.add_child(
+            guid='welcome_msg', widget=self.welcome_msg
+        )
+        self.add_child(
+            guid='topic2', widget=self.topic2
+        )
+        self.add_child(
+            guid='topic1', widget=self.topic1, before=self.topic2
+        )
+        self.add_child(
+            guid='topic3', widget=self.topic3
+        )
 
 
 def basic_dashboard():

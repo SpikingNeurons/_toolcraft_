@@ -124,72 +124,95 @@ class _SimplePlot(Widget):
 @dataclasses.dataclass(frozen=True)
 class Plot(Widget):
     """
-    Refer to
+    Refer:
     >>> dpg.plot
+
+    Adds a plot which is used to hold series, and can be drawn to with
+    draw commands.
     """
-    label: str = ''
-    x_axis_name: str = ''
-    y_axis_name: str = ''
-    no_legend: bool = False
-    no_menus: bool = False
-    no_box_select: bool = False
-    no_mouse_pos: bool = False
-    no_highlight: bool = False
-    no_child: bool = False
-    query: bool = False
-    crosshairs: bool = False
-    anti_aliased: bool = False
-    equal_aspects: bool = False
-    yaxis2: bool = False
-    yaxis3: bool = False
-    xaxis_no_gridlines: bool = False
-    xaxis_no_tick_marks: bool = False
-    xaxis_no_tick_labels: bool = False
-    xaxis_log_scale: bool = False
-    xaxis_time: bool = False
-    xaxis_invert: bool = False
-    xaxis_lock_min: bool = False
-    xaxis_lock_max: bool = False
-    yaxis_no_gridlines: bool = False
-    yaxis_no_tick_marks: bool = False
-    yaxis_no_tick_labels: bool = False
-    yaxis_log_scale: bool = False
-    yaxis_invert: bool = False
-    yaxis_lock_min: bool = False
-    yaxis_lock_max: bool = False
-    y2axis_no_gridlines: bool = False
-    y2axis_no_tick_marks: bool = False
-    y2axis_no_tick_labels: bool = False
-    y2axis_log_scale: bool = False
-    y2axis_invert: bool = False
-    y2axis_lock_min: bool = False
-    y2axis_lock_max: bool = False
-    y3axis_no_gridlines: bool = False
-    y3axis_no_tick_marks: bool = False
-    y3axis_no_tick_labels: bool = False
-    y3axis_log_scale: bool = False
-    y3axis_invert: bool = False
-    y3axis_lock_min: bool = False
-    y3axis_lock_max: bool = False
-    width: int = -1
-    # height: int = -1
-    height: int = 400
-    show_color_scale: bool = False
-    scale_min: float = 0.0
-    scale_max: float = 1.0
-    scale_height: int = 100
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Height of the item.
+    height: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
     show: bool = True
-    show_annotations: bool = True
-    show_drag_lines: bool = True
-    show_drag_points: bool = True
-    # Callback ran when plot is queried. Should be of the form
-    # 'def Callback(sender, data)'
-    # Data is (x_min, x_max, y_min, y_max).
-    query_callback: Callback = None
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Delays searching container for specified items until the end of the
+    # app. Possible optimization when a container has many children that are
+    # not accessed often.
+    delay_search: str = False
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Any = None
+
+    # ...
+    no_title: bool = False
+
+    # ...
+    no_menus: bool = False
+
+    # ...
+    no_box_select: bool = False
+
+    # ...
+    no_mouse_pos: bool = False
+
+    # ...
+    no_highlight: bool = False
+
+    # ...
+    no_child: bool = False
+
+    # ...
+    query: bool = False
+
+    # ...
+    crosshairs: bool = False
+
+    # ...
+    anti_aliased: bool = False
+
+    # ...
+    equal_aspects: bool = False
 
     @property
     def is_container(self) -> bool:
-        return False
+        return True
 
     @property
     @util.CacheResult
@@ -248,12 +271,24 @@ class Plot(Widget):
                 item.plot(parent_plot=self)
 
     def build(self) -> int:
-        # call add plot
         _ret = dpg.add_plot(
             **self.internal.dpg_kwargs,
-            x_axis_name=self.x_axis_name,
-            y_axis_name=self.y_axis_name,
-            no_legend=self.no_legend,
+            label=self.label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            no_title=self.no_title,
             no_menus=self.no_menus,
             no_box_select=self.no_box_select,
             no_mouse_pos=self.no_mouse_pos,
@@ -263,50 +298,6 @@ class Plot(Widget):
             crosshairs=self.crosshairs,
             anti_aliased=self.anti_aliased,
             equal_aspects=self.equal_aspects,
-            yaxis2=self.yaxis2,
-            yaxis3=self.yaxis3,
-            xaxis_no_gridlines=self.xaxis_no_gridlines,
-            xaxis_no_tick_marks=self.xaxis_no_tick_marks,
-            xaxis_no_tick_labels=self.xaxis_no_tick_labels,
-            xaxis_log_scale=self.xaxis_log_scale,
-            xaxis_time=self.xaxis_time,
-            xaxis_invert=self.xaxis_invert,
-            xaxis_lock_min=self.xaxis_lock_min,
-            xaxis_lock_max=self.xaxis_lock_max,
-            yaxis_no_gridlines=self.yaxis_no_gridlines,
-            yaxis_no_tick_marks=self.yaxis_no_tick_marks,
-            yaxis_no_tick_labels=self.yaxis_no_tick_labels,
-            yaxis_log_scale=self.yaxis_log_scale,
-            yaxis_invert=self.yaxis_invert,
-            yaxis_lock_min=self.yaxis_lock_min,
-            yaxis_lock_max=self.yaxis_lock_max,
-            y2axis_no_gridlines=self.y2axis_no_gridlines,
-            y2axis_no_tick_marks=self.y2axis_no_tick_marks,
-            y2axis_no_tick_labels=self.y2axis_no_tick_labels,
-            y2axis_log_scale=self.y2axis_log_scale,
-            y2axis_invert=self.y2axis_invert,
-            y2axis_lock_min=self.y2axis_lock_min,
-            y2axis_lock_max=self.y2axis_lock_max,
-            y3axis_no_gridlines=self.y3axis_no_gridlines,
-            y3axis_no_tick_marks=self.y3axis_no_tick_marks,
-            y3axis_no_tick_labels=self.y3axis_no_tick_labels,
-            y3axis_log_scale=self.y3axis_log_scale,
-            y3axis_invert=self.y3axis_invert,
-            y3axis_lock_min=self.y3axis_lock_min,
-            y3axis_lock_max=self.y3axis_lock_max,
-            width=self.width,
-            height=self.height,
-            show_color_scale=self.show_color_scale,
-            scale_min=self.scale_min,
-            scale_max=self.scale_max,
-            scale_height=self.scale_height,
-            label=self.label,
-            show=self.show,
-            show_annotations=self.show_annotations,
-            show_drag_lines=self.show_drag_lines,
-            show_drag_points=self.show_drag_points,
-            query_callback=None if self.query_callback is None else
-            self.query_callback.fn
         )
 
         # if there are items plot them as we will not do that during
@@ -314,63 +305,32 @@ class Plot(Widget):
         for item in self.items.values():
             item.plot(parent_plot=self)
 
-        # return
         return _ret
 
-    def get_plot_xlimits(self) -> t.Tuple[float, float]:
-        _ = dpg.get_plot_xlimits(plot=self.name)
-        return _[0], _[1]
+    def callback_fn(self, **kwargs):
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn()
 
-    def get_plot_ylimits(self) -> t.Tuple[float, float]:
-        _ = dpg.get_plot_ylimits(plot=self.name)
-        return _[0], _[1]
+    def drag_callback_fn(self, **kwargs):
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn()
 
-    def set_plot_xlimits(self, xmin: float, xmax: float):
-        dpg.set_plot_xlimits(plot=self.name, xmin=xmin, xmax=xmax)
-
-    def set_plot_ylimits(self, ymin: float, ymax: float):
-        dpg.set_plot_ylimits(plot=self.name, ymin=ymin, ymax=ymax)
-
-    def set_plot_xlimits_auto(self):
-        dpg.set_plot_xlimits_auto(plot=self.name)
-
-    def set_plot_ylimits_auto(self):
-        dpg.set_plot_ylimits_auto(plot=self.name)
-
-    def set_xticks(self, label_pairs: t.List[t.Tuple[str, float]]):
-        dpg.set_xticks(plot=self.name, label_pairs=label_pairs)
-
-    def set_yticks(self, label_pairs: t.List[t.Tuple[str, float]]):
-        dpg.set_yticks(plot=self.name, label_pairs=label_pairs)
-
-    def reset_xticks(self):
-        dpg.reset_xticks(plot=self.name)
-
-    def reset_yticks(self):
-        dpg.reset_yticks(plot=self.name)
-
-    def clear(self):
-        dpg.clear_plot(plot=self.name)
-        self.items.clear()
-
-    def is_plot_queried(self) -> bool:
-        return dpg.is_plot_queried(plot=self.name)
-
-    def set_color_map(self, color_map: PlotColorMap):
-        dpg.set_color_map(plot=self.name, map=color_map.dpg_value)
-
-    def get_plot_query_area(self) -> t.Tuple[float, float, float, float]:
-        # noinspection PyTypeChecker
-        return dpg.get_plot_query_area(plot=self.name)
+    def drop_callback_fn(self, **kwargs):
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn()
 
 
 @dataclasses.dataclass(frozen=True)
 class PlotItem(abc.ABC):
     """
-    Note that this is not a Widget nor a m.HashableClass as this will reprent
+    Note that this is not a Widget nor a m.HashableClass as this will represent
     data that we will plot and there is no need to serialize it.
-    todo: Need to implement delete for all Series. Check below method:
-    >>> dpg.delete_series
     """
     # This basically behaves like guid but we keep it as label so that users
     # can even add spaces or special characters inside label

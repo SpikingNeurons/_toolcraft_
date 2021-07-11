@@ -39,19 +39,19 @@ class Color(m.FrozenEnum, enum.Enum):
         return f"!gui_color"
 
     @property
-    def dpg_value(self) -> t.List[float]:
+    def dpg_value(self) -> t.List[int]:
         if self is self.DEFAULT:
-            return [0., 0., 0., -1.]
+            return [-1, -1, -1, -1]
         elif self is self.WHITE:
-            return [255., 255., 255., 255.]
+            return [255, 255, 255, 255]
         elif self is self.BLACK:
-            return [0., 0., 0., 255.]
+            return [0, 0, 0, 255]
         elif self is self.RED:
-            return [255., 0., 0., 255.]
+            return [255, 0, 0, 255]
         elif self is self.GREEN:
-            return [0., 255., 0., 255.]
+            return [0, 255, 0, 255]
         elif self is self.GREY:
-            return [127., 127., 127., 127.]
+            return [127, 127, 127, 255]
         elif self is self.CUSTOM:
             e.code.CodingError(
                 msgs=[
@@ -338,7 +338,7 @@ class Widget(m.HashableClass, abc.ABC):
         # delete self from parents children
         del self.parent.children[self.guid]
         # delete the UI counterpart
-        dpg.delete_item(item=self.name, children_only=False)
+        dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
 
     def delete_post_runner(
         self, *, hooked_method_return_value: t.Any

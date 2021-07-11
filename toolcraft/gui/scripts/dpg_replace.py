@@ -3,7 +3,8 @@ import pathlib
 import textwrap
 import dearpygui.dearpygui as dpg
 
-_method = dpg.add_combo
+_method = dpg.add_line_series
+_is_plot_item = True
 
 
 _signature = inspect.signature(_method)

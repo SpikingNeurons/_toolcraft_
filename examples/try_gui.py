@@ -14,18 +14,17 @@ class Info(gui.CollapsingHeader):
     label: str = "Topic 1 - Text"
 
     message: gui.Text = gui.Text(
-        msgs=[
-            "This is topic 1. We will just add some bullet points below ..."
-        ],
+        "This is topic 1. We will just add some bullet points below ..."
     )
-    bullets: gui.Text = gui.Text(
-        msgs=[
-            "bullet 1",
-            "bullet 2",
-            "bullet 3",
-            "bullet 4",
-        ],
-        bullet=True
+
+    bullet_1: gui.Text = gui.Text(
+        "bullet 1 ...",
+        bullet=True,
+    )
+
+    bullet_2: gui.Text = gui.Text(
+        "bullet 2 ...",
+        bullet=True,
     )
 
 
@@ -206,10 +205,7 @@ class MyDashboard(gui.Dashboard):
     theme_selector: gui.Combo = gui.callback.SetThemeCallback.get_combo_widget()
 
     welcome_msg: gui.Text = gui.Text(
-        msgs=[
-            "Welcome to my dashboard",
-            " ..... toolcraft ..... "
-        ],
+        "Welcome to my dashboard ..... toolcraft ..... "
     )
 
     topic1: Info = Info()

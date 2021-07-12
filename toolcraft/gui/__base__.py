@@ -566,18 +566,18 @@ class Widget(m.HashableClass, abc.ABC):
     def hide(self, children_only: bool = False):
         # todo: needs testing
         if children_only:
-            for child in dpg.get_item_children(item=self.guid):
+            for child in dpg.get_item_children(item=self.dpg_id):
                 dpg.configure_item(item=child, show=False)
         else:
-            dpg.configure_item(item=self.guid, show=False)
+            dpg.configure_item(item=self.dpg_id, show=False)
 
     def show(self, children_only: bool = False):
         # todo: needs testing
         if children_only:
-            for child in dpg.get_item_children(item=self.guid):
+            for child in dpg.get_item_children(item=self.dpg_id):
                 dpg.configure_item(item=child, show=True)
         else:
-            dpg.configure_item(item=self.guid, show=True)
+            dpg.configure_item(item=self.dpg_id, show=True)
 
     def preview(self):
         """
@@ -623,6 +623,14 @@ class Dashboard(Widget):
     + login mechanism
 
     Note that we make this as primary window when we start GUI
+
+    todo: add less important fields to config and save it to disk ... on
+      config field change trigger ui update ... plus also update ui when
+      config loaded from disk ... this will indirectly help save ui state :)
+      Or maybe have only one config for Dashboard alone and make key value
+      pairs ... may be introduce new State file for that
+      Also maybe add field save_state for Widget so that we know that only
+      these widgets state needs to be saved
     """
     dash_guid: str
     title: str

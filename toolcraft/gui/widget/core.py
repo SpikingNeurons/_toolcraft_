@@ -1,344 +1,33 @@
-import abc
-import dataclasses
-import dearpygui.dearpygui as dpg
-import typing as t
-import enum
-
 from ... import error as e
-from ... import marshalling as m
-from .. import Widget, Color, Dashboard, Callback
-from . import extract_dpg_ids
-
-
-class TableSizingPolicy(m.FrozenEnum, enum.Enum):
-    """
-    Refer:
-    >>> dpg.mvTable_SizingFixedFit
-    """
-    FixedFit = enum.auto()
-    FixedSame = enum.auto()
-    StretchProp = enum.auto()
-    StretchSame = enum.auto()
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"!gui_table_sizing_policy"
-
-    @property
-    def dpg_id(self) -> int:
-        return _DPG_IDS_TABLE_SIZING_POLICY[self]
-
-
-_DPG_IDS_TABLE_SIZING_POLICY = extract_dpg_ids(
-    enum_class=TableSizingPolicy, dpg_prefix="mvTable_Sizing")
+from .. import Widget, Callback, Color
+from .auto import *
 
 
 @dataclasses.dataclass(frozen=True)
-class Column(Widget):
-    """
-    Refer:
-    >>> dpg.add_table_column
-
-    Undocumented function
-    """
-
-    # Overrides 'name' as label.
-    label: str = None
-
-    # Width of the item.
-    width: int = 0
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # User data for callbacks.
-    user_data: t.Any = None
+class Table(BTable):
+    # ...
+    rows: int = None
 
     # ...
-    init_width_or_weight: float = 0.0
-
-    # Default as a hidden/disabled column.
-    default_hide: bool = False
-
-    # Default as a sorting column.
-    default_sort: bool = False
-
-    # Column will stretch. Preferable with horizontal scrolling disabled
-    # (default if table sizing policy is _SizingStretchSame or
-    # _SizingStretchProp).
-    width_stretch: bool = False
-
-    # Column will not stretch. Preferable with horizontal scrolling enabled
-    # (default if table sizing policy is _SizingFixedFit and table is
-    # resizable).
-    width_fixed: bool = False
-
-    # Disable manual resizing.
-    no_resize: bool = False
-
-    # Disable manual reordering this column, this will also prevent other
-    # columns from crossing over this column.
-    no_reorder: bool = False
-
-    # Disable ability to hide/disable this column.
-    no_hide: bool = False
-
-    # Disable clipping for this column (all NoClip columns will render in a
-    # same draw command).
-    no_clip: bool = False
-
-    # Disable ability to sort on this field (even if
-    # ImGuiTableFlags_Sortable is set on the table).
-    no_sort: bool = False
-
-    # Disable ability to sort in the ascending direction.
-    no_sort_ascending: bool = False
-
-    # Disable ability to sort in the descending direction.
-    no_sort_descending: bool = False
-
-    # Disable header text width contribution to automatic column width.
-    no_header_width: bool = False
-
-    # Make the initial sort direction Ascending when first sorting on this
-    # column (default).
-    prefer_sort_ascending: bool = True
-
-    # Make the initial sort direction Descending when first sorting on this
-    # column.
-    prefer_sort_descending: bool = False
-
-    # Use current Indent value when entering cell (default for column 0).
-    indent_enable: bool = False
-
-    # Ignore current Indent value when entering cell (default for columns >
-    # 0). Indentation changes _within_ the cell will still be honored.
-    indent_disable: bool = False
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self) -> int:
-        _ret = dpg.add_table_column(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            width=self.width,
-            show=self.show,
-            user_data=self.user_data,
-            init_width_or_weight=self.init_width_or_weight,
-            default_hide=self.default_hide,
-            default_sort=self.default_sort,
-            width_stretch=self.width_stretch,
-            width_fixed=self.width_fixed,
-            no_resize=self.no_resize,
-            no_reorder=self.no_reorder,
-            no_hide=self.no_hide,
-            no_clip=self.no_clip,
-            no_sort=self.no_sort,
-            no_sort_ascending=self.no_sort_ascending,
-            no_sort_descending=self.no_sort_descending,
-            no_header_width=self.no_header_width,
-            prefer_sort_ascending=self.prefer_sort_ascending,
-            prefer_sort_descending=self.prefer_sort_descending,
-            indent_enable=self.indent_enable,
-            indent_disable=self.indent_disable,
-        )
-
-        return _ret
-
-
-@dataclasses.dataclass(frozen=True)
-class Row(Widget):
-    """
-    Refer:
-    >>> dpg.table_row
-
-    Undocumented function
-    """
-
-    # Overrides 'name' as label.
-    label: str = None
-
-    # Height of the item.
-    height: int = 0
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # Used by filter widget.
-    filter_key: str = ''
-
-    # User data for callbacks.
-    user_data: t.Any = None
-
-    @property
-    def is_container(self) -> bool:
-        return True
-
-    def build(self) -> int:
-        _ret = dpg.add_table_row(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            height=self.height,
-            show=self.show,
-            filter_key=self.filter_key,
-            user_data=self.user_data,
-        )
-
-        return _ret
-
-
-@dataclasses.dataclass(frozen=True)
-class Table(Widget):
-    """
-    Refer:
-    >>> dpg.table
-
-    Undocumented function
-    """
-    # ...
-    rows: int
-
-    # ...
-    columns: t.Union[int, t.List[str]]
-
-    # Overrides 'name' as label.
-    label: str = None
-
-    # Width of the item.
-    width: int = 0
-
-    # Height of the item.
-    height: int = 0
-
-    # Offsets the widget to the right the specified number multiplied by the
-    # indent style.
-    indent: int = -1
-
-    # Overrides 'id' as value storage key.
-    source: t.Optional[Widget] = None
-
-    # Registers a callback.
-    callback: Callback = None
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.List[int] = dataclasses.field(default_factory=list)
-
-    # Used by filter widget.
-    filter_key: str = ''
-
-    # Delays searching container for specified items until the end of the
-    # app. Possible optimization when a container has many children that are
-    # not accessed often.
-    delay_search: str = False
-
-    # User data for callbacks.
-    user_data: t.Any = None
-
-    # show headers at the top of the columns
-    header_row: bool = True
-
-    # ...
-    inner_width: int = 0
-
-    # ...
-    policy: TableSizingPolicy = None
-
-    # ...
-    freeze_rows: int = 0
-
-    # ...
-    freeze_columns: int = 0
-
-    # Hold shift when clicking headers to sort on multiple column.
-    sort_multi: bool = False
-
-    # Allow no sorting, disable default sorting.
-    sort_tristate: bool = False
-
-    # Enable resizing columns
-    resizable: bool = False
-
-    # Enable reordering columns in header row (need calling
-    # TableSetupColumn() + TableHeadersRow() to display headers)
-    reorderable: bool = False
-
-    # Enable hiding/disabling columns in context menu.
-    hideable: bool = False
-
-    # Enable sorting. Call TableGetSortSpecs() to obtain sort specs. Also
-    # see ImGuiTableFlags_SortMulti and ImGuiTableFlags_SortTristate.
-    sortable: bool = False
-
-    # Right-click on columns body/contents will display table context menu.
-    # By default it is available in TableHeadersRow().
-    context_menu_in_body: bool = False
-
-    # Set each RowBg color with ImGuiCol_TableRowBg or
-    # ImGuiCol_TableRowBgAlt (equivalent of calling TableSetBgColor with
-    # ImGuiTableBgFlags_RowBg0 on each row manually)
-    row_background: bool = False
-
-    # Draw horizontal borders between rows.
-    borders_innerH: bool = False
-
-    # Draw horizontal borders at the top and bottom.
-    borders_outerH: bool = False
-
-    # Draw vertical borders between columns.
-    borders_innerV: bool = False
-
-    # Draw vertical borders on the left and right sides.
-    borders_outerV: bool = False
-
-    # Make outer width auto-fit to columns, overriding outer_size.x value.
-    # Only available when ScrollX/ScrollY are disabled and Stretch columns
-    # are not used.
-    no_host_extendX: bool = False
-
-    # Make outer height stop exactly at outer_size.y (prevent auto-extending
-    # table past the limit). Only available when ScrollX/ScrollY are
-    # disabled. Data below the limit will be clipped and not visible.
-    no_host_extendY: bool = False
-
-    # Disable keeping column always minimally visible when ScrollX is off
-    # and table gets too small. Not recommended if columns are resizable.
-    no_keep_columns_visible: bool = False
-
-    # Disable distributing remainder width to stretched columns (width
-    # allocation on a 100-wide table with 3 columns
-    precise_widths: bool = False
-
-    # Disable clipping rectangle for every individual columns.
-    no_clip: bool = False
-
-    # Default if BordersOuterV is on. Enable outer-most padding. Generally
-    # desirable if you have headers.
-    pad_outerX: bool = False
-
-    # Default if BordersOuterV is off. Disable outer-most padding.
-    no_pad_outerX: bool = False
-
-    # Disable inner padding between columns (double inner padding if
-    # BordersOuterV is on, single inner padding if BordersOuterV is off).
-    no_pad_innerX: bool = False
-
-    # Enable horizontal scrolling. Require 'outer_size' parameter of
-    # BeginTable() to specify the container size. Changes default sizing
-    # policy. Because this create a child window, ScrollY is currently
-    # generally recommended when using ScrollX.
-    scrollX: bool = False
-
-    # Enable vertical scrolling.
-    scrollY: bool = False
-
-    @property
-    def is_container(self) -> bool:
-        return True
+    columns: t.Union[int, t.List[str]] = None
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # check mandatory fields
+        if self.rows is None:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"Please supply mandatory field `rows`"
+                ]
+            )
+        if self.columns is None:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"Please supply mandatory field `columns`"
+                ]
+            )
 
     def init(self):
         # call super
@@ -391,1077 +80,1418 @@ class Table(Widget):
         # noinspection PyTypeChecker
         return self.children[f"r{row}"]
 
-    def build(self) -> int:
-        _ret = dpg.add_table(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            width=self.width,
-            height=self.height,
-            indent=self.indent,
-            source=0 if self.source is None else self.source.dpg_id,
-            callback=self.callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            user_data=self.user_data,
-            header_row=self.header_row,
-            inner_width=self.inner_width,
-            policy=0 if self.policy is None else self.policy.dpg_id,
-            freeze_rows=self.freeze_rows,
-            freeze_columns=self.freeze_columns,
-            sort_multi=self.sort_multi,
-            sort_tristate=self.sort_tristate,
-            resizable=self.resizable,
-            reorderable=self.reorderable,
-            hideable=self.hideable,
-            sortable=self.sortable,
-            context_menu_in_body=self.context_menu_in_body,
-            row_background=self.row_background,
-            borders_innerH=self.borders_innerH,
-            borders_outerH=self.borders_outerH,
-            borders_innerV=self.borders_innerV,
-            borders_outerV=self.borders_outerV,
-            no_host_extendX=self.no_host_extendX,
-            no_host_extendY=self.no_host_extendY,
-            no_keep_columns_visible=self.no_keep_columns_visible,
-            precise_widths=self.precise_widths,
-            no_clip=self.no_clip,
-            pad_outerX=self.pad_outerX,
-            no_pad_outerX=self.no_pad_outerX,
-            no_pad_innerX=self.no_pad_innerX,
-            scrollX=self.scrollX,
-            scrollY=self.scrollY,
-        )
 
-        return _ret
-
-    def callback_fn(self, **kwargs):
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn()
-
-
+# noinspection PyDefaultArgument
 @dataclasses.dataclass(frozen=True)
-class TabButton(Widget):
-    """
-    Refer to
-    >>> dpg.add_tab_button
-    """
-    label: str = ''
-
-    show: bool = True
-
-    # Disable reordering this tab or having another tab cross over this tab
-    no_reorder: bool = False
-
-    # Enforce the tab position to the left of the tab bar
-    # (after the tab list popup button)
-    leading: bool = False
-
-    # Enforce the tab position to the right of the tab bar
-    # (before the scrolling buttons)
-    trailing: bool = False
-
-    # Disable tooltip for the given tab
-    no_tooltip: bool = False
-
-    tip: str = ''
-
-    callback: Callback = None
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self):
-        # add_button
-        dpg.add_tab_button(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            show=self.show,
-            no_reorder=self.no_reorder,
-            leading=self.leading,
-            trailing=self.trailing,
-            no_tooltip=self.no_tooltip,
-            tip=self.tip,
-            callback=None if self.callback is None else self.callback.fn,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class TabBar(Widget):
-    """
-    Refer to
-    >>> dpg.add_tab_bar
-    """
-    # allows for moveable tabs
-    reorderable: bool = False
-    show: bool = True
-    callback: Callback = None
-
-    @property
-    def is_container(self) -> bool:
-        return True
-
-    def build(self):
-        # add_button
-        dpg.add_tab_bar(
-            **self.internal.dpg_kwargs,
-            reorderable=self.reorderable,
-            show=self.show,
-            callback=None if self.callback is None else self.callback.fn,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class Tab(Widget):
-    """
-    Refer to
-    >>> dpg.add_tab
-    """
-
-    # creates a button on the tab that can hide the tab
-    closable: bool = False
-
-    label: str = ''
-
-    show: bool = True
-
-    # Disable reordering this tab or having another tab cross over this tab
-    no_reorder: bool = False
-
-    # Enforce the tab position to the left of the tab bar
-    # (after the tab list popup button)
-    leading: bool = False
-
-    # Enforce the tab position to the right of the tab bar
-    # (before the scrolling buttons)
-    trailing: bool = False
-
-    # Disable tooltip for the given tab
-    no_tooltip: bool = False
-
-    tip: str = ''
-
-    @property
-    def is_container(self) -> bool:
-        return True
-
-    def build(self):
-        # add_button
-        dpg.add_tab(
-            **self.internal.dpg_kwargs,
-            closable=self.closable,
-            label=self.label,
-            show=self.show,
-            no_reorder=self.no_reorder,
-            leading=self.leading,
-            trailing=self.trailing,
-            no_tooltip=self.no_tooltip,
-            tip=self.tip,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class Button(Widget):
-    """
-    Refer:
-    >>> dpg.add_button
-
-    Adds a button.
-    """
-
-    # Overrides 'name' as label.
-    label: str = None
-
-    # Width of the item.
-    width: int = 0
-
-    # Height of the item.
-    height: int = 0
-
-    # Offsets the widget to the right the specified number multiplied by the
-    # indent style.
-    indent: int = -1
-
-    # Sender string type must be the same as the target for the target to
-    # run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # Registers a callback.
-    callback: Callback = None
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # Turns off functionality of widget and applies the disabled theme.
-    enabled: bool = True
-
-    # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.List[int] = dataclasses.field(default_factory=list)
-
-    # Used by filter widget.
-    filter_key: str = ''
-
-    # Scroll tracking
-    tracked: bool = False
-
-    # 0.0f
-    track_offset: float = 0.5
-
-    # User data for callbacks.
-    user_data: t.Any = None
-
-    # Small button, useful for embedding in text.
-    small: bool = False
-
-    # Arrow button, requires the direction keyword.
-    arrow: bool = False
-
-    # A cardinal direction for arrow.
-    direction: int = 0
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self) -> int:
-        _ret = dpg.add_button(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            width=self.width,
-            height=self.height,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            callback=self.callback_fn,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            enabled=self.enabled,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            user_data=self.user_data,
-            small=self.small,
-            arrow=self.arrow,
-            direction=self.direction,
-        )
-
-        return _ret
-
-    def callback_fn(self, **kwargs):
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn()
-
-    def drag_callback_fn(self, **kwargs):
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn()
-
-    def drop_callback_fn(self, **kwargs):
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn()
-
-
-@dataclasses.dataclass(frozen=True)
-class Combo(Widget):
-    """
-    Refer:
-    >>> dpg.add_combo
-
-    Adds a combo dropdown that allows a user to select a single option
-    from a drop down window.
-    """
-
-    # A tuple of items to be shown in the drop down window. Can consist of
-    # any combination of types.
-    items: t.List[str] = ()
-
-    # Overrides 'name' as label.
-    label: str = None
-
-    # Width of the item.
-    width: int = 0
-
-    # Offsets the widget to the right the specified number multiplied by the
-    # indent style.
-    indent: int = -1
-
-    # Overrides 'id' as value storage key.
-    source: t.Optional[Widget] = None
-
-    # Sender string type must be the same as the target for the target to
-    # run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # Registers a callback.
-    callback: Callback = None
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # Turns off functionality of widget and applies the disabled theme.
-    enabled: bool = True
-
-    # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.List[int] = dataclasses.field(default_factory=list)
-
-    # Used by filter widget.
-    filter_key: str = ''
-
-    # Scroll tracking
-    tracked: bool = False
-
-    # 0.0f
-    track_offset: float = 0.5
-
-    # User data for callbacks.
-    user_data: t.Any = None
+class Plot(BPlot):
+    # ...
+    legend: t.Optional[Legend] = "legend"
 
     # ...
-    default_value: str = ''
-
-    # Align the popup toward the left.
-    popup_align_left: bool = False
-
-    # Display the preview box without the square arrow button.
-    no_arrow_button: bool = False
-
-    # Display only the square arrow button.
-    no_preview: bool = False
-
-    # mvComboHeight_Small, _Regular, _Large, _Largest
-    height_mode: int = 1
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self) -> int:
-        _ret = dpg.add_combo(
-            **self.internal.dpg_kwargs,
-            items=self.items,
-            label=self.label,
-            width=self.width,
-            indent=self.indent,
-            source=0 if self.source is None else self.source.dpg_id,
-            payload_type=self.payload_type,
-            callback=self.callback_fn,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            enabled=self.enabled,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            user_data=self.user_data,
-            default_value=self.default_value,
-            popup_align_left=self.popup_align_left,
-            no_arrow_button=self.no_arrow_button,
-            no_preview=self.no_preview,
-            height_mode=self.height_mode,
-        )
-
-        return _ret
-
-    def callback_fn(self, **kwargs):
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn()
-
-    def drag_callback_fn(self, **kwargs):
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn()
-
-    def drop_callback_fn(self, **kwargs):
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn()
-
-
-@dataclasses.dataclass(frozen=True)
-class InSameLine(Widget):
-    """
-    Refer to
-    >>> dpg.add_same_line
-    """
-
-    # offset from containing window
-    xoffset: float = 0.0
-
-    # offset from previous widget
-    spacing: float = -1.0
-
-    show: bool = True
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self):
-        dpg.add_same_line(
-            **self.internal.dpg_kwargs,
-            xoffset=self.xoffset,
-            spacing=self.spacing,
-            show=self.show,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class Columns(Widget):
-    """
-    Refer to
-    >>> dpg.add_columns
-    """
-    columns: int
-    border: bool = True
-    show: bool = True
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self):
-        dpg.add_columns(
-            **self.internal.dpg_kwargs,
-            columns=self.columns,
-            border=self.border,
-            show=self.show,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class NextColumn(Widget):
-    """
-    Refer to
-    >>> dpg.add_next_column
-    """
-    show: bool = True
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self):
-        dpg.add_next_column(
-            **self.internal.dpg_kwargs,
-            show=self.show,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class Separator(Widget):
-    """
-    Refer to
-    >>> dpg.add_separator
-    """
-    tip: str = ''
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self):
-        dpg.add_separator(
-            **self.internal.dpg_kwargs,
-            tip=self.tip,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class Child(Widget):
-    """
-    Refer:
-    >>> dpg.child
-
-    Adds an embedded child window. Will show scrollbars when items do not
-    fit. Must be followed by a call to end.
-    """
-
-    # Overrides 'name' as label.
-    label: str = None
-
-    # Width of the item.
-    width: int = 0
-
-    # Height of the item.
-    height: int = 0
-
-    # Offsets the widget to the right the specified number multiplied by the
-    # indent style.
-    indent: int = -1
-
-    # Sender string type must be the same as the target for the target to
-    # run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.List[int] = dataclasses.field(default_factory=list)
-
-    # Used by filter widget.
-    filter_key: str = ''
-
-    # Delays searching container for specified items until the end of the
-    # app. Possible optimization when a container has many children that are
-    # not accessed often.
-    delay_search: str = False
-
-    # Scroll tracking
-    tracked: bool = False
-
-    # 0.0f
-    track_offset: float = 0.5
-
-    # User data for callbacks.
-    user_data: t.Any = None
-
-    # Shows/Hides the border around the sides.
-    border: bool = True
-
-    # Autosize the window to fit it's items in the x.
-    autosize_x: bool = False
-
-    # Autosize the window to fit it's items in the y.
-    autosize_y: bool = False
-
-    # Disable scrollbars (window can still scroll with mouse or
-    # programmatically).
-    no_scrollbar: bool = False
-
-    # Allow horizontal scrollbar to appear (off by default).
-    horizontal_scrollbar: bool = False
-
-    # Shows/Hides the menubar at the top.
-    menubar: bool = False
-
-    @property
-    def is_container(self) -> bool:
-        return True
-
-    def build(self) -> int:
-        _ret = dpg.add_child(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            width=self.width,
-            height=self.height,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            user_data=self.user_data,
-            border=self.border,
-            autosize_x=self.autosize_x,
-            autosize_y=self.autosize_y,
-            no_scrollbar=self.no_scrollbar,
-            horizontal_scrollbar=self.horizontal_scrollbar,
-            menubar=self.menubar,
-        )
-
-        return _ret
-
-    def drag_callback_fn(self, **kwargs):
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn()
-
-    def drop_callback_fn(self, **kwargs):
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn()
-
-
-@dataclasses.dataclass(frozen=True)
-class Window(Widget):
-    """
-    Refer to
-    >>> dpg.add_window
-    """
-
-    width: int = -1
-
-    height: int = -1
-
-    # x position the window will start at
-    x_pos: int = 200
-
-    # y position the window will start at
-    y_pos: int = 200
-
-    # Autosized the window to fit it's items.
-    autosize: bool = False
-
-    # Allows for the window size to be changed or fixed
-    no_resize: bool = False
-
-    # Title name for the title bar of the window
-    no_title_bar: bool = False
-
-    # Allows for the window's position to be changed or fixed
-    no_move: bool = False
-
-    # Disable scrollbars
-    # (window can still scroll with mouse or programmatically)
-    no_scrollbar: bool = False
-
-    # Disable user collapsing window by double-clicking on it
-    no_collapse: bool = False
-
-    # Allow horizontal scrollbar to appear (off by default).
-    horizontal_scrollbar: bool = False
-
-    # Disable taking focus when transitioning from hidden to visible state
-    no_focus_on_appearing: bool = False
-
-    # Disable bringing window to front when taking focus
-    # (e.g. clicking on it or programmatically giving it focus)
-    no_bring_to_front_on_focus: bool = False
-
-    menubar: bool = False
-
-    no_close: bool = False
-
-    no_background: bool = False
-
-    label: str = ''
-
-    # Attempt to render
-    show: bool = True
-
-    # Collapse the window
-    collapsed: bool = False
-
-    on_close: Callback = None
-
-    @property
-    def is_container(self) -> bool:
-        return True
-
-    def build_pre_runner(self):
-
-        if self.internal.before is not None:
-            e.code.NotAllowed(
+    x_axis: t.Union[str, XAxis] = ""
+
+    # ...
+    y1_axis: t.Union[str, YAxis] = ""
+
+    # ...
+    y2_axis: t.Union[str, YAxis] = None
+
+    # ...
+    y3_axis: t.Union[str, YAxis] = None
+
+    def init(self):
+
+        # call super
+        super().init()
+
+        # add legend and axis which are same as widgets but are immediate
+        # part of Plot widget and needs to be added well in advance
+        if self.legend is not None:
+            self.add_child(
+                guid="_l",
+                widget=Legend(label=self.legend)
+                if isinstance(self.legend, str) else self.legend
+            )
+        if self.x_axis is not None:
+            self.add_child(
+                guid="_x",
+                widget=XAxis(label=self.x_axis)
+                if isinstance(self.x_axis, str) else self.x_axis
+            )
+        if self.y1_axis is not None:
+            self.add_child(
+                guid="_y1",
+                widget=YAxis(label=self.y1_axis)
+                if isinstance(self.y1_axis, str) else self.y1_axis
+            )
+        if self.y2_axis is not None:
+            self.add_child(
+                guid="_y2",
+                widget=YAxis(label=self.y2_axis)
+                if isinstance(self.y2_axis, str) else self.y2_axis
+            )
+        if self.y3_axis is not None:
+            self.add_child(
+                guid="_y3",
+                widget=YAxis(label=self.y3_axis)
+                if isinstance(self.y3_axis, str) else self.y3_axis
+            )
+
+    def get_y_axis(self, axis_dim: int) -> YAxis:
+        if axis_dim not in [1, 2, 3]:
+            e.code.CodingError(
                 msgs=[
-                    f"Widget {self.__class__} does not support before kwarg ..."
+                    f"for y axis axis_dim should be one of {[1, 2, 3]} ... "
+                    f"but found unsupported {axis_dim}"
+                ]
+            )
+        try:
+            # noinspection PyTypeChecker
+            return self.children[f"_y{axis_dim}"]
+        except KeyError:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"field `y{axis_dim}_axis` is not supplied while "
+                    f"creating Plot instance"
                 ]
             )
 
-        if not isinstance(self.internal.parent, Dashboard):
-            e.code.NotAllowed(
+    def get_x_axis(self) -> XAxis:
+        try:
+            # noinspection PyTypeChecker
+            return self.children["_x"]
+        except KeyError:
+            e.validation.NotAllowed(
                 msgs=[
-                    F"Window widget can be a child only to a Dashboard",
-                    f"This is because add_widow does not have parent kwarg"
+                    "field `x_axis` is not supplied"
                 ]
             )
 
-        super().build_pre_runner()
-
-    def build(self):
-
-        dpg.add_window(
-            name=self.name,
-            width=self.width,
-            height=self.height,
-            x_pos=self.x_pos,
-            y_pos=self.y_pos,
-            autosize=self.autosize,
-            no_resize=self.no_resize,
-            no_title_bar=self.no_title_bar,
-            no_move=self.no_move,
-            no_scrollbar=self.no_scrollbar,
-            no_collapse=self.no_collapse,
-            horizontal_scrollbar=self.horizontal_scrollbar,
-            no_focus_on_appearing=self.no_focus_on_appearing,
-            no_bring_to_front_on_focus=self.no_bring_to_front_on_focus,
-            menubar=self.menubar,
-            no_close=self.no_close,
-            no_background=self.no_background,
-            label=self.label,
-            show=self.show,
-            collapsed=self.collapsed,
-            on_close=None if self.on_close is None else self.on_close.fn,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class Text(Widget):
-    """
-    Refer:
-    >>> dpg.add_text
-
-    Adds text. Text can have an optional label that will display to the
-    right of the text.
-    """
-    # ...
-    msgs: t.Union[str, t.List[str]]
-
-    # Overrides 'name' as label.
-    label: str = None
-
-    # Offsets the widget to the right the specified number multiplied by the
-    # indent style.
-    indent: int = -1
-
-    # Overrides 'id' as value storage key.
-    source: t.Optional[Widget] = None
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.List[int] = dataclasses.field(default_factory=list)
-
-    # Used by filter widget.
-    filter_key: str = ''
-
-    # Scroll tracking
-    tracked: bool = False
-
-    # 0.0f
-    track_offset: float = 0.5
-
-    # User data for callbacks.
-    user_data: t.Any = None
-
-    # Number of pixels until wrapping starts.
-    wrap: int = -1
-
-    # Makes the text bulleted.
-    bullet: bool = False
-
-    # Color of the text (rgba).
-    color: Color = Color.DEFAULT
-
-    # Displays the label.
-    show_label: bool = False
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self) -> int:
-        _msgs = self.msgs if isinstance(self.msgs, list) else [self.msgs]
-
-        _ids = []
-
-        for _msg in _msgs:
-            # noinspection PyUnresolvedReferences
-            _ret = dpg.add_text(
-                **self.internal.dpg_kwargs,
-                default_value=_msg,
-                label=self.label,
-                indent=self.indent,
-                source=0 if self.source is None else self.source.dpg_id,
-                show=self.show,
-                pos=self.pos,
-                filter_key=self.filter_key,
-                tracked=self.tracked,
-                track_offset=self.track_offset,
-                user_data=self.user_data,
-                wrap=self.wrap,
-                bullet=self.bullet,
-                color=self.color.dpg_value,
-                show_label=self.show_label,
+    def get_legend(self) -> Legend:
+        try:
+            # noinspection PyTypeChecker
+            return self.children["_l"]
+        except KeyError:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"field `legend` is not supplied"
+                ]
             )
 
-            _ids.append(_ret)
+    def add_area_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        y: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        fill: t.List[int] = (0, 0, 0, -255),
+        contribute_to_bounds: bool = True,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_area_series
 
-        # currently returning the first one
-        # todo: fix this
-        return _ids[0]
+        Adds an area series to a plot.
 
+        Args:
+            x:
+              ...
+            y:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            fill:
+              ...
+            contribute_to_bounds:
+              ...
+            y_axis_dim:
+              ...
 
-@dataclasses.dataclass(frozen=True)
-class CollapsingHeader(Widget):
-    """
-    Refer:
-    >>> dpg.collapsing_header
+        Returns:
 
-    Adds a collapsing header to add items to. Must be closed with the end
-    command.
-    """
+        """
 
-    # Overrides 'name' as label.
-    label: str = None
-
-    # Offsets the widget to the right the specified number multiplied by the
-    # indent style.
-    indent: int = -1
-
-    # Sender string type must be the same as the target for the target to
-    # run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.List[int] = dataclasses.field(default_factory=list)
-
-    # Used by filter widget.
-    filter_key: str = ''
-
-    # Delays searching container for specified items until the end of the
-    # app. Possible optimization when a container has many children that are
-    # not accessed often.
-    delay_search: str = False
-
-    # Scroll tracking
-    tracked: bool = False
-
-    # 0.0f
-    track_offset: float = 0.5
-
-    # User data for callbacks.
-    user_data: t.Any = None
-
-    # Adds the ability to hide this widget by pressing the (x) in the top
-    # right of widget.
-    closable: bool = False
-
-    # Sets the collapseable header open by default.
-    default_open: bool = False
-
-    # Need double-click to open node.
-    open_on_double_click: bool = False
-
-    # Only open when clicking on the arrow part.
-    open_on_arrow: bool = False
-
-    # No collapsing, no arrow (use as a convenience for leaf nodes).
-    leaf: bool = False
-
-    # Display a bullet instead of arrow.
-    bullet: bool = False
-
-    @property
-    def is_container(self) -> bool:
-        return True
-
-    def build(self) -> int:
-        _ret = dpg.add_collapsing_header(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            user_data=self.user_data,
-            closable=self.closable,
-            default_open=self.default_open,
-            open_on_double_click=self.open_on_double_click,
-            open_on_arrow=self.open_on_arrow,
-            leaf=self.leaf,
-            bullet=self.bullet,
+        _dpg_id = dpg.add_area_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y=y,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            fill=fill,
+            contribute_to_bounds=contribute_to_bounds,
         )
 
-        return _ret
+    def add_bar_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        y: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        weight: float = 1.0,
+        horizontal: bool = False,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_bar_series
 
-    def drag_callback_fn(self, **kwargs):
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn()
+        Adds a bar series to a plot.
 
-    def drop_callback_fn(self, **kwargs):
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn()
+        Args:
+            x:
+              ...
+            y:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            weight:
+              ...
+            horizontal:
+              ...
+            y_axis_dim:
+              ...
 
+        Returns:
 
-@dataclasses.dataclass(frozen=True)
-class Group(Widget):
-    """
-    Refer:
-    >>> dpg.group
+        """
 
-    Creates a group that other widgets can belong to. The group allows
-    item commands to be issued for all of its members. Must be closed with
-    the end command.
-    """
-
-    # Overrides 'name' as label.
-    label: str = None
-
-    # Width of the item.
-    width: int = 0
-
-    # Offsets the widget to the right the specified number multiplied by the
-    # indent style.
-    indent: int = -1
-
-    # Sender string type must be the same as the target for the target to
-    # run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.List[int] = dataclasses.field(default_factory=list)
-
-    # Used by filter widget.
-    filter_key: str = ''
-
-    # Delays searching container for specified items until the end of the
-    # app. Possible optimization when a container has many children that are
-    # not accessed often.
-    delay_search: str = False
-
-    # Scroll tracking
-    tracked: bool = False
-
-    # 0.0f
-    track_offset: float = 0.5
-
-    # User data for callbacks.
-    user_data: t.Any = None
-
-    # Forces child widgets to be added in a horizontal layout.
-    horizontal: bool = False
-
-    # Spacing for the horizontal layout.
-    horizontal_spacing: float = -1
-
-    @property
-    def is_container(self) -> bool:
-        return True
-
-    def build(self) -> int:
-        _ret = dpg.add_group(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            width=self.width,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            user_data=self.user_data,
-            horizontal=self.horizontal,
-            horizontal_spacing=self.horizontal_spacing,
+        _dpg_id = dpg.add_bar_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y=y,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            weight=weight,
+            horizontal=horizontal,
         )
 
-        return _ret
+    def add_candle_series(
+        self, *,
+        dates: PLOT_DATA_TYPE,
+        opens: PLOT_DATA_TYPE,
+        closes: PLOT_DATA_TYPE,
+        lows: PLOT_DATA_TYPE,
+        highs: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        bull_color: t.List[int] = (0, 255, 113, 255),
+        bear_color: t.List[int] = (218, 13, 79, 255),
+        weight: int = 0.25,
+        tooltip: bool = True,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_candle_series
 
-    def drag_callback_fn(self, **kwargs):
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn()
+        Adds a candle series to a plot.
 
-    def drop_callback_fn(self, **kwargs):
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn()
+        Args:
+            dates:
+              ...
+            opens:
+              ...
+            closes:
+              ...
+            lows:
+              ...
+            highs:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            bull_color:
+              ...
+            bear_color:
+              ...
+            weight:
+              ...
+            tooltip:
+              ...
+            y_axis_dim:
+              ...
 
+        Returns:
 
-@dataclasses.dataclass(frozen=True)
-class ManagedColumn(Widget):
-    """
-    Refer to
-    >>> dpg.add_managed_columns
-    """
-    columns: int
-    border: bool = True
-    show: bool = True
-    widths: t.List[float] = None
+        """
 
-    @property
-    def is_container(self) -> bool:
-        return True
-
-    def init_validate(self):
-        # check if num of elements in widths is same as number of columns
-        if self.widths is not None:
-            if len(self.widths) != self.columns:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"The widths field should have {self.columns} elements",
-                        f"Found {len(self.widths)} elements in widths instead"
-                    ]
-                )
-
-    def build(self):
-        # add ui component
-        dpg.add_managed_columns(
-            **self.internal.dpg_kwargs,
-            columns=self.columns,
-            border=self.border,
-            show=self.show,
+        _dpg_id = dpg.add_candle_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            dates=dates,
+            opens=opens,
+            closes=closes,
+            lows=lows,
+            highs=highs,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            bull_color=bull_color,
+            bear_color=bear_color,
+            weight=weight,
+            tooltip=tooltip,
         )
 
-        # set column widths
-        # todo: this feature is still not working
-        #   issue filed here: https://github.com/hoffstadt/DearPyGui/issues/780
-        if self.widths is not None:
-            for i in range(self.columns):
-                dpg.set_managed_column_width(
-                    item=self.name, column=i, width=self.widths[i]
-                )
+    def add_drag_line(
+        self, *,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        callback: t.Optional[Callback] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        default_value: t.Any = 0.0,
+        color: t.List[int] = (0, 0, 0, -255),
+        thickness: float = 1.0,
+        show_label: bool = True,
+        vertical: bool = True,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_drag_line
+
+        Adds a drag line to a plot.
+
+        Args:
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            callback:
+              Registers a callback.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            default_value:
+              ...
+            color:
+              ...
+            thickness:
+              ...
+            show_label:
+              ...
+            vertical:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_drag_line(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            callback=None if callback is None else callback.fn,
+            show=show,
+            user_data=user_data,
+            default_value=default_value,
+            color=color,
+            thickness=thickness,
+            show_label=show_label,
+            vertical=vertical,
+        )
+
+    def add_drag_point(
+        self, *,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        callback: t.Optional[Callback] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        default_value: t.Any = (0.0, 0.0),
+        color: t.List[int] = (0, 0, 0, -255),
+        thickness: float = 1.0,
+        show_label: bool = True,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_drag_point
+
+        Adds a drag point to a plot.
+
+        Args:
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            callback:
+              Registers a callback.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            default_value:
+              ...
+            color:
+              ...
+            thickness:
+              ...
+            show_label:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_drag_point(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            callback=None if callback is None else callback.fn,
+            show=show,
+            user_data=user_data,
+            default_value=default_value,
+            color=color,
+            thickness=thickness,
+            show_label=show_label,
+        )
+
+    def add_error_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        y: PLOT_DATA_TYPE,
+        negative: PLOT_DATA_TYPE,
+        positive: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        contribute_to_bounds: bool = True,
+        horizontal: bool = False,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_error_series
+
+        Adds an error series to a plot.
+
+        Args:
+            x:
+              ...
+            y:
+              ...
+            negative:
+              ...
+            positive:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            contribute_to_bounds:
+              ...
+            horizontal:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_error_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y=y,
+            negative=negative,
+            positive=positive,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            contribute_to_bounds=contribute_to_bounds,
+            horizontal=horizontal,
+        )
+
+    def add_heat_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        rows: int,
+        cols: int,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        scale_min: float = 0.0,
+        scale_max: float = 1.0,
+        bounds_min: t.Any = (0.0, 0.0),
+        bounds_max: t.Any = (1.0, 1.0),
+        format: str = '%0.1f',
+        contribute_to_bounds: bool = True,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_heat_series
+
+        Adds a heat series to a plot. Typically a color scale widget is also
+        added to show the legend.
+
+        Args:
+            x:
+              ...
+            rows:
+              ...
+            cols:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            scale_min:
+              Sets the color scale min. Typically paired with the color
+              scale widget scale_min.
+            scale_max:
+              Sets the color scale max. Typically paired with the color
+              scale widget scale_max.
+            bounds_min:
+              ...
+            bounds_max:
+              ...
+            format:
+              ...
+            contribute_to_bounds:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_heat_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            rows=rows,
+            cols=cols,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            scale_min=scale_min,
+            scale_max=scale_max,
+            bounds_min=bounds_min,
+            bounds_max=bounds_max,
+            format=format,
+            contribute_to_bounds=contribute_to_bounds,
+        )
+
+    def add_histogram_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        bins: int = -1,
+        bar_scale: float = 1.0,
+        min_range: float = 0.0,
+        max_range: float = 1.0,
+        cumlative: bool = False,
+        density: bool = False,
+        outliers: bool = True,
+        contribute_to_bounds: bool = True,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_histogram_series
+
+        Adds a histogram series to a plot.
+
+        Args:
+            x:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            bins:
+              ...
+            bar_scale:
+              ...
+            min_range:
+              ...
+            max_range:
+              ...
+            cumlative:
+              ...
+            density:
+              ...
+            outliers:
+              ...
+            contribute_to_bounds:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_histogram_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            bins=bins,
+            bar_scale=bar_scale,
+            min_range=min_range,
+            max_range=max_range,
+            cumlative=cumlative,
+            density=density,
+            outliers=outliers,
+            contribute_to_bounds=contribute_to_bounds,
+        )
+
+    def add_hline_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        contribute_to_bounds: bool = True,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_hline_series
+
+        Adds a infinite horizontal line series to a plot.
+
+        Args:
+            x:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            contribute_to_bounds:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_hline_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            contribute_to_bounds=contribute_to_bounds,
+        )
+
+    def add_image_series(
+        self, *,
+        texture_id: int,
+        bounds_min: PLOT_DATA_TYPE,
+        bounds_max: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        uv_min: t.List[float] = (0.0, 0.0),
+        uv_max: t.List[float] = (1.0, 1.0),
+        tint_color: t.List[int] = (255, 255, 255, 255),
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_image_series
+
+        Adds a image series to a plot.
+
+        Args:
+            texture_id:
+              ...
+            bounds_min:
+              ...
+            bounds_max:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            uv_min:
+              normalized texture coordinates
+            uv_max:
+              normalized texture coordinates
+            tint_color:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_image_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            texture_id=texture_id,
+            bounds_min=bounds_min,
+            bounds_max=bounds_max,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            uv_min=uv_min,
+            uv_max=uv_max,
+            tint_color=tint_color,
+        )
+
+    def add_line_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        y: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_line_series
+
+        Adds a line series to a plot.
+
+        Args:
+            x:
+              ...
+            y:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_line_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y=y,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+        )
+
+    def add_pie_series(
+        self, *,
+        x: float,
+        y: float,
+        radius: float,
+        values: PLOT_DATA_TYPE,
+        labels: t.List[str],
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        format: str = '%0.2f',
+        angle: float = 90.0,
+        normalize: bool = False,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_pie_series
+
+        Adds a pie series to a plot.
+
+        Args:
+            x:
+              ...
+            y:
+              ...
+            radius:
+              ...
+            values:
+              ...
+            labels:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            format:
+              ...
+            angle:
+              ...
+            normalize:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_pie_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y=y,
+            radius=radius,
+            values=values,
+            labels=labels,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            format=format,
+            angle=angle,
+            normalize=normalize,
+        )
+
+    def add_plot_annotation(
+        self, *,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        default_value: t.Any = (0.0, 0.0),
+        offset: t.List[float] = (0.0, 0.0),
+        color: t.List[int] = (0, 0, 0, -255),
+        clamped: bool = True,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_plot_annotation
+
+        Adds an annotation to a plot.
+
+        Args:
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            default_value:
+              ...
+            offset:
+              ...
+            color:
+              ...
+            clamped:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_plot_annotation(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            default_value=default_value,
+            offset=offset,
+            color=color,
+            clamped=clamped,
+        )
+
+    def add_scatter_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        y: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_scatter_series
+
+        Adds a scatter series to a plot.
+
+        Args:
+            x:
+              ...
+            y:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_scatter_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y=y,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+        )
+
+    def add_shade_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        y1: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        y2: t.Any = [],
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_shade_series
+
+        Adds a shade series to a plot.
+
+        Args:
+            x:
+              ...
+            y1:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            y2:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_shade_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y1=y1,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            y2=y2,
+        )
+
+    def add_stair_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        y: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_stair_series
+
+        Adds a stair series to a plot.
+
+        Args:
+            x:
+              ...
+            y:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_stair_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y=y,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+        )
+
+    def add_stem_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        y: PLOT_DATA_TYPE,
+        label: str = None,
+        indent: int = -1,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_stem_series
+
+        Adds a stem series to a plot.
+
+        Args:
+            x:
+              ...
+            y:
+              ...
+            label:
+              Overrides 'name' as label.
+            indent:
+              Offsets the widget to the right the specified number
+              multiplied by the indent style.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_stem_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y=y,
+            label=label,
+            indent=indent,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+        )
+
+    def add_subplots(
+        self, *,
+        rows: int,
+        columns: int,
+        label: str = None,
+        width: int = 0,
+        height: int = 0,
+        indent: int = -1,
+        before: t.Optional[Widget] = None,
+        callback: t.Optional[Callback] = None,
+        show: bool = True,
+        pos: t.List[int] = [],
+        filter_key: str = '',
+        delay_search: str = False,
+        tracked: bool = False,
+        track_offset: float = 0.5,
+        user_data: t.Any = None,
+        row_ratios: t.List[float] = [],
+        column_ratios: t.List[float] = [],
+        no_title: bool = False,
+        no_menus: bool = False,
+        no_resize: bool = False,
+        no_align: bool = False,
+        link_rows: bool = False,
+        link_columns: bool = False,
+        link_all_x: bool = False,
+        link_all_y: bool = False,
+        column_major: bool = False,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_subplots
+
+        Adds a plot which is used to hold series, and can be drawn to with
+        draw commands.
+
+        Args:
+            rows:
+              ...
+            columns:
+              ...
+            label:
+              Overrides 'name' as label.
+            width:
+              Width of the item.
+            height:
+              Height of the item.
+            indent:
+              Offsets the widget to the right the specified number
+              multiplied by the indent style.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            callback:
+              Registers a callback.
+            show:
+              Attempt to render widget.
+            pos:
+              Places the item relative to window coordinates, [0,0] is top
+              left.
+            filter_key:
+              Used by filter widget.
+            delay_search:
+              Delays searching container for specified items until the end
+              of the app. Possible optimization when a container has many
+              children that are not accessed often.
+            tracked:
+              Scroll tracking
+            track_offset:
+              0.0f
+            user_data:
+              User data for callbacks.
+            row_ratios:
+              ...
+            column_ratios:
+              ...
+            no_title:
+              ...
+            no_menus:
+              the user will not be able to open context menus with right-
+              click
+            no_resize:
+              resize splitters between subplot cells will be not be
+              provided
+            no_align:
+              subplot edges will not be aligned vertically or horizontally
+            link_rows:
+              link the y-axis limits of all plots in each row (does not
+              apply auxiliary y-axes)
+            link_columns:
+              link the x-axis limits of all plots in each column
+            link_all_x:
+              link the x-axis limits in every plot in the subplot
+            link_all_y:
+              link the y-axis limits in every plot in the subplot (does
+              not apply to auxiliary y-axes)
+            column_major:
+              subplots are added in column major order instead of the
+              default row major order
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_subplots(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            rows=rows,
+            columns=columns,
+            label=label,
+            width=width,
+            height=height,
+            indent=indent,
+            before=0 if before is None else before.dpg_id,
+            callback=None if callback is None else callback.fn,
+            show=show,
+            pos=pos,
+            filter_key=filter_key,
+            delay_search=delay_search,
+            tracked=tracked,
+            track_offset=track_offset,
+            user_data=user_data,
+            row_ratios=row_ratios,
+            column_ratios=column_ratios,
+            no_title=no_title,
+            no_menus=no_menus,
+            no_resize=no_resize,
+            no_align=no_align,
+            link_rows=link_rows,
+            link_columns=link_columns,
+            link_all_x=link_all_x,
+            link_all_y=link_all_y,
+            column_major=column_major,
+        )
+
+    def add_text_point(
+        self, *,
+        x: float,
+        y: float,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        x_offset: int = Ellipsis,
+        y_offset: int = Ellipsis,
+        vertical: bool = False,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_text_point
+
+        Adds a labels series to a plot.
+
+        Args:
+            x:
+              ...
+            y:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            x_offset:
+              ...
+            y_offset:
+              ...
+            vertical:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_text_point(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            y=y,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+            x_offset=x_offset,
+            y_offset=y_offset,
+            vertical=vertical,
+        )
+
+    def add_vline_series(
+        self, *,
+        x: PLOT_DATA_TYPE,
+        label: str = None,
+        before: t.Optional[Widget] = None,
+        source: t.Optional[Widget] = None,
+        show: bool = True,
+        user_data: t.Any = None,
+        y_axis_dim: int = 1,
+    ):
+        """
+        Refer:
+        >>> dpg.add_vline_series
+
+        Adds a infinite vertical line series to a plot.
+
+        Args:
+            x:
+              ...
+            label:
+              Overrides 'name' as label.
+            before:
+              This item will be displayed before the specified item in the
+              parent.
+            source:
+              Overrides 'id' as value storage key.
+            show:
+              Attempt to render widget.
+            user_data:
+              User data for callbacks.
+            y_axis_dim:
+              ...
+
+        Returns:
+
+        """
+
+        _dpg_id = dpg.add_vline_series(
+            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            x=x,
+            label=label,
+            before=0 if before is None else before.dpg_id,
+            source=0 if source is None else source.dpg_id,
+            show=show,
+            user_data=user_data,
+        )

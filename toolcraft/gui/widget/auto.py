@@ -2259,3 +2259,277 @@ class BPlot(Widget):
             return None
         else:
             return self.drop_callback.fn()
+
+
+@dataclasses.dataclass(frozen=True)
+class InputIntX(Widget):
+    """
+    Refer:
+    >>> dpg.add_input_intx
+
+    Adds multi int input for up to 4 integer values.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Any = None
+
+    # ...
+    default_value: t.List[int] = (0, 0, 0, 0)
+
+    # Value for lower limit of input for each cell. Use clamped to turn on.
+    min_value: int = 0
+
+    # Value for upper limit of input for each cell. Use clamped to turn on.
+    max_value: int = 100
+
+    # Number of components.
+    size: int = 4
+
+    # Activates and deactivates min_value.
+    min_clamped: bool = False
+
+    # Activates and deactivates max_value.
+    max_clamped: bool = False
+
+    # Only runs callback on enter.
+    on_enter: bool = False
+
+    # Activates a read only mode for the inputs.
+    readonly: bool = False
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_input_intx(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            width=self.width,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            default_value=self.default_value,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            size=self.size,
+            min_clamped=self.min_clamped,
+            max_clamped=self.max_clamped,
+            on_enter=self.on_enter,
+            readonly=self.readonly,
+        )
+        
+        return _ret
+
+    def callback_fn(self, **kwargs):
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn()
+
+    def drag_callback_fn(self, **kwargs):
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn()
+
+    def drop_callback_fn(self, **kwargs):
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn()
+
+
+@dataclasses.dataclass(frozen=True)
+class InputInt(Widget):
+    """
+    Refer:
+    >>> dpg.add_input_int
+
+    Adds input for an int. Step buttons can be turned on or off.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Any = None
+
+    # ...
+    default_value: int = 0
+
+    # Value for lower limit of input. By default this limits the step
+    # buttons. Use clamped to limit manual input.
+    min_value: int = 0
+
+    # Value for upper limit of input. By default this limits the step
+    # buttons. Use clamped to limit manual input.
+    max_value: int = 100
+
+    # Increment to change value by when the step buttons are pressed.
+    # Setting this to a value of 0 or smaller will turn off step buttons.
+    step: int = 1
+
+    # After holding the step buttons for extended time the increments will
+    # switch to this value.
+    step_fast: int = 100
+
+    # Activates and deactivates min_value.
+    min_clamped: bool = False
+
+    # Activates and deactivates max_value.
+    max_clamped: bool = False
+
+    # Only runs callback on enter key press.
+    on_enter: bool = False
+
+    # Activates a read only mode for the input.
+    readonly: bool = False
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_input_int(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            width=self.width,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            default_value=self.default_value,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            step=self.step,
+            step_fast=self.step_fast,
+            min_clamped=self.min_clamped,
+            max_clamped=self.max_clamped,
+            on_enter=self.on_enter,
+            readonly=self.readonly,
+        )
+        
+        return _ret
+
+    def callback_fn(self, **kwargs):
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn()
+
+    def drag_callback_fn(self, **kwargs):
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn()
+
+    def drop_callback_fn(self, **kwargs):
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn()

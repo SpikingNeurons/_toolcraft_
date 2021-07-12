@@ -231,6 +231,8 @@ PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
         (dpg.subplots, "SubPlot", {}),
         (dpg.add_simple_plot, "SimplePlot", {}),
         (dpg.plot, "BPlot", {}),
+        (dpg.add_input_intx, "InputIntX", {}),
+        (dpg.add_input_int, "InputInt", {}),
     ]
     _widget_lines = []
     for _method, _widget_name, _color_fields in _widget_items:

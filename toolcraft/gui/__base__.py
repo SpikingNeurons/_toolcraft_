@@ -241,6 +241,9 @@ class Widget(m.HashableClass, abc.ABC):
             if isinstance(v, (Widget, Callback)):
                 self.duplicate_field(field_name=f_name, value=v)
 
+    def get_value(self) -> t.Any:
+        return dpg.get_value(item=self.dpg_id)
+
     def duplicate_field(
         self,
         field_name: str,

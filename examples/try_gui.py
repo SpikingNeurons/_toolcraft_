@@ -1,11 +1,8 @@
 import dataclasses
 import numpy as np
-import time
-import datetime
-import typing as t
 import dearpygui.dearpygui as dpg
 
-from toolcraft import gui, util
+from toolcraft import gui
 
 
 @dataclasses.dataclass(frozen=True)
@@ -178,10 +175,11 @@ class ButtonPlot(gui.CollapsingHeader):
 
     def layout(self):
         _table = gui.Table(
-            rows=1, columns=2, header_row=False,
+            header_row=False,
             resizable=True, policy=gui.TableSizingPolicy.StretchSame,
             borders_innerH=True, borders_outerH=True,
             borders_innerV=True, borders_outerV=True,
+            rows=1, columns=2,
         )
         _button_cell = _table.get_cell(row=0, column=0)
         _display_cell = _table.get_cell(row=0, column=1)

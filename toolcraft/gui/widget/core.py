@@ -99,6 +99,12 @@ class Plot(BPlot):
     # ...
     y3_axis: t.Union[str, YAxis] = None
 
+    #
+    width: int = -1
+
+    #
+    height: int = 400
+
     def init(self):
 
         # call super
@@ -136,6 +142,13 @@ class Plot(BPlot):
                 widget=YAxis(label=self.y3_axis)
                 if isinstance(self.y3_axis, str) else self.y3_axis
             )
+
+    def clear(self):
+        # plot series are added to YAxis so we clear its children to clear
+        # the plot
+        for _k, _w in self.children.items():
+            if _k.startswith("_y"):
+                dpg.delete_item(item=_w.dpg_id, children_only=True)
 
     def get_y_axis(self, axis_dim: int) -> YAxis:
         if axis_dim not in [1, 2, 3]:
@@ -190,7 +203,7 @@ class Plot(BPlot):
         fill: t.List[int] = (0, 0, 0, -255),
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_area_series
@@ -221,6 +234,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -237,6 +251,8 @@ class Plot(BPlot):
             contribute_to_bounds=contribute_to_bounds,
         )
 
+        return _dpg_id
+
     def add_bar_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -249,7 +265,7 @@ class Plot(BPlot):
         weight: float = 1.0,
         horizontal: bool = False,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_bar_series
@@ -280,6 +296,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -295,6 +312,8 @@ class Plot(BPlot):
             weight=weight,
             horizontal=horizontal,
         )
+
+        return _dpg_id
 
     def add_candle_series(
         self, *,
@@ -313,7 +332,7 @@ class Plot(BPlot):
         weight: int = 0.25,
         tooltip: bool = True,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_candle_series
@@ -354,6 +373,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -375,6 +395,8 @@ class Plot(BPlot):
             tooltip=tooltip,
         )
 
+        return _dpg_id
+
     def add_drag_line(
         self, *,
         label: str = None,
@@ -389,7 +411,7 @@ class Plot(BPlot):
         show_label: bool = True,
         vertical: bool = True,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_drag_line
@@ -424,6 +446,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -442,6 +465,8 @@ class Plot(BPlot):
             vertical=vertical,
         )
 
+        return _dpg_id
+
     def add_drag_point(
         self, *,
         label: str = None,
@@ -455,7 +480,7 @@ class Plot(BPlot):
         thickness: float = 1.0,
         show_label: bool = True,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_drag_point
@@ -488,6 +513,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -505,6 +531,8 @@ class Plot(BPlot):
             show_label=show_label,
         )
 
+        return _dpg_id
+
     def add_error_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -519,7 +547,7 @@ class Plot(BPlot):
         contribute_to_bounds: bool = True,
         horizontal: bool = False,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_error_series
@@ -554,6 +582,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -572,6 +601,8 @@ class Plot(BPlot):
             horizontal=horizontal,
         )
 
+        return _dpg_id
+
     def add_heat_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -589,7 +620,7 @@ class Plot(BPlot):
         format: str = '%0.1f',
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_heat_series
@@ -633,6 +664,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -654,6 +686,8 @@ class Plot(BPlot):
             contribute_to_bounds=contribute_to_bounds,
         )
 
+        return _dpg_id
+
     def add_histogram_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -671,7 +705,7 @@ class Plot(BPlot):
         outliers: bool = True,
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_histogram_series
@@ -712,6 +746,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -733,6 +768,8 @@ class Plot(BPlot):
             contribute_to_bounds=contribute_to_bounds,
         )
 
+        return _dpg_id
+
     def add_hline_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -743,7 +780,7 @@ class Plot(BPlot):
         user_data: t.Any = None,
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_hline_series
@@ -770,6 +807,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -783,6 +821,8 @@ class Plot(BPlot):
             user_data=user_data,
             contribute_to_bounds=contribute_to_bounds,
         )
+
+        return _dpg_id
 
     def add_image_series(
         self, *,
@@ -798,7 +838,7 @@ class Plot(BPlot):
         uv_max: t.List[float] = (1.0, 1.0),
         tint_color: t.List[int] = (255, 255, 255, 255),
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_image_series
@@ -833,6 +873,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -851,6 +892,8 @@ class Plot(BPlot):
             tint_color=tint_color,
         )
 
+        return _dpg_id
+
     def add_line_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -861,7 +904,7 @@ class Plot(BPlot):
         show: bool = True,
         user_data: t.Any = None,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_line_series
@@ -888,6 +931,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -901,6 +945,8 @@ class Plot(BPlot):
             show=show,
             user_data=user_data,
         )
+
+        return _dpg_id
 
     def add_pie_series(
         self, *,
@@ -918,7 +964,7 @@ class Plot(BPlot):
         angle: float = 90.0,
         normalize: bool = False,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_pie_series
@@ -957,6 +1003,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -977,6 +1024,8 @@ class Plot(BPlot):
             normalize=normalize,
         )
 
+        return _dpg_id
+
     def add_plot_annotation(
         self, *,
         label: str = None,
@@ -989,7 +1038,7 @@ class Plot(BPlot):
         color: t.List[int] = (0, 0, 0, -255),
         clamped: bool = True,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_plot_annotation
@@ -1020,6 +1069,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -1036,6 +1086,8 @@ class Plot(BPlot):
             clamped=clamped,
         )
 
+        return _dpg_id
+
     def add_scatter_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -1046,7 +1098,7 @@ class Plot(BPlot):
         show: bool = True,
         user_data: t.Any = None,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_scatter_series
@@ -1073,6 +1125,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -1087,6 +1140,8 @@ class Plot(BPlot):
             user_data=user_data,
         )
 
+        return _dpg_id
+
     def add_shade_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -1098,7 +1153,7 @@ class Plot(BPlot):
         user_data: t.Any = None,
         y2: t.Any = [],
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_shade_series
@@ -1127,6 +1182,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -1142,6 +1198,8 @@ class Plot(BPlot):
             y2=y2,
         )
 
+        return _dpg_id
+
     def add_stair_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -1152,7 +1210,7 @@ class Plot(BPlot):
         show: bool = True,
         user_data: t.Any = None,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_stair_series
@@ -1179,6 +1237,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -1193,6 +1252,8 @@ class Plot(BPlot):
             user_data=user_data,
         )
 
+        return _dpg_id
+
     def add_stem_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -1204,7 +1265,7 @@ class Plot(BPlot):
         show: bool = True,
         user_data: t.Any = None,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_stem_series
@@ -1234,6 +1295,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -1248,6 +1310,8 @@ class Plot(BPlot):
             show=show,
             user_data=user_data,
         )
+
+        return _dpg_id
 
     def add_subplots(
         self, *,
@@ -1278,7 +1342,7 @@ class Plot(BPlot):
         link_all_y: bool = False,
         column_major: bool = False,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_subplots
@@ -1353,6 +1417,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -1386,6 +1451,8 @@ class Plot(BPlot):
             column_major=column_major,
         )
 
+        return _dpg_id
+
     def add_text_point(
         self, *,
         x: float,
@@ -1399,7 +1466,7 @@ class Plot(BPlot):
         y_offset: int = Ellipsis,
         vertical: bool = False,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_text_point
@@ -1432,6 +1499,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -1449,6 +1517,8 @@ class Plot(BPlot):
             vertical=vertical,
         )
 
+        return _dpg_id
+
     def add_vline_series(
         self, *,
         x: PLOT_DATA_TYPE,
@@ -1458,7 +1528,7 @@ class Plot(BPlot):
         show: bool = True,
         user_data: t.Any = None,
         y_axis_dim: int = 1,
-    ):
+    ) -> int:
         """
         Refer:
         >>> dpg.add_vline_series
@@ -1483,6 +1553,7 @@ class Plot(BPlot):
               ...
 
         Returns:
+            int
 
         """
 
@@ -1495,3 +1566,5 @@ class Plot(BPlot):
             show=show,
             user_data=user_data,
         )
+
+        return _dpg_id

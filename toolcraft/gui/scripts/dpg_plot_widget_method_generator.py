@@ -91,6 +91,7 @@ for _method in get_methods_related_to_plot():
         "\t\t\t  ...",
         "",
         "\t\tReturns:",
+        "\t\t\tint",
         ""
     ]
 
@@ -142,7 +143,7 @@ for _method in get_methods_related_to_plot():
     # method end
     _lines += [
         "\t\ty_axis_dim: int = 1,",
-        "\t):",
+        "\t) -> int:",
         '\t\t"""',
         "\t\tRefer:",
         f"\t\t>>> dpg.{_method.__name__}",
@@ -166,6 +167,8 @@ for _method in get_methods_related_to_plot():
         f"\t\t\tparent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,",
         *_kwargs,
         f"\t\t)",
+        f"\t\t",
+        f"\t\treturn _dpg_id",
         f"\t\t",
     ]
 

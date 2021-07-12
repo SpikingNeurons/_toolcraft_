@@ -5,7 +5,8 @@ import typing as t
 from .. import util
 from .. import marshalling as m
 from .. import error as e
-from . import Widget, Callback, widget
+from . import Widget, Callback, Binder
+from . import widget
 from . import assets
 
 
@@ -162,12 +163,13 @@ class HashableMethodRunnerCallback(Callback):
 
         # get actual result widget we are interested to display ... and make
         # it child to receiver
-        _result_widget = util.rgetattr(
+        util.rgetattr(
             _hashable, self.callable_name
-        )()
-        _receiver.add_child(
-            guid=_unique_guid,
-            widget=_result_widget
+        )(
+            binder=Binder(
+                guid=_unique_guid, parent=_receiver,
+                # before=None
+            )
         )
 
 

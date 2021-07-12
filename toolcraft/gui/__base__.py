@@ -9,6 +9,7 @@ import typing as t
 
 import yaml
 import dearpygui.dearpygui as dpg
+from dearpygui import themes
 import dearpygui.core as internal_dpg
 import numpy as np
 import enum
@@ -579,18 +580,6 @@ class Widget(m.HashableClass, abc.ABC):
         else:
             dpg.configure_item(item=self.dpg_id, show=True)
 
-    def preview(self):
-        """
-        You can see the preview of this widget without adding it to dashboard
-        """
-        _dash = Dashboard(
-            dash_guid="preview",
-            title=f"PREVIEW: {self.__module__}:{self.__class__.__name__}",
-        )
-        _dash.build()
-        _dash.add_child(guid="child", widget=self)
-        _dash.run()
-
     def guid_dom(self) -> t.Tuple[str, t.Union[None, t.Dict]]:
         if not self.is_container:
             return self.guid, None
@@ -604,6 +593,46 @@ class Widget(m.HashableClass, abc.ABC):
 
     def set_theme(self, theme: assets.Theme):
         dpg.set_item_theme(item=self.dpg_id, theme=theme.dpg_id)
+
+
+@dataclasses.dataclass(frozen=True)
+class Binder:
+    """
+    Can bind to parent that is already built
+    """
+    guid: str
+    parent: Widget
+    before: Widget = None
+
+    def __post_init__(self):
+        if not self.parent.is_built:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"The parent is not built so we cannot create binder "
+                    f"instance ...",
+                    f"Make sure to supply parent that is built"
+                ]
+            )
+        if not self.parent.is_container:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"We expect parent to be of container type so that "
+                    f"new widget can be bind ..."
+                ]
+            )
+        if self.guid in self.parent.children.keys():
+            e.validation.NotAllowed(
+                msgs=[
+                    f"You cannot have widget with guid `{self.guid}` to be "
+                    f"bind with this parent"
+                ]
+            )
+
+    def __call__(self, widget: Widget):
+        # bind
+        self.parent.add_child(
+            guid=self.guid, widget=widget, before=self.before,
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -698,6 +727,7 @@ class Dashboard(Widget):
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
+        dpg.set_item_theme(item=_ret, theme=themes.DARK)
 
         # -------------------------------------------------- 03
         # return

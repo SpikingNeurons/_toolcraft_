@@ -44,13 +44,10 @@ class Plotting(gui.CollapsingHeader):
         height=200,
     )
 
-    subplot_msg: gui.Text = gui.Text(
-        msgs=[
-            "This is sub plot with Group ..."
-        ],
+    subplot: gui.SubPlot = gui.SubPlot(
+        rows=2, columns=2,
+        label= "This is sub plot ..."
     )
-
-    subplot: gui.Group = gui.Group()
 
     def plot_some_examples(self):
         # ------------------------------------------------------- 01
@@ -66,62 +63,35 @@ class Plotting(gui.CollapsingHeader):
             y=np.random.normal(0.0, scale=2.0, size=100)
         )
         _line_plot.add_line_series(
-                label="line 2",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100)
+            label="line 2",
+            x=np.arange(100),
+            y=np.random.normal(0.0, scale=2.0, size=100),
         )
-        return
-        # noinspection PyTypeChecker
-        _line_plot_items = [
-            gui.LineSeries(
-                label="line 1",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100)
-            ),
-            gui.LineSeries(
-                label="line 2",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100)
-            )
-        ] + gui.LineSeries.generate_from_npy(
-            data=[
-                np.random.normal(0.0, scale=1.5, size=100)
-                for _ in range(5)
-            ],
-            label=[f"line {i}" for i in range(3, 3+5)]
-        ) + gui.VLineSeries.generate_from_npy(
-            data=[
-                np.asarray([1., 2.]), np.asarray([3., 4.])
-            ],
-            label=["vline1", "vline2"]
-        ) + gui.HLineSeries.generate_from_npy(
-            data=[
-                np.asarray([1., 2.]), np.asarray([3., 4.])
-            ],
-            label=["hline1", "hline2"]
+        _line_plot.add_vline_series(
+            x=[1., 2.], label='vline 1'
         )
-        _line_plot.add_items(items=_line_plot_items)
+        _line_plot.add_vline_series(
+            x=[10., 11.], label='vline 2'
+        )
+        _line_plot.add_hline_series(
+            x=[1., 2.], label='hline 1'
+        )
+        _line_plot.add_hline_series(
+            x=[10., 11.], label='hline 2'
+        )
 
         # ------------------------------------------------------- 03
         _scatter_plot = self.scatter_plot
-        _scatter_plot_items = [
-            gui.ScatterSeries(
-                label="scatter 1",
-                x=np.random.normal(1.0, scale=2.0, size=100),
-                y=np.random.normal(0.0, scale=2.0, size=100)
-            ),
-            gui.ScatterSeries(
-                label="scatter 2",
-                x=np.random.normal(0.0, scale=2.0, size=100),
-                y=np.random.normal(1.0, scale=2.0, size=100),
-            )
-        ] + gui.ScatterSeries.generate_from_npy(
-            data_x=np.random.normal(0.0, scale=1.5, size=500),
-            data_y=np.random.normal(0.0, scale=1.5, size=500),
-            label=np.random.randint(3, 3+5, 500),
-            label_formatter="scatter {label}"
+        _scatter_plot.add_scatter_series(
+            label="scatter 1",
+            x=np.random.normal(1.0, scale=2.0, size=100),
+            y=np.random.normal(0.0, scale=2.0, size=100),
         )
-        _scatter_plot.add_items(items=_scatter_plot_items)
+        _scatter_plot.add_scatter_series(
+            label="scatter 2",
+            x=np.random.normal(0.0, scale=2.0, size=100),
+            y=np.random.normal(1.0, scale=2.0, size=100),
+        )
 
         # ------------------------------------------------------- 04
         _subplot = self.subplot
@@ -130,19 +100,15 @@ class Plotting(gui.CollapsingHeader):
             _subplot.add_child(
                 guid=f"plot_{i}", widget=_plot
             )
-            _plot.add_items(
-                items=[
-                    gui.LineSeries(
-                        label="line 1",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    ),
-                    gui.LineSeries(
-                        label="line 2",
-                        x=np.arange(100),
-                        y=np.random.normal(0.0, scale=2.0, size=100)
-                    ),
-                ]
+            _plot.add_line_series(
+                label="line 1",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
+            )
+            _plot.add_line_series(
+                label="line 2",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
             )
 
 
@@ -179,21 +145,22 @@ class ButtonPlotCallback(gui.Callback):
             # make plot and add to collapsing header
             _plot = gui.Plot(
                 label=f"This is plot for {_sender.label} ...",
-                height=200,
+                height=200, width=-1
             )
             _collapsing_header.add_child(
                 guid="plot", widget=_plot
             )
 
             # add some data
-            _plot.add_items(
-                items=gui.LineSeries.generate_from_npy(
-                    data=[
-                        np.random.normal(0.0, scale=1.5, size=100)
-                        for _ in range(5)
-                    ],
-                    label=[f"line {i}" for i in range(3, 3+5)]
-                )
+            _plot.add_line_series(
+                label="line 1",
+                x=np.random.normal(0.0, scale=2.0, size=100),
+                y=np.random.normal(1.0, scale=2.0, size=100),
+            )
+            _plot.add_scatter_series(
+                label="scatter 1",
+                x=np.random.normal(0.0, scale=2.0, size=100),
+                y=np.random.normal(1.0, scale=2.0, size=100),
             )
 
         # else we do nothing as things are already plotted
@@ -208,32 +175,29 @@ class ButtonPlotCallback(gui.Callback):
 @dataclasses.dataclass(frozen=True)
 class ButtonPlot(gui.CollapsingHeader):
 
-    label: str = "Topic 3 - Button with threaded action"
-
-    button_window: gui.Child = gui.Child()
-
-    display_window: gui.Child = gui.Child()
+    label: str = "Topic 3 - Button with action"
 
     def layout(self):
-        _columns = gui.Group()
-        _columns.add_child(
-            guid="button_window", widget=self.button_window
+        _table = gui.Table(
+            rows=1, columns=2, header_row=False,
+            resizable=True, policy=gui.TableSizingPolicy.StretchSame,
+            borders_innerH=True, borders_outerH=True,
+            borders_innerV=True, borders_outerV=True,
         )
-        _columns.add_child(
-            guid="display_window", widget=self.display_window
-        )
+        _button_cell = _table.get_cell(row=0, column=0)
+        _display_cell = _table.get_cell(row=0, column=1)
         for i in range(5):
-            self.button_window.add_child(
+            _button_cell.add_child(
                 guid=f"button{i}",
                 widget=gui.Button(
                     width=300,
                     label=f"Button {i}",
                     callback=ButtonPlotCallback(
-                        receiver=self.display_window
+                        receiver=_display_cell
                     )
                 ),
             )
-        self.add_child(guid="columns", widget=_columns)
+        self.add_child(guid="columns", widget=_table)
 
 
 @dataclasses.dataclass(frozen=True)

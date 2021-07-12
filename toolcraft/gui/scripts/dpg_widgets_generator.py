@@ -3,7 +3,7 @@ import pathlib
 import textwrap
 import dearpygui.dearpygui as dpg
 
-_method = dpg.add_simple_plot
+_method = dpg.add_table_column
 
 
 _signature = inspect.signature(_method)

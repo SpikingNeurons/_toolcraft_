@@ -10,7 +10,7 @@ from ... import error as e
 from ... import util
 from ... import marshalling as m
 from .. import Color, Widget, Callback
-from .. import helper
+from . import extract_dpg_ids
 
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 
@@ -41,7 +41,7 @@ class ColorMap(m.FrozenEnum, enum.Enum):
         return _DPG_IDS_COLOR_MAP[self]
 
 
-_DPG_IDS_COLOR_MAP = helper.extract_dpg_ids(
+_DPG_IDS_COLOR_MAP = extract_dpg_ids(
     enum_class=ColorMap, dpg_prefix="mvPlotColormap_")
 
 
@@ -71,7 +71,7 @@ class Marker(m.FrozenEnum, enum.Enum):
         return _DPG_IDS_MARKER[self]
 
 
-_DPG_IDS_MARKER = helper.extract_dpg_ids(
+_DPG_IDS_MARKER = extract_dpg_ids(
     enum_class=Marker, dpg_prefix="mvPlotMarker_")
 
 
@@ -99,7 +99,7 @@ class Location(m.FrozenEnum, enum.Enum):
         return _DPG_IDS_LOCATION[self]
 
 
-_DPG_IDS_LOCATION = helper.extract_dpg_ids(
+_DPG_IDS_LOCATION = extract_dpg_ids(
     enum_class=Location, dpg_prefix="mvPlot_Location_")
 
 
@@ -792,7 +792,8 @@ class Plot(Widget):
         except KeyError:
             e.validation.NotAllowed(
                 msgs=[
-                    f"field `y{axis_dim}_axis` is not supplied"
+                    f"field `y{axis_dim}_axis` is not supplied while "
+                    f"creating Plot instance"
                 ]
             )
 
@@ -835,76 +836,6 @@ class Plot(Widget):
             return None
         else:
             return self.drop_callback.fn()
-
-    def add_multi_label_series(
-        self, *,
-        data_x: np.ndarray,
-        data_y: np.ndarray,
-        label: np.ndarray,
-        label_formatter: str,
-        series_type: str,
-        y_axis_dim: int = 1,
-    ):
-        # ---------------------------------------------- 01
-        # validate if lengths are correct
-        if data_x.shape != label.shape:
-            e.code.NotAllowed(
-                msgs=[
-                    f"The data_x and label are not of same length ..."
-                ]
-            )
-        if data_y.shape != label.shape:
-            e.code.NotAllowed(
-                msgs=[
-                    f"The data_y and label are not of same length ..."
-                ]
-            )
-        if data_x.ndim != 1:
-            e.code.NotAllowed(
-                msgs=[
-                    f"We expect data_x to be 1D"
-                ]
-            )
-        if data_y.ndim != 1:
-            e.code.NotAllowed(
-                msgs=[
-                    f"We expect data_y to be 1D"
-                ]
-            )
-        if label.ndim != 1:
-            e.code.NotAllowed(
-                msgs=[
-                    f"We expect label to be 1D"
-                ]
-            )
-
-        # ---------------------------------------------- 02
-        # estimate unique labels
-        _labels = np.unique(label)
-
-        # ---------------------------------------------- 03
-        # loop over categories and generate series
-        _ret = []
-        for _label in _labels:
-            # filter data to plot for this label
-            _filter = label == _label
-            _data_x_filtered = data_x[_filter]
-            _data_y_filtered = data_y[_filter]
-
-            # get formatted label
-            _label_formatted = label_formatter.format(label=_label)
-
-            # add series
-            getattr(self, f"add_{series_type}")(
-                label=_label_formatted,
-                x=_data_x_filtered,
-                y=_data_y_filtered,
-                y_axis_dim=y_axis_dim,
-            )
-
-        # ---------------------------------------------- 04
-        # return
-        return _ret
 
     def add_area_series(
         self, *,

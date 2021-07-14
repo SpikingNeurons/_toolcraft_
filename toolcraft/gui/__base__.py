@@ -676,7 +676,7 @@ class Dashboard(Widget):
     def parent(self) -> "Widget":
         e.code.CodingError(
             msgs=[
-                f"You need not use this property for dash baord"
+                f"You need not use this property for dashboard"
             ]
         )
 

@@ -233,6 +233,8 @@ PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
         (dpg.plot, "BPlot", {}),
         (dpg.add_input_intx, "InputIntX", {}),
         (dpg.add_input_int, "InputInt", {}),
+        (dpg.add_progress_bar, "ProgressBar", {}),
+        (dpg.add_checkbox, "CheckBox", {}),
     ]
     _widget_lines = []
     for _method, _widget_name, _color_fields in _widget_items:

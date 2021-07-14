@@ -2533,3 +2533,203 @@ class InputInt(Widget):
             return None
         else:
             return self.drop_callback.fn()
+
+
+@dataclasses.dataclass(frozen=True)
+class ProgressBar(Widget):
+    """
+    Refer:
+    >>> dpg.add_progress_bar
+
+    Adds a progress bar.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Height of the item.
+    height: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Any = None
+
+    # Overlayed text.
+    overlay: str = ''
+
+    # Normalized value to fill the bar from 0.0 to 1.0.
+    default_value: float = 0.0
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_progress_bar(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            overlay=self.overlay,
+            default_value=self.default_value,
+        )
+        
+        return _ret
+
+    def drag_callback_fn(self, **kwargs):
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn()
+
+    def drop_callback_fn(self, **kwargs):
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn()
+
+
+@dataclasses.dataclass(frozen=True)
+class CheckBox(Widget):
+    """
+    Refer:
+    >>> dpg.add_checkbox
+
+    Adds a checkbox.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Any = None
+
+    # ...
+    default_value: bool = False
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_checkbox(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            default_value=self.default_value,
+        )
+        
+        return _ret
+
+    def callback_fn(self, **kwargs):
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn()
+
+    def drag_callback_fn(self, **kwargs):
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn()
+
+    def drop_callback_fn(self, **kwargs):
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn()

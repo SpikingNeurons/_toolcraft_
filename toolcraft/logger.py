@@ -20,6 +20,7 @@ from datetime import datetime
 import sys
 import io
 from yaspin.core import Yaspin
+import dearpygui.dearpygui as dpg
 
 # log dirs
 # todo: use `tooling.tool.config` to get these settings from user or
@@ -802,12 +803,133 @@ class Spinner(Yaspin):
             return None
 
 
+class DpgLogger:
+    """
+    This class cannot be moved to gui module as it will cause cyclic import
+
+    This can be easy and fun
+
+    For every module there will be instance for dpg_log with unique name
+    self.logger_module
+
+    We need to make tab bar for each module and have child window inside
+    which we will have this tab bar
+
+    Now when logging module changes the active tab in tab bar will switch and
+    the logging text will be scrolled ;)
+
+    Also for progress bar we can have add_progress_bar instead of add_text
+    in self._log method
+
+    This will have an effect of dynamic log window which can switch itself ...
+
+    todo: DO all this when grpc is in place and we have client and backend
+      code segregated ... do not rush as then there will be performance issue
+      ... let logging in backend be synced to client in async updates from
+      backend ... may be when we have blazor based UI we can think of this
+    """
+    def __init__(self, logger_module):
+        self.logger_module = logger_module
+
+    def setup(self, parent=None):
+
+        self._auto_scroll = True
+        self.filter_id = None
+        if parent:
+            self.window_id = parent
+        else:
+            self.window_id = dpg.add_window(
+                label="mvLogger", pos=(200, 200), width=500, height=500)
+        self.count = 0
+        self.flush_count = 1000
+
+        with dpg.group(horizontal=True, parent=self.window_id):
+            dpg.add_checkbox(
+                label="Auto-scroll",
+                default_value=True,
+                callback=lambda sender:self.auto_scroll(dpg.get_value(sender)))
+            dpg.add_button(
+                label="Clear",
+                callback=lambda: dpg.delete_item(
+                    self.filter_id, children_only=True
+                )
+            )
+
+        dpg.add_input_text(
+            label="Filter",
+            callback=lambda sender: dpg.set_value(
+                self.filter_id, dpg.get_value(sender)
+            ),
+            parent=self.window_id)
+        self.child_id = dpg.add_child(
+            parent=self.window_id, autosize_x=True, autosize_y=True)
+        self.filter_id = dpg.add_filter_set(parent=self.child_id)
+
+        with dpg.theme() as self.trace_theme:
+            dpg.add_theme_color(dpg.mvThemeCol_Text, (0, 255, 0, 255))
+
+        with dpg.theme() as self.debug_theme:
+            dpg.add_theme_color(dpg.mvThemeCol_Text, (64, 128, 255, 255))
+
+        with dpg.theme() as self.info_theme:
+            dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 255, 255, 255))
+
+        with dpg.theme() as self.warning_theme:
+            dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 255, 0, 255))
+
+        with dpg.theme() as self.error_theme:
+            dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 0, 0, 255))
+
+        with dpg.theme() as self.critical_theme:
+            dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 0, 0, 255))
+
+    def auto_scroll(self, value):
+        self._auto_scroll = value
+
+    def _log(self, message, theme):
+
+        self.count += 1
+
+        if self.count > self.flush_count:
+            self.clear()
+
+        new_log = dpg.add_text(
+            message, parent=self.filter_id, filter_key=message)
+        dpg.set_item_theme(new_log, theme)
+        if self._auto_scroll:
+            scroll_max = dpg.get_y_scroll_max(self.child_id)
+            dpg.set_y_scroll(self.child_id, -1.0)
+
+    def log(self, message):
+        self._log(message, self.trace_theme)
+
+    def debug(self, message):
+        self._log(message, self.debug_theme)
+
+    def info(self, message):
+        self._log(message, self.info_theme)
+
+    def warning(self, message):
+        self._log(message, self.warning_theme)
+
+    def error(self, message):
+        self._log(message, self.error_theme)
+
+    def critical(self, message):
+        self._log(message, self.critical_theme)
+
+    def clear(self):
+        dpg.delete_item(self.filter_id, children_only=True)
+        self.count = 0
+
+
 @dataclasses.dataclass
 class _LoggerClass:
     module: types.ModuleType
     use_stream_handler: bool = True
     use_file_handler: bool = True
     use_separate_file: bool = False
+    use_dpg_logger: bool = False
     level: int = logging.DEBUG
     stream_handler_level: int = logging.DEBUG
     file_handler_level: int = logging.DEBUG
@@ -889,6 +1011,10 @@ class _LoggerClass:
             # register handler
             self.log.addHandler(_fh)
 
+        # if dpg logger
+        if self.use_dpg_logger:
+            self.dpg_log = DpgLogger()
+
         # Check for global key _LOGGER if set properly ...
         # NOTE: If LOGGER variable is not available that means we are
         #       creating Logger for this (i.e. logger.py) module. Then in
@@ -958,6 +1084,8 @@ class _LoggerClass:
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.debug(_msg)
+            if self.use_dpg_logger:
+                self.dpg_log.debug(_msg)
 
     # level: 20
     def info(
@@ -968,6 +1096,8 @@ class _LoggerClass:
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.info(_msg)
+            if self.use_dpg_logger:
+                self.dpg_log.info(_msg)
 
     # level: 30
     def warning(
@@ -978,6 +1108,8 @@ class _LoggerClass:
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.warning(_msg)
+            if self.use_dpg_logger:
+                self.dpg_log.warning(_msg)
 
     # level: 40
     def error(
@@ -990,6 +1122,8 @@ class _LoggerClass:
             msg=msg, msgs=msgs, prefix=prefix, no_wrap=no_wrap)
         for _msg in wrap_msgs:
             self.log.error(_msg)
+            if self.use_dpg_logger:
+                self.dpg_log.error(_msg)
 
     # level: 50
     def critical(
@@ -1000,6 +1134,8 @@ class _LoggerClass:
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.critical(_msg)
+            if self.use_dpg_logger:
+                self.dpg_log.critical(_msg)
 
 
 def get_logger(

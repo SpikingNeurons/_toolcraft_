@@ -22,13 +22,16 @@ class Font(enum.Enum):
 
 
 class Theme(enum.Enum):
+    Default = enum.auto()
     Dark = enum.auto()
     Light = enum.auto()
 
     @property
     @util.CacheResult
     def dpg_id(self) -> int:
-        if self is self.Dark:
+        if self is self.Default:
+            return 0
+        elif self is self.Dark:
             return themes.create_theme_imgui_dark()
         elif self is self.Light:
             return themes.create_theme_imgui_light()

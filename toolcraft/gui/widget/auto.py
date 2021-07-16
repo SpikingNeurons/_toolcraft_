@@ -209,7 +209,7 @@ class Column(Widget):
             indent_enable=self.indent_enable,
             indent_disable=self.indent_disable,
         )
-
+        
         return _ret
 
 
@@ -250,7 +250,7 @@ class Row(Widget):
             filter_key=self.filter_key,
             user_data=self.user_data,
         )
-
+        
         return _ret
 
 
@@ -442,7 +442,7 @@ class BTable(Widget):
             scrollX=self.scrollX,
             scrollY=self.scrollY,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):
@@ -533,7 +533,7 @@ class TabButton(Widget):
             trailing=self.trailing,
             no_tooltip=self.no_tooltip,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):
@@ -632,7 +632,7 @@ class TabBar(Widget):
             user_data=self.user_data,
             reorderable=self.reorderable,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):
@@ -731,7 +731,7 @@ class Tab(Widget):
             no_tooltip=self.no_tooltip,
             order_mode=self.order_mode,
         )
-
+        
         return _ret
 
     def drag_callback_fn(self, **kwargs):
@@ -838,7 +838,7 @@ class Button(Widget):
             arrow=self.arrow,
             direction=self.direction,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):
@@ -965,7 +965,7 @@ class Combo(Widget):
             no_preview=self.no_preview,
             height_mode=self.height_mode,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):
@@ -1025,7 +1025,7 @@ class InSameLine(Widget):
             xoffset=self.xoffset,
             spacing=self.spacing,
         )
-
+        
         return _ret
 
 
@@ -1067,7 +1067,7 @@ class Separator(Widget):
             pos=self.pos,
             user_data=self.user_data,
         )
-
+        
         return _ret
 
 
@@ -1174,7 +1174,7 @@ class Child(Widget):
             horizontal_scrollbar=self.horizontal_scrollbar,
             menubar=self.menubar,
         )
-
+        
         return _ret
 
     def drag_callback_fn(self, **kwargs):
@@ -1319,7 +1319,7 @@ class Window(Widget):
             popup=self.popup,
             on_close=self.on_close_fn,
         )
-
+        
         return _ret
 
     def on_close_fn(self, **kwargs):
@@ -1404,7 +1404,7 @@ class Text(Widget):
             color=self.color.dpg_value,
             show_label=self.show_label,
         )
-
+        
         return _ret
 
 
@@ -1503,7 +1503,7 @@ class CollapsingHeader(Widget):
             leaf=self.leaf,
             bullet=self.bullet,
         )
-
+        
         return _ret
 
     def drag_callback_fn(self, **kwargs):
@@ -1602,7 +1602,7 @@ class Group(Widget):
             horizontal=self.horizontal,
             horizontal_spacing=self.horizontal_spacing,
         )
-
+        
         return _ret
 
     def drag_callback_fn(self, **kwargs):
@@ -1672,7 +1672,7 @@ class Legend(Widget):
             horizontal=self.horizontal,
             outside=self.outside,
         )
-
+        
         return _ret
 
     def drag_callback_fn(self, **kwargs):
@@ -1763,7 +1763,7 @@ class XAxis(Widget):
             lock_max=self.lock_max,
             time=self.time,
         )
-
+        
         return _ret
 
     def drag_callback_fn(self, **kwargs):
@@ -1854,7 +1854,7 @@ class YAxis(Widget):
             lock_max=self.lock_max,
             time=self.time,
         )
-
+        
         return _ret
 
     def drag_callback_fn(self, **kwargs):
@@ -1994,7 +1994,7 @@ class SubPlot(Widget):
             link_all_y=self.link_all_y,
             column_major=self.column_major,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):
@@ -2099,7 +2099,7 @@ class SimplePlot(Widget):
             min_scale=self.min_scale,
             max_scale=self.max_scale,
         )
-
+        
         return _ret
 
     def drag_callback_fn(self, **kwargs):
@@ -2237,7 +2237,7 @@ class BPlot(Widget):
             anti_aliased=self.anti_aliased,
             equal_aspects=self.equal_aspects,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):
@@ -2370,7 +2370,7 @@ class InputIntX(Widget):
             on_enter=self.on_enter,
             readonly=self.readonly,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):
@@ -2511,7 +2511,7 @@ class InputInt(Widget):
             on_enter=self.on_enter,
             readonly=self.readonly,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):
@@ -2616,7 +2616,7 @@ class ProgressBar(Widget):
             overlay=self.overlay,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
     def drag_callback_fn(self, **kwargs):
@@ -2711,7 +2711,7 @@ class CheckBox(Widget):
             user_data=self.user_data,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
     def callback_fn(self, **kwargs):

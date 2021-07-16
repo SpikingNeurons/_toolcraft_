@@ -189,13 +189,11 @@ def gen_auto_widgets_and_enums():
 import dataclasses
 import dearpygui.dearpygui as dpg
 import typing as t
-import numpy as np
 import enum
 
 from ... import marshalling as m
 from .. import Widget, Callback, Color
-
-PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
+from . import PLOT_DATA_TYPE
 '''
     # ---------------------------------------------------- 02
     _enum_items = [

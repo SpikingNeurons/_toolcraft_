@@ -6,13 +6,11 @@ The rule for now is to
 import abc
 import dataclasses
 import typing as t
-
-import yaml
-import dearpygui.dearpygui as dpg
-from dearpygui import themes
-import dearpygui.core as internal_dpg
-import numpy as np
 import enum
+
+import dearpygui.dearpygui as dpg
+# noinspection PyProtectedMember
+import dearpygui._dearpygui as internal_dpg
 
 from .. import error as e
 from .. import logger
@@ -20,10 +18,11 @@ from .. import util
 from .. import marshalling as m
 from . import assets
 
+_LOGGER = logger.get_logger()
+
+# noinspection PyUnreachableCode
 if False:
     from . import Window
-
-_LOGGER = logger.get_logger()
 
 
 class Color(m.FrozenEnum, enum.Enum):
@@ -730,7 +729,7 @@ class Dashboard(Widget):
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.set_item_theme(item=_ret, theme=themes.DARK)
+        dpg.set_item_theme(item=_ret, theme=assets.Theme.Dark.dpg_id)
 
         # -------------------------------------------------- 03
         # return

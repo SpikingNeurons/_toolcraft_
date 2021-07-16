@@ -1,6 +1,6 @@
 import typing as t
 
-from . import Widget, Dashboard
+from . import __base__
 from . import widget
 from . import callback
 from .. import marshalling as m
@@ -9,8 +9,8 @@ from .. import marshalling as m
 def simple_split_window(
     dash_guid: str,
     title: str
-) -> t.Tuple[Dashboard, widget.Group, widget.Group]:
-    _dash = Dashboard(dash_guid=dash_guid, title=title)
+) -> t.Tuple[__base__.Dashboard, widget.Group, widget.Group]:
+    _dash = __base__.Dashboard(dash_guid=dash_guid, title=title)
 
     # noinspection PyArgumentList
     _table = widget.Table(
@@ -32,8 +32,8 @@ def simple_split_window(
 
 def add_widgets_in_line(
     guid: str,
-    receiver: Widget,
-    widgets: t.List[Widget]
+    receiver: __base__.Widget,
+    widgets: t.List[__base__.Widget]
 ):
     receiver.add_child(
         guid=f"{guid}_{0}",
@@ -56,7 +56,7 @@ def button_bar_from_hashable_callables(
     title: str,
     close_button: bool,
     callable_names: t.Dict[str, str],
-) -> Widget:
+) -> __base__.Widget:
     # ----------------------------------------------------- 01
     # everything will be added to main UI which is window with
     # scrollbar

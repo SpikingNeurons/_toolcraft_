@@ -1,6 +1,13 @@
+
+import dataclasses
+import typing as t
+import dearpygui.dearpygui as dpg
+
 from ... import error as e
-from .. import Widget, Callback, Color
-from .auto import *
+from .. import Widget, Callback
+from . import PLOT_DATA_TYPE
+from .auto import BTable, BPlot, Group
+from .auto import YAxis, XAxis, Legend, Column, Row
 
 
 @dataclasses.dataclass(frozen=True)

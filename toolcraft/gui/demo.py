@@ -226,10 +226,6 @@ def show_demo():
     logger.log_critical("critical message")
 
     def _log(sender, app_data, user_data):
-        print("vvvvvvvvvvvvvvvvvvvvvv")
-        print(sender)
-        print(app_data)
-        print(user_data)
         pass
 
     _create_static_textures()

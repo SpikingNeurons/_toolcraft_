@@ -293,8 +293,6 @@ class Tracker:
         self,
         iter_show_progress_bar: bool = None,
         iter_desc: str = None,
-        iter_start_at: int = None,
-        iter_end_at: int = None,
         **kwargs,
     ) -> "Tracker":
         """
@@ -332,15 +330,10 @@ class Tracker:
                 self.internal.on_call_kwargs = {
                     'iter_show_progress_bar': iter_show_progress_bar,
                     'iter_desc': iter_desc,
-                    'iter_start_at': iter_start_at,
-                    'iter_end_at': iter_end_at,
                     **kwargs
                 }
             else:
-                if iter_show_progress_bar is not None or \
-                    iter_desc is not None or \
-                    iter_start_at is not None or \
-                        iter_end_at is not None:
+                if iter_show_progress_bar is not None or iter_desc is not None:
                     e.code.CodingError(
                         msgs=[
                             f"The class {self.__class__} does not override "

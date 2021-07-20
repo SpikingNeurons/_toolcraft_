@@ -39,7 +39,7 @@ class StateFile(m.Tracker, abc.ABC):
     """
     hashable: m.HashableClass
     # this is the path for which we store state
-    # this is the str to which we attack suffix and save it alongside path dir
+    # this is the str to which we attach suffix and save it alongside path dir
     path_prefix: str
 
     @property

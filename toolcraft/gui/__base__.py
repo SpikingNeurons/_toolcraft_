@@ -665,6 +665,8 @@ class Dashboard(Widget):
     """
     dash_guid: str
     title: str
+    width: int = 1370
+    height: int = 1200
 
     @property
     def name(self) -> str:
@@ -720,7 +722,7 @@ class Dashboard(Widget):
         _ret = dpg.add_window(
             label=self.title,
             on_close=self.on_close,
-            width=1370, height=1200,
+            width=self.width, height=self.height,
         )
 
         # -------------------------------------------------- 02

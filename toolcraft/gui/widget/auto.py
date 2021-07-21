@@ -294,7 +294,7 @@ class BTable(Widget):
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
     # not accessed often.
-    delay_search: str = False
+    delay_search: bool = False
 
     # User data for callbacks.
     user_data: t.Any = None
@@ -396,6 +396,9 @@ class BTable(Widget):
     # Enable vertical scrolling.
     scrollY: bool = False
 
+    # Never load/save settings in .ini file.
+    no_saved_settings: bool = False
+
     @property
     def is_container(self) -> bool:
         return True
@@ -441,6 +444,7 @@ class BTable(Widget):
             no_pad_innerX=self.no_pad_innerX,
             scrollX=self.scrollX,
             scrollY=self.scrollY,
+            no_saved_settings=self.no_saved_settings,
         )
         
         return _ret
@@ -596,7 +600,7 @@ class TabBar(Widget):
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
     # not accessed often.
-    delay_search: str = False
+    delay_search: bool = False
 
     # Scroll tracking
     tracked: bool = False
@@ -689,7 +693,7 @@ class Tab(Widget):
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
     # not accessed often.
-    delay_search: str = False
+    delay_search: bool = False
 
     # Scroll tracking
     tracked: bool = False
@@ -1116,7 +1120,7 @@ class Child(Widget):
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
     # not accessed often.
-    delay_search: str = False
+    delay_search: bool = False
 
     # Scroll tracking
     tracked: bool = False
@@ -1221,7 +1225,7 @@ class Window(Widget):
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
     # not accessed often.
-    delay_search: str = False
+    delay_search: bool = False
 
     # User data for callbacks.
     user_data: t.Any = None
@@ -1282,6 +1286,9 @@ class Window(Widget):
     # background behind the window.
     popup: bool = False
 
+    # Never load/save settings in .ini file.
+    no_saved_settings: bool = False
+
     # Callback ran when window is closed.
     on_close: Callback = None
 
@@ -1317,6 +1324,7 @@ class Window(Widget):
             no_background=self.no_background,
             modal=self.modal,
             popup=self.popup,
+            no_saved_settings=self.no_saved_settings,
             on_close=self.on_close_fn,
         )
         
@@ -1447,7 +1455,7 @@ class CollapsingHeader(Widget):
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
     # not accessed often.
-    delay_search: str = False
+    delay_search: bool = False
 
     # Scroll tracking
     tracked: bool = False
@@ -1562,7 +1570,7 @@ class Group(Widget):
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
     # not accessed often.
-    delay_search: str = False
+    delay_search: bool = False
 
     # Scroll tracking
     tracked: bool = False
@@ -1914,7 +1922,7 @@ class SubPlot(Widget):
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
     # not accessed often.
-    delay_search: str = False
+    delay_search: bool = False
 
     # Scroll tracking
     tracked: bool = False
@@ -2163,7 +2171,7 @@ class BPlot(Widget):
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
     # not accessed often.
-    delay_search: str = False
+    delay_search: bool = False
 
     # Scroll tracking
     tracked: bool = False
@@ -2204,6 +2212,43 @@ class BPlot(Widget):
     # ...
     equal_aspects: bool = False
 
+    # enables panning when held
+    pan_button: int = 0
+
+    # optional modifier that must be held for panning
+    pan_mod: int = -1
+
+    # fits visible data when double clicked
+    fit_button: int = 0
+
+    # opens plot context menu (if enabled) when clicked
+    context_menu_button: int = 1
+
+    # begins box selection when pressed and confirms selection when released
+    box_select_button: int = 1
+
+    # begins box selection when pressed and confirms selection when released
+    box_select_mod: int = -1
+
+    # cancels active box selection when pressed
+    box_select_cancel_button: int = 0
+
+    # begins query selection when pressed and end query selection when
+    # released
+    query_button: int = 2
+
+    # optional modifier that must be held for query selection
+    query_mod: int = -1
+
+    # when held, active box selections turn into queries
+    query_toggle_mod: int = 17
+
+    # expands active box selection/query horizontally to plot edge when held
+    horizontal_mod: int = 18
+
+    # expands active box selection/query vertically to plot edge when held
+    vertical_mod: int = 16
+
     @property
     def is_container(self) -> bool:
         return True
@@ -2236,6 +2281,18 @@ class BPlot(Widget):
             crosshairs=self.crosshairs,
             anti_aliased=self.anti_aliased,
             equal_aspects=self.equal_aspects,
+            pan_button=self.pan_button,
+            pan_mod=self.pan_mod,
+            fit_button=self.fit_button,
+            context_menu_button=self.context_menu_button,
+            box_select_button=self.box_select_button,
+            box_select_mod=self.box_select_mod,
+            box_select_cancel_button=self.box_select_cancel_button,
+            query_button=self.query_button,
+            query_mod=self.query_mod,
+            query_toggle_mod=self.query_toggle_mod,
+            horizontal_mod=self.horizontal_mod,
+            vertical_mod=self.vertical_mod,
         )
         
         return _ret

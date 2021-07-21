@@ -18,6 +18,7 @@ def get_methods_related_to_plot():
         if _name in [
             'plot', 'subplots', 'add_plot',
             'add_plot_axis', 'add_plot_legend', 'add_simple_plot',
+            'add_subplots',
         ]:
             continue
 

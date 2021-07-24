@@ -1837,6 +1837,28 @@ def compute_class_weights(
     # return _unique_labels, _unique_labels_weight
 
 
+def shuffle_arrays(
+    arrays: t.List[np.ndarray],
+    set_seed: int = -1,
+):
+    """
+    Refer to: https://stackoverflow.com/questions/4601373
+
+    Shuffles arrays in-place, in the same order, along axis=0
+
+    Parameters:
+    -----------
+    arrays : List of NumPy arrays.
+    set_seed : Seed value if int >= 0, else seed is random.
+    """
+    assert all(len(arr) == len(arrays[0]) for arr in arrays)
+    seed = np.random.randint(0, 2**(32 - 1) - 1) if set_seed < 0 else set_seed
+
+    for arr in arrays:
+        rstate = np.random.RandomState(seed)
+        rstate.shuffle(arr)
+
+
 def np_to_lnp(data: np.ndarray) -> t.List:
     """
     Convert any n-dim array to nested list of lists of 1D array

@@ -1857,6 +1857,8 @@ def shuffle_arrays(
     for arr in arrays:
         rstate = np.random.RandomState(seed)
         rstate.shuffle(arr)
+    # reset the state
+    np.random.seed(None)
 
 
 def np_to_lnp(data: np.ndarray) -> t.List:

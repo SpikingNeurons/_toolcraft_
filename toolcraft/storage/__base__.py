@@ -331,7 +331,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # job of user to handle in respective parent_folder class
         if self.uses_parent_folder:
             # noinspection PyUnresolvedReferences
-            _parent_folder = self.parent_folder
+            _parent_folder = self.parent_folder  # type: Folder
             if _parent_folder.contains is not None:
                 # add item ...
                 # Note that item can already exist due to sync in that case

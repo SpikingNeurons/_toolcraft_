@@ -1806,7 +1806,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         )
 
     def get_files(
-            self, *, file_keys: t.List[str]
+        self, *, file_keys: t.List[str]
     ) -> t.Dict[str, pathlib.Path]:
         return {
             file_key: self.path / file_key

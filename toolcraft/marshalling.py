@@ -134,13 +134,17 @@ class Internal:
         # set again
         if key not in self.vars_that_can_be_overwritten():
             if self.has(key):
+                if isinstance(value, HashableClass):
+                    _str_value = value.yaml()
+                else:
+                    _str_value = str(value)
                 e.code.NotAllowed(
                     msgs=[
                         f"The item `{key}` is already present in the internal "
                         f"object.",
                         f"Please refrain from overwriting it as it is "
                         f"configured to be written only once.",
-                        f"You are overwriting it with value `{value}`",
+                        f"You are overwriting it with value `{_str_value}`",
                         f"In case you want to overwrite it then override "
                         f"method `self.vars_that_can_be_overwritten` so "
                         f"that we allow you to overwrite it."

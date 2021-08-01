@@ -13,10 +13,10 @@ from .auto import YAxis, XAxis, Legend, Column, Row
 @dataclasses.dataclass(frozen=True)
 class Table(BTable):
     # ...
-    rows: int = None
+    rows: t.Union[int, t.List[Row]] = None
 
     # ...
-    columns: t.Union[int, t.List[str]] = None
+    columns: t.Union[int, t.List[t.Union[str, Column]]] = None
 
     def init_validate(self):
         # call super
@@ -51,7 +51,8 @@ class Table(BTable):
         elif isinstance(self.columns, list):
             for _ in self.columns:
                 self.add_child(
-                    guid=f"c{_}", widget=Column(label=_),
+                    guid=f"c{_}",
+                    widget=Column(label=_) if isinstance(_, str) else _,
                 )
             _num_columns = len(self.columns)
         else:
@@ -63,9 +64,12 @@ class Table(BTable):
             raise
 
         # add rows
-        for _ in range(self.rows):
-            # make row
-            _row = Row()
+        if isinstance(self.rows, int):
+            _rows = [Row() for _ in range(self.rows)]
+        else:
+            _rows = self.rows
+        for _, _row in enumerate(_rows):
+            # add row
             self.add_child(
                 guid=f"r{_}", widget=_row,
             )

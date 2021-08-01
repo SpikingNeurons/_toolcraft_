@@ -120,35 +120,35 @@ class Plot(BPlot):
         # add legend and axis which are same as widgets but are immediate
         # part of Plot widget and needs to be added well in advance
         if self.legend is not None:
-            self.add_child(
-                guid="_l",
-                widget=Legend(label=self.legend)
-                if isinstance(self.legend, str) else self.legend
-            )
+            if isinstance(self.legend, str):
+                self.add_child(
+                    guid="legend",
+                    widget=Legend(label=self.legend)
+                )
         if self.x_axis is not None:
-            self.add_child(
-                guid="_x",
-                widget=XAxis(label=self.x_axis)
-                if isinstance(self.x_axis, str) else self.x_axis
-            )
+            if isinstance(self.x_axis, str):
+                self.add_child(
+                    guid="x_axis",
+                    widget=XAxis(label=self.x_axis)
+                )
         if self.y1_axis is not None:
-            self.add_child(
-                guid="_y1",
-                widget=YAxis(label=self.y1_axis)
-                if isinstance(self.y1_axis, str) else self.y1_axis
-            )
+            if isinstance(self.y1_axis, str):
+                self.add_child(
+                    guid="y1_axis",
+                    widget=YAxis(label=self.y1_axis)
+                )
         if self.y2_axis is not None:
-            self.add_child(
-                guid="_y2",
-                widget=YAxis(label=self.y2_axis)
-                if isinstance(self.y2_axis, str) else self.y2_axis
-            )
+            if isinstance(self.y2_axis, str):
+                self.add_child(
+                    guid="y2_axis",
+                    widget=YAxis(label=self.y2_axis)
+                )
         if self.y3_axis is not None:
-            self.add_child(
-                guid="_y3",
-                widget=YAxis(label=self.y3_axis)
-                if isinstance(self.y3_axis, str) else self.y3_axis
-            )
+            if isinstance(self.y3_axis, str):
+                self.add_child(
+                    guid="y3_axis",
+                    widget=YAxis(label=self.y3_axis)
+                )
 
     def clear(self):
         # plot series are added to YAxis so we clear its children to clear
@@ -167,7 +167,7 @@ class Plot(BPlot):
             )
         try:
             # noinspection PyTypeChecker
-            return self.children[f"_y{axis_dim}"]
+            return self.children[f"y{axis_dim}_axis"]
         except KeyError:
             e.validation.NotAllowed(
                 msgs=[
@@ -179,7 +179,7 @@ class Plot(BPlot):
     def get_x_axis(self) -> XAxis:
         try:
             # noinspection PyTypeChecker
-            return self.children["_x"]
+            return self.children["x_axis"]
         except KeyError:
             e.validation.NotAllowed(
                 msgs=[
@@ -190,7 +190,7 @@ class Plot(BPlot):
     def get_legend(self) -> Legend:
         try:
             # noinspection PyTypeChecker
-            return self.children["_l"]
+            return self.children["legend"]
         except KeyError:
             e.validation.NotAllowed(
                 msgs=[

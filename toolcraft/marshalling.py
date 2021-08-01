@@ -1383,7 +1383,7 @@ class HashableClass(YamlRepr, abc.ABC):
 
 SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
     int, float, str, slice,
-    np.float32, np.int64,
+    np.float32, np.int64, np.int32,
     datetime.datetime, None,
     FrozenDict, FrozenEnum, FrozenKeras, HashableClass,
     pa.Schema,

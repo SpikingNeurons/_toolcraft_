@@ -233,6 +233,7 @@ from . import PLOT_DATA_TYPE
         (dpg.add_input_int, "InputInt", {}),
         (dpg.add_progress_bar, "ProgressBar", {}),
         (dpg.add_checkbox, "CheckBox", {}),
+        (dpg.add_colormap_scale, "ColorMapScale", {}),
     ]
     _widget_lines = []
     for _method, _widget_name, _color_fields in _widget_items:

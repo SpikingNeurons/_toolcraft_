@@ -2788,3 +2788,72 @@ class CheckBox(Widget):
             return None
         else:
             return self.drop_callback.fn()
+
+
+@dataclasses.dataclass(frozen=True)
+class ColorMapScale(Widget):
+    """
+    Refer:
+    >>> dpg.add_colormap_scale
+
+    Adds a legend that pairs values with colors. This is typically used
+    with a heat series.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Height of the item.
+    height: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # User data for callbacks.
+    user_data: t.Any = None
+
+    # ...
+    default_value: int = 0
+
+    # Sets the min number of the color scale. Typically is the same as the
+    # min scale from the heat series.
+    min_scale: float = 0.0
+
+    # Sets the max number of the color scale. Typically is the same as the
+    # max scale from the heat series.
+    max_scale: float = 1.0
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_colormap_scale(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            show=self.show,
+            pos=self.pos,
+            user_data=self.user_data,
+            default_value=self.default_value,
+            min_scale=self.min_scale,
+            max_scale=self.max_scale,
+        )
+        
+        return _ret

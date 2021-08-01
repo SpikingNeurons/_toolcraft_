@@ -419,7 +419,7 @@ class Widget(m.HashableClass, abc.ABC):
         if self.is_container:
             # ------------------------------------------------ 03.01
             # backup children dict before clearing it
-            # this si needed because in some cases there will be add_child
+            # this is needed because in some cases there will be add_child
             # performed before build, but we need to give preference to layout
             # method and then again append the backed up elements
             _backup_children = {

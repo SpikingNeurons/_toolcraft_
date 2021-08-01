@@ -1476,9 +1476,14 @@ def show_demo():
                 with dpg.file_dialog(label="Demo File Dialog", show=False,
                                      callback=lambda s, a, u: print(s, a, u)):
                     dpg.add_file_extension(".*", color=(255, 255, 255, 255))
+                    dpg.add_file_extension(
+                        "Source files (*.cpp *.h *.hpp){.cpp,.h,.hpp}",
+                        color=(0, 255, 255, 255))
                     dpg.add_file_extension(".cpp", color=(255, 255, 0, 255))
-                    dpg.add_file_extension(".h", color=(255, 0, 255, 255))
-                    dpg.add_file_extension(".py", color=(0, 255, 0, 255))
+                    dpg.add_file_extension(".h", color=(255, 0, 255, 255),
+                                           custom_text="header")
+                    dpg.add_file_extension("Python(.py){.py}",
+                                           color=(0, 255, 0, 255))
                     # dpg.add_button(label="Button on file dialog")
 
                 dpg.add_button(label="Show File Selector",
@@ -3063,9 +3068,10 @@ def show_demo():
                             dpg.add_plot_axis(dpg.mvYAxis, label="y")
 
                             dpg.draw_line((0, 0), (1, 2),
-                                          color=(255, 0, 0, 255), thickness=1)
+                                          color=(255, 0, 0, 255),
+                                          thickness=0.01)
                             dpg.draw_text((0, 0), "Origin",
-                                          color=(250, 250, 250, 255), size=15)
+                                          color=(250, 250, 250, 255), size=0.1)
 
                 with dpg.tab(label="Help"):
 

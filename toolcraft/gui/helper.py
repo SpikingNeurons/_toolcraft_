@@ -53,6 +53,35 @@ def add_widgets_in_line(
         )
 
 
+def tab_bar_from_hashable_callables(
+    title: str,
+    hashable: m.HashableClass,
+    callable_names: t.Dict[str, str],
+    binder: __base__.Binder
+):
+    # tab bar
+    _tab_bar = widget.TabBar(
+        label=title
+    )
+
+    # bind
+    binder(_tab_bar)
+
+    # loop over callable names
+    for k, v in callable_names.items():
+        _tab = widget.Tab(
+            label=k
+        )
+        _tab_bar.add_child(
+            guid=k, widget=_tab
+        )
+        getattr(hashable, v)(
+            binder=__base__.Binder(
+                guid=k, parent=_tab
+            )
+        )
+
+
 def button_bar_from_hashable_callables(
     tab_group_name: str,
     hashable: m.HashableClass,

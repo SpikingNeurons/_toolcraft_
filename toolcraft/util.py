@@ -1746,26 +1746,6 @@ class HookUp:
             return _ret
 
 
-def add_channels_info_to_shape_tuple(
-    shape: t.Union[t.Tuple, t.List],
-    num_channels: int,
-    channel_first: bool,
-) -> t.Union[t.Tuple, t.List]:
-    _l = list(shape)
-    if channel_first:
-        _l.insert(1, num_channels)
-    else:
-        _l.append(num_channels)
-
-    if isinstance(shape, tuple):
-        return tuple(_l)
-    elif isinstance(shape, list):
-        return _l
-    else:
-        e.code.ShouldNeverHappen(msgs=[])
-        raise
-
-
 def import_from_str(
     module: str, name: str
 ) -> t.Any:

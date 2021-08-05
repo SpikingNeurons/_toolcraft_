@@ -193,7 +193,6 @@ import enum
 
 from ... import marshalling as m
 from .. import Widget, Callback, Color
-from . import PLOT_DATA_TYPE
 '''
     # ---------------------------------------------------- 02
     _enum_items = [

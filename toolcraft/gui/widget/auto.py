@@ -12,7 +12,6 @@ import enum
 
 from ... import marshalling as m
 from .. import Widget, Callback, Color
-from . import PLOT_DATA_TYPE
 
 
 class TableSizingPolicy(m.FrozenEnum, enum.Enum):
@@ -119,6 +118,10 @@ class Column(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     init_width_or_weight: float = 0.0
 
@@ -191,6 +194,7 @@ class Column(Widget):
             width=self.width,
             show=self.show,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             init_width_or_weight=self.init_width_or_weight,
             default_hide=self.default_hide,
             default_sort=self.default_sort,
@@ -237,6 +241,10 @@ class Row(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     @property
     def is_container(self) -> bool:
         return True
@@ -249,6 +257,7 @@ class Row(Widget):
             show=self.show,
             filter_key=self.filter_key,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
         )
         
         return _ret
@@ -298,6 +307,10 @@ class BTable(Widget):
 
     # User data for callbacks.
     user_data: t.Any = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
 
     # show headers at the top of the columns
     header_row: bool = True
@@ -417,6 +430,7 @@ class BTable(Widget):
             filter_key=self.filter_key,
             delay_search=self.delay_search,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             header_row=self.header_row,
             inner_width=self.inner_width,
             policy=0 if self.policy is None else self.policy.dpg_id,
@@ -500,6 +514,10 @@ class TabButton(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Disable reordering this tab or having another tab cross over this tab.
     no_reorder: bool = False
 
@@ -532,6 +550,7 @@ class TabButton(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             no_reorder=self.no_reorder,
             leading=self.leading,
             trailing=self.trailing,
@@ -611,6 +630,10 @@ class TabBar(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Allows for the user to change the order of the tabs.
     reorderable: bool = False
 
@@ -634,6 +657,7 @@ class TabBar(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             reorderable=self.reorderable,
         )
         
@@ -704,6 +728,10 @@ class Tab(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Creates a button on the tab that can hide the tab.
     closable: bool = False
 
@@ -731,6 +759,7 @@ class Tab(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             closable=self.closable,
             no_tooltip=self.no_tooltip,
             order_mode=self.order_mode,
@@ -807,6 +836,10 @@ class Button(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Small button, useful for embedding in text.
     small: bool = False
 
@@ -838,6 +871,7 @@ class Button(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             small=self.small,
             arrow=self.arrow,
             direction=self.direction,
@@ -925,6 +959,10 @@ class Combo(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     default_value: str = ''
 
@@ -963,6 +1001,7 @@ class Combo(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             default_value=self.default_value,
             popup_align_left=self.popup_align_left,
             no_arrow_button=self.no_arrow_button,
@@ -1010,6 +1049,10 @@ class InSameLine(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Offset from containing window.
     xoffset: float = 0.0
 
@@ -1026,6 +1069,7 @@ class InSameLine(Widget):
             label=self.label,
             show=self.show,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             xoffset=self.xoffset,
             spacing=self.spacing,
         )
@@ -1058,6 +1102,10 @@ class Separator(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     @property
     def is_container(self) -> bool:
         return False
@@ -1070,6 +1118,7 @@ class Separator(Widget):
             show=self.show,
             pos=self.pos,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
         )
         
         return _ret
@@ -1131,6 +1180,10 @@ class Child(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Shows/Hides the border around the sides.
     border: bool = True
 
@@ -1171,6 +1224,7 @@ class Child(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             border=self.border,
             autosize_x=self.autosize_x,
             autosize_y=self.autosize_y,
@@ -1229,6 +1283,10 @@ class Window(Widget):
 
     # User data for callbacks.
     user_data: t.Any = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
 
     # Minimum window size.
     min_size: t.List[int] = dataclasses.field(default_factory=list)
@@ -1307,6 +1365,7 @@ class Window(Widget):
             pos=self.pos,
             delay_search=self.delay_search,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             min_size=self.min_size,
             max_size=self.max_size,
             menubar=self.menubar,
@@ -1378,6 +1437,10 @@ class Text(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Number of pixels until wrapping starts.
     wrap: int = -1
 
@@ -1407,6 +1470,7 @@ class Text(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             wrap=self.wrap,
             bullet=self.bullet,
             color=self.color.dpg_value,
@@ -1466,6 +1530,10 @@ class CollapsingHeader(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Adds the ability to hide this widget by pressing the (x) in the top
     # right of widget.
     closable: bool = False
@@ -1504,6 +1572,7 @@ class CollapsingHeader(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             closable=self.closable,
             default_open=self.default_open,
             open_on_double_click=self.open_on_double_click,
@@ -1581,6 +1650,10 @@ class Group(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Forces child widgets to be added in a horizontal layout.
     horizontal: bool = False
 
@@ -1607,6 +1680,7 @@ class Group(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             horizontal=self.horizontal,
             horizontal_spacing=self.horizontal_spacing,
         )
@@ -1654,6 +1728,10 @@ class Legend(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # location, mvPlot_Location_*
     location: int = 5
 
@@ -1676,6 +1754,7 @@ class Legend(Widget):
             drop_callback=self.drop_callback_fn,
             show=self.show,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             location=self.location,
             horizontal=self.horizontal,
             outside=self.outside,
@@ -1724,6 +1803,10 @@ class XAxis(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     no_gridlines: bool = False
 
@@ -1762,6 +1845,7 @@ class XAxis(Widget):
             drop_callback=self.drop_callback_fn,
             show=self.show,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             no_gridlines=self.no_gridlines,
             no_tick_marks=self.no_tick_marks,
             no_tick_labels=self.no_tick_labels,
@@ -1815,6 +1899,10 @@ class YAxis(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     no_gridlines: bool = False
 
@@ -1853,6 +1941,7 @@ class YAxis(Widget):
             drop_callback=self.drop_callback_fn,
             show=self.show,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             no_gridlines=self.no_gridlines,
             no_tick_marks=self.no_tick_marks,
             no_tick_labels=self.no_tick_labels,
@@ -1933,6 +2022,10 @@ class SubPlot(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     row_ratios: t.List[float] = dataclasses.field(default_factory=list)
 
@@ -1990,6 +2083,7 @@ class SubPlot(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             row_ratios=self.row_ratios,
             column_ratios=self.column_ratios,
             no_title=self.no_title,
@@ -2062,6 +2156,10 @@ class SimplePlot(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     default_value: t.List[float] = ()
 
@@ -2100,6 +2198,7 @@ class SimplePlot(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             default_value=self.default_value,
             overlay=self.overlay,
             histogram=self.histogram,
@@ -2181,6 +2280,10 @@ class BPlot(Widget):
 
     # User data for callbacks.
     user_data: t.Any = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
 
     # ...
     no_title: bool = False
@@ -2271,6 +2374,7 @@ class BPlot(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             no_title=self.no_title,
             no_menus=self.no_menus,
             no_box_select=self.no_box_select,
@@ -2372,6 +2476,10 @@ class InputIntX(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     default_value: t.List[int] = (0, 0, 0, 0)
 
@@ -2418,6 +2526,7 @@ class InputIntX(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             default_value=self.default_value,
             min_value=self.min_value,
             max_value=self.max_value,
@@ -2505,6 +2614,10 @@ class InputInt(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     default_value: int = 0
 
@@ -2558,6 +2671,7 @@ class InputInt(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             default_value=self.default_value,
             min_value=self.min_value,
             max_value=self.max_value,
@@ -2643,6 +2757,10 @@ class ProgressBar(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # Overlayed text.
     overlay: str = ''
 
@@ -2670,6 +2788,7 @@ class ProgressBar(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             overlay=self.overlay,
             default_value=self.default_value,
         )
@@ -2742,6 +2861,10 @@ class CheckBox(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     default_value: bool = False
 
@@ -2766,6 +2889,7 @@ class CheckBox(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             default_value=self.default_value,
         )
         
@@ -2825,6 +2949,10 @@ class ColorMapScale(Widget):
     # User data for callbacks.
     user_data: t.Any = None
 
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
     # ...
     default_value: int = 0
 
@@ -2851,6 +2979,7 @@ class ColorMapScale(Widget):
             show=self.show,
             pos=self.pos,
             user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
             default_value=self.default_value,
             min_scale=self.min_scale,
             max_scale=self.max_scale,

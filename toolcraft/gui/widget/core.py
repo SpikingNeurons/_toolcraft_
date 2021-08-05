@@ -211,6 +211,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         fill: t.List[int] = (0, 0, 0, -255),
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
@@ -237,6 +238,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             fill:
               ...
             contribute_to_bounds:
@@ -258,6 +262,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             fill=fill,
             contribute_to_bounds=contribute_to_bounds,
         )
@@ -273,6 +278,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         weight: float = 1.0,
         horizontal: bool = False,
         y_axis_dim: int = 1,
@@ -299,6 +305,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             weight:
               ...
             horizontal:
@@ -320,6 +329,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             weight=weight,
             horizontal=horizontal,
         )
@@ -338,6 +348,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         bull_color: t.List[int] = (0, 255, 113, 255),
         bear_color: t.List[int] = (218, 13, 79, 255),
         weight: int = 0.25,
@@ -372,6 +383,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             bull_color:
               ...
             bear_color:
@@ -400,6 +414,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             bull_color=bull_color,
             bear_color=bear_color,
             weight=weight,
@@ -416,6 +431,7 @@ class Plot(BPlot):
         callback: t.Optional[Callback] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         default_value: t.Any = 0.0,
         color: t.List[int] = (0, 0, 0, -255),
         thickness: float = 1.0,
@@ -443,6 +459,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             default_value:
               ...
             color:
@@ -469,6 +488,7 @@ class Plot(BPlot):
             callback=None if callback is None else callback.fn,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             default_value=default_value,
             color=color,
             thickness=thickness,
@@ -486,6 +506,7 @@ class Plot(BPlot):
         callback: t.Optional[Callback] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         default_value: t.Any = (0.0, 0.0),
         color: t.List[int] = (0, 0, 0, -255),
         thickness: float = 1.0,
@@ -512,6 +533,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             default_value:
               ...
             color:
@@ -536,6 +560,7 @@ class Plot(BPlot):
             callback=None if callback is None else callback.fn,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             default_value=default_value,
             color=color,
             thickness=thickness,
@@ -555,6 +580,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         contribute_to_bounds: bool = True,
         horizontal: bool = False,
         y_axis_dim: int = 1,
@@ -585,6 +611,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             contribute_to_bounds:
               ...
             horizontal:
@@ -608,6 +637,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             contribute_to_bounds=contribute_to_bounds,
             horizontal=horizontal,
         )
@@ -624,6 +654,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         scale_min: float = 0.0,
         scale_max: float = 1.0,
         bounds_min: t.Any = (0.0, 0.0),
@@ -657,6 +688,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             scale_min:
               Sets the color scale min. Typically paired with the color
               scale widget scale_min.
@@ -689,6 +723,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             scale_min=scale_min,
             scale_max=scale_max,
             bounds_min=bounds_min,
@@ -707,6 +742,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         bins: int = -1,
         bar_scale: float = 1.0,
         min_range: float = 0.0,
@@ -737,6 +773,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             bins:
               ...
             bar_scale:
@@ -769,6 +808,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             bins=bins,
             bar_scale=bar_scale,
             min_range=min_range,
@@ -789,6 +829,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
@@ -812,6 +853,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             contribute_to_bounds:
               ...
             y_axis_dim:
@@ -830,6 +874,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             contribute_to_bounds=contribute_to_bounds,
         )
 
@@ -845,6 +890,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         uv_min: t.List[float] = (0.0, 0.0),
         uv_max: t.List[float] = (1.0, 1.0),
         tint_color: t.List[int] = (255, 255, 255, 255),
@@ -874,6 +920,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             uv_min:
               normalized texture coordinates
             uv_max:
@@ -898,6 +947,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             uv_min=uv_min,
             uv_max=uv_max,
             tint_color=tint_color,
@@ -914,6 +964,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -938,6 +989,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -955,6 +1009,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
         )
 
         return _dpg_id
@@ -971,6 +1026,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         format: str = '%0.2f',
         angle: float = 90.0,
         normalize: bool = False,
@@ -1004,6 +1060,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             format:
               ...
             angle:
@@ -1030,6 +1089,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             format=format,
             angle=angle,
             normalize=normalize,
@@ -1044,6 +1104,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         default_value: t.Any = (0.0, 0.0),
         offset: t.List[float] = (0.0, 0.0),
         color: t.List[int] = (0, 0, 0, -255),
@@ -1068,6 +1129,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             default_value:
               ...
             offset:
@@ -1091,6 +1155,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             default_value=default_value,
             offset=offset,
             color=color,
@@ -1108,6 +1173,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -1132,6 +1198,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -1149,6 +1218,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
         )
 
         return _dpg_id
@@ -1162,6 +1232,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         y2: t.Any = [],
         y_axis_dim: int = 1,
     ) -> int:
@@ -1187,6 +1258,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             y2:
               ...
             y_axis_dim:
@@ -1206,6 +1280,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             y2=y2,
         )
 
@@ -1220,6 +1295,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -1244,6 +1320,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -1261,6 +1340,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
         )
 
         return _dpg_id
@@ -1275,6 +1355,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -1302,6 +1383,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -1320,6 +1404,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
         )
 
         return _dpg_id
@@ -1333,6 +1418,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         x_offset: int = Ellipsis,
         y_offset: int = Ellipsis,
         vertical: bool = False,
@@ -1360,6 +1446,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             x_offset:
               ...
             y_offset:
@@ -1383,6 +1472,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
             x_offset=x_offset,
             y_offset=y_offset,
             vertical=vertical,
@@ -1398,6 +1488,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         user_data: t.Any = None,
+        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -1420,6 +1511,9 @@ class Plot(BPlot):
               Attempt to render widget.
             user_data:
               User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -1436,6 +1530,7 @@ class Plot(BPlot):
             source=0 if source is None else source.dpg_id,
             show=show,
             user_data=user_data,
+            use_internal_label=use_internal_label,
         )
 
         return _dpg_id

@@ -88,24 +88,26 @@ def button_bar_from_hashable_callables(
     title: str,
     close_button: bool,
     callable_names: t.Dict[str, str],
+    no_main_ui: bool = False,
 ) -> __base__.Widget:
     # ----------------------------------------------------- 01
     # everything will be added to main UI which is window with
     # scrollbar
-    # todo: instead of child we can also use Window which can pop out
-    _main_ui = widget.CollapsingHeader(
-        label=title, default_open=True,
-    )
-
-    # ----------------------------------------------------- 02
-    # make title and add it main ui
-    _main_ui.add_child(
-        guid="bb_sub_title",
-        widget=widget.Text(
-            f"{hashable.group_by}: {hashable.hex_hash}",
-            bullet=True,
+    if no_main_ui:
+        _main_ui = widget.Group()
+    else:
+        # todo: instead of child we can also use Window which can pop out
+        _main_ui = widget.CollapsingHeader(
+            label=title, default_open=True,
         )
-    )
+        # make title and add it main ui
+        _main_ui.add_child(
+            guid="bb_sub_title",
+            widget=widget.Text(
+                f"{hashable.group_by}: {hashable.hex_hash}",
+                bullet=True,
+            )
+        )
 
     # ----------------------------------------------------- 03
     # make buttons and add make them plot to _button_receiver

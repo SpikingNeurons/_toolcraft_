@@ -3,6 +3,8 @@ import dearpygui.themes as themes
 from dearpygui.logger import mvLogger
 from math import sin, cos
 import random
+if False:
+    from dearpygui import demo
 
 demo_texture_container = dpg.add_texture_registry(
     label="Demo Texture Container")

@@ -7,7 +7,7 @@ from ... import error as e
 from .. import Widget, Callback
 from . import PLOT_DATA_TYPE
 from .auto import BTable, BPlot, Group
-from .auto import YAxis, XAxis, Legend, Column, Row
+from .auto import YAxis, XAxis, Legend, Column, Row, Text
 
 
 @dataclasses.dataclass(frozen=True)
@@ -90,6 +90,33 @@ class Table(BTable):
     def get_row(self, row: int) -> Row:
         # noinspection PyTypeChecker
         return self.children[f"r{row}"]
+
+    @classmethod
+    def table_from_dict(
+        cls, input_dict: t.Dict,
+    ) -> "Table":
+        _rows = list(input_dict.keys())
+        _columns = ["\\"] + list(input_dict[_rows[0]].keys())
+        _table = Table(
+            rows=len(_rows), columns=_columns,
+        )
+        for _rid, _r in enumerate(_rows):
+            for _cid, _c in enumerate(_columns):
+                if _c == "\\":
+                    _table.get_cell(
+                        row=_rid, column=_cid
+                    ).add_child(
+                        guid=f"{_rid}_{_cid}",
+                        widget=Text(default_value=f"{_r}")
+                    )
+                else:
+                    _table.get_cell(
+                        row=_rid, column=_cid
+                    ).add_child(
+                        guid=f"{_rid}_{_cid}",
+                        widget=Text(default_value=f"{input_dict[_r][_c]}")
+                    )
+        return _table
 
 
 # noinspection PyDefaultArgument

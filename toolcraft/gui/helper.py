@@ -4,6 +4,7 @@ from . import __base__
 from . import widget
 from . import callback
 from .. import marshalling as m
+from .. import error as e
 
 
 def simple_split_window(
@@ -51,6 +52,31 @@ def add_widgets_in_line(
             guid=f"{guid}_{i+1}",
             widget=w,
         )
+
+
+def tab_bar_from_widget_dict(
+    widget_dict: t.Dict, parent: __base__.Widget
+):
+    _tab_bar = widget.TabBar()
+    parent.add_child(guid="tb", widget=_tab_bar)
+    for _k in widget_dict.keys():
+        _tab = widget.Tab(label=_k)
+        _tab_bar.add_child(guid=_k, widget=_tab)
+        _v = widget_dict[_k]
+        if isinstance(_v, dict):
+            tab_bar_from_widget_dict(_v, _tab)
+        elif isinstance(_v, list):
+            for _i, __v in enumerate(_v):
+                _tab.add_child(
+                    guid=f"{_i}",
+                    widget=__v
+                )
+        else:
+            e.code.CodingError(
+                msgs=[
+                    f"Unrecognized type {type(_v)}"
+                ]
+            )
 
 
 def tab_bar_from_hashable_callables(

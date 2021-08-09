@@ -1,6 +1,7 @@
 import dataclasses
 import numpy as np
 import dearpygui.dearpygui as dpg
+import typing as t
 
 from toolcraft import gui
 
@@ -113,22 +114,26 @@ class ButtonPlotCallback(gui.Callback):
 
     receiver: gui.Widget
 
-    def fn(self):
-        # get sender
-        # noinspection PyTypeChecker
-        _sender = self.sender  # type: gui.Button
+    def fn(
+        self,
+        sender: gui.Widget,
+        app_data: t.Any,
+        user_data: t.Union[gui.Widget, t.List[gui.Widget]]
+    ):
+        # provide type
+        sender: gui.Button
 
         # display to receiver i.e. add_child if not there
-        if _sender.guid not in self.receiver.children.keys():
+        if sender.guid not in self.receiver.children.keys():
 
             # make collapsing header
             _collapsing_header = gui.CollapsingHeader(
-                label=_sender.label, closable=False, default_open=True,
+                label=sender.label, closable=False, default_open=True,
             )
 
             # add child to receiver
             self.receiver.add_child(
-                guid=_sender.guid,
+                guid=sender.guid,
                 widget=_collapsing_header
             )
 
@@ -140,7 +145,7 @@ class ButtonPlotCallback(gui.Callback):
 
             # make plot and add to collapsing header
             _plot = gui.Plot(
-                label=f"This is plot for {_sender.label} ...",
+                label=f"This is plot for {sender.label} ...",
                 height=200, width=-1
             )
             _collapsing_header.add_child(

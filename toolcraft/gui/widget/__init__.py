@@ -4,7 +4,7 @@ import typing as t
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 
 from .core import Table, Plot
-from .auto import Window, SubPlot, Child
+from .auto import Window, SubPlot, Child, DragLine, DragPoint
 from .auto import TableSizingPolicy, ColorMap, Marker
 from .auto import Row, Column, Legend, XAxis, YAxis, ColorMapScale
 from .auto import Group, Tab, TabBar, TabButton, Combo, Button, Text, Separator

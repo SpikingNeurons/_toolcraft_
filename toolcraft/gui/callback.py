@@ -40,8 +40,13 @@ class SetThemeCallback(Callback):
             label="Select Theme"
         )
 
-    def fn(self):
-        _theme_str = dpg.get_value(item=self.sender.dpg_id)
+    def fn(
+        self,
+        sender: Widget,
+        app_data: t.Any,
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        _theme_str = dpg.get_value(item=sender.dpg_id)
         if _theme_str == "Dark":
             _theme = assets.Theme.Dark
         elif _theme_str == "Light":
@@ -54,7 +59,7 @@ class SetThemeCallback(Callback):
             )
             raise
         # we change theme of parent to which this Combo widget is child
-        self.sender.parent.set_theme(theme=_theme)
+        sender.parent.set_theme(theme=_theme)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -70,8 +75,13 @@ class CloseWidgetCallback(Callback):
             callback=cls()
         )
 
-    def fn(self):
-        self.sender.parent.delete()
+    def fn(
+        self,
+        sender: Widget,
+        app_data: t.Any,
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        sender.parent.delete()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -92,9 +102,15 @@ class RefreshWidgetCallback(Callback):
             callback=cls(refresh_callback=refresh_callback)
         )
 
-    def fn(self):
-        self.sender.parent.delete()
-        self.refresh_callback.fn()
+    def fn(
+        self,
+        sender: Widget,
+        app_data: t.Any,
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        sender.parent.delete()
+        self.refresh_callback.fn(
+            sender=sender, app_data=app_data, user_data=user_data)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -139,7 +155,12 @@ class HashableMethodRunnerCallback(Callback):
                     ]
                 )
 
-    def fn(self):
+    def fn(
+        self,
+        sender: Widget,
+        app_data: t.Any,
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
         # get some vars
         # _sender = self.sender
         _hashable = self.hashable
@@ -209,7 +230,12 @@ class HashableMethodsRunnerCallback(Callback):
                 ]
             )
 
-    def fn(self):
+    def fn(
+        self,
+        sender: Widget,
+        app_data: t.Any,
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
         # import
         from . import helper
 

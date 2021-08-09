@@ -116,7 +116,7 @@ class Column(Widget):
     show: bool = True
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -239,7 +239,7 @@ class Row(Widget):
     filter_key: str = ''
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -306,7 +306,7 @@ class BTable(Widget):
     delay_search: bool = False
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -463,11 +463,23 @@ class BTable(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -512,7 +524,7 @@ class TabButton(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -559,23 +571,59 @@ class TabButton(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -628,7 +676,7 @@ class TabBar(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -663,23 +711,59 @@ class TabBar(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -726,7 +810,7 @@ class Tab(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -767,17 +851,41 @@ class Tab(Widget):
         
         return _ret
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -834,7 +942,7 @@ class Button(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -879,23 +987,59 @@ class Button(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -957,7 +1101,7 @@ class Combo(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1011,23 +1155,59 @@ class Combo(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1047,7 +1227,7 @@ class InSameLine(Widget):
     show: bool = True
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1100,7 +1280,7 @@ class Separator(Widget):
     pos: t.List[int] = dataclasses.field(default_factory=list)
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1178,7 +1358,7 @@ class Child(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1235,17 +1415,41 @@ class Child(Widget):
         
         return _ret
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1282,7 +1486,7 @@ class Window(Widget):
     delay_search: bool = False
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1389,11 +1593,23 @@ class Window(Widget):
         
         return _ret
 
-    def on_close_fn(self, **kwargs):
+    def on_close_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.on_close is None:
             return None
         else:
-            return self.on_close.fn()
+            return self.on_close.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1435,7 +1651,7 @@ class Text(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1528,7 +1744,7 @@ class CollapsingHeader(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1583,17 +1799,41 @@ class CollapsingHeader(Widget):
         
         return _ret
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1648,7 +1888,7 @@ class Group(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1687,17 +1927,41 @@ class Group(Widget):
         
         return _ret
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1726,7 +1990,7 @@ class Legend(Widget):
     show: bool = True
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1762,17 +2026,41 @@ class Legend(Widget):
         
         return _ret
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1801,7 +2089,7 @@ class XAxis(Widget):
     show: bool = True
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1858,17 +2146,41 @@ class XAxis(Widget):
         
         return _ret
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1897,7 +2209,7 @@ class YAxis(Widget):
     show: bool = True
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -1954,17 +2266,41 @@ class YAxis(Widget):
         
         return _ret
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -2020,7 +2356,7 @@ class SubPlot(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -2099,11 +2435,23 @@ class SubPlot(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -2154,7 +2502,7 @@ class SimplePlot(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -2209,17 +2557,41 @@ class SimplePlot(Widget):
         
         return _ret
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -2279,7 +2651,7 @@ class BPlot(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -2401,23 +2773,59 @@ class BPlot(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -2474,7 +2882,7 @@ class InputIntX(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -2539,23 +2947,59 @@ class InputIntX(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -2612,7 +3056,7 @@ class InputInt(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -2685,23 +3129,59 @@ class InputInt(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -2755,7 +3235,7 @@ class ProgressBar(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -2795,17 +3275,41 @@ class ProgressBar(Widget):
         
         return _ret
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -2859,7 +3363,7 @@ class CheckBox(Widget):
     track_offset: float = 0.5
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -2895,23 +3399,59 @@ class CheckBox(Widget):
         
         return _ret
 
-    def callback_fn(self, **kwargs):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn()
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drag_callback_fn(self, **kwargs):
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn()
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
-    def drop_callback_fn(self, **kwargs):
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn()
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -2947,7 +3487,7 @@ class ColorMapScale(Widget):
     pos: t.List[int] = dataclasses.field(default_factory=list)
 
     # User data for callbacks.
-    user_data: t.Any = None
+    user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
@@ -2986,3 +3526,167 @@ class ColorMapScale(Widget):
         )
         
         return _ret
+
+
+@dataclasses.dataclass(frozen=True)
+class DragLine(Widget):
+    """
+    Refer:
+    >>> dpg.add_drag_line
+
+    Adds a drag line to a plot.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # ...
+    default_value: t.Any = 0.0
+
+    # ...
+    color: Color = Color.DEFAULT
+
+    # ...
+    thickness: float = 1.0
+
+    # ...
+    show_label: bool = True
+
+    # ...
+    vertical: bool = True
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_drag_line(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            source=0 if self.source is None else self.source.dpg_id,
+            callback=self.callback_fn,
+            show=self.show,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            default_value=self.default_value,
+            color=self.color.dpg_value,
+            thickness=self.thickness,
+            show_label=self.show_label,
+            vertical=self.vertical,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass(frozen=True)
+class DragPoint(Widget):
+    """
+    Refer:
+    >>> dpg.add_drag_point
+
+    Adds a drag point to a plot.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # ...
+    default_value: t.Any = (0.0, 0.0)
+
+    # ...
+    color: Color = Color.DEFAULT
+
+    # ...
+    thickness: float = 1.0
+
+    # ...
+    show_label: bool = True
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_drag_point(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            source=0 if self.source is None else self.source.dpg_id,
+            callback=self.callback_fn,
+            show=self.show,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            default_value=self.default_value,
+            color=self.color.dpg_value,
+            thickness=self.thickness,
+            show_label=self.show_label,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Union[Widget, t.List[Widget]]
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )

@@ -628,22 +628,37 @@ class YamlRepr(Tracker):
 
             # save the map for tags and see if there is repetition
             _yaml_tag = cls.yaml_tag()
+
             if _yaml_tag not in YAML_TAG_MAPPING.keys():
                 YAML_TAG_MAPPING[_yaml_tag] = cls
             else:
-                e.code.CodingError(
-                    msgs=[
-                        f"The yaml tag `{_yaml_tag}` is already registered for "
-                        f"class `{YAML_TAG_MAPPING[_yaml_tag]}`",
-                        f"But you are again trying to use same tag for class "
-                        f"`{cls}`.",
-                        f"Please check if you have overridden `yaml_tag` "
-                        f"method appropriately ... "
-                    ]
-                )
+                if cls.__name__.startswith("__"):
+                    # this is to handle special local classes that we do not
+                    # intend to have any special tags
+                    del YAML_TAG_MAPPING[_yaml_tag]
+                    YAML_TAG_MAPPING[_yaml_tag] = cls
+                else:
+                    e.code.CodingError(
+                        msgs=[
+                            f"The yaml tag `{_yaml_tag}` is already registered "
+                            f"for class `{YAML_TAG_MAPPING[_yaml_tag]}`",
+                            f"But you are again trying to use same tag for "
+                            f"class `{cls}`.",
+                            f"Please check if you have overridden `yaml_tag` "
+                            f"method appropriately ... "
+                        ]
+                    )
 
     @classmethod
     def yaml_tag(cls) -> str:
+
+        # this is to handle special local classes that we do not
+        # intend to have any special tags
+        # this will also grab <locals> keyword
+        if cls.__name__.startswith("__"):
+            return str(cls)
+
+        # return
         return f"!{cls.__module__}:{cls.__name__}"
 
     @classmethod

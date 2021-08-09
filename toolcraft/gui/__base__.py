@@ -32,6 +32,7 @@ class Color(m.FrozenEnum, enum.Enum):
     CUSTOM = enum.auto()
     GREY = enum.auto()
     GREEN = enum.auto()
+    BLUE = enum.auto()
     RED = enum.auto()
 
     @classmethod
@@ -50,6 +51,8 @@ class Color(m.FrozenEnum, enum.Enum):
             return [255, 0, 0, 255]
         elif self is self.GREEN:
             return [0, 255, 0, 255]
+        elif self is self.BLUE:
+            return [0, 0, 255, 255]
         elif self is self.GREY:
             return [127, 127, 127, 255]
         elif self is self.CUSTOM:
@@ -85,10 +88,6 @@ class Color(m.FrozenEnum, enum.Enum):
             )
 
 
-class CallbackInternal(m.Internal):
-    sender: "Widget"
-
-
 @dataclasses.dataclass(frozen=True)
 class Callback(m.HashableClass, abc.ABC):
     """
@@ -97,42 +96,17 @@ class Callback(m.HashableClass, abc.ABC):
     of this instance will serve as data ;)
     """
 
-    @property
-    def name(self) -> str:
-        """
-        This is basically using only senders info to build unique name
-        Currently we assume there will be only one Callback per widget so we
-        need not worry.
-
-        todo: If there are multiple callbacks for widget we might need to
-          update this code, where we need to accept extra unique token like
-          guid and add it as mandatory field for this class
-        """
-        return f"[{self.yaml_tag()}]{self.sender.name}"
-
-    @property
-    @util.CacheResult
-    def internal(self) -> "CallbackInternal":
-        return CallbackInternal(owner=self)
-
-    @property
-    @util.CacheResult
-    def sender(self) -> "Widget":
-        """
-        The owner i.e. the widget to which this callback was assigned
-        """
-        # noinspection PyTypeChecker
-        return self.internal.sender
-
     @classmethod
     def yaml_tag(cls) -> str:
-        return f"!{cls.__name__}"
-
-    def set_sender(self, sender: "Widget"):
-        self.internal.sender = sender
+        return super().yaml_tag() + ":GuiCallback"
 
     @abc.abstractmethod
-    def fn(self):
+    def fn(
+        self,
+        sender: "Widget",
+        app_data: t.Any,
+        user_data: t.Union["Widget", t.List["Widget"]]
+    ):
         ...
 
 
@@ -407,17 +381,9 @@ class Widget(m.HashableClass, abc.ABC):
             )
 
         # ---------------------------------------------------- 02
-        # set the sender i.e. which UI widget will have control to call this
-        # callback
-        for f_name in self.dataclass_field_names:
-            v = getattr(self, f_name)
-            if isinstance(v, Callback):
-                v.set_sender(sender=self)
-
-        # ---------------------------------------------------- 03
         # layout ... only done for widgets that are containers
         if self.is_container:
-            # ------------------------------------------------ 03.01
+            # ------------------------------------------------ 02.01
             # backup children dict before clearing it
             # this is needed because in some cases there will be add_child
             # performed before build, but we need to give preference to layout
@@ -425,13 +391,13 @@ class Widget(m.HashableClass, abc.ABC):
             _backup_children = {
                 k: v for k, v in self.children.items()
             }
-            # ------------------------------------------------ 03.02
+            # ------------------------------------------------ 02.02
             # clear the children dict
             self.children.clear()
-            # ------------------------------------------------ 03.03
+            # ------------------------------------------------ 02.03
             # call layout it will add some widgets if any
             self.layout()
-            # ------------------------------------------------ 03.04
+            # ------------------------------------------------ 02.04
             # update children with backup
             for k, v in _backup_children.items():
                 if k in self.children.keys():
@@ -595,6 +561,23 @@ class Widget(m.HashableClass, abc.ABC):
 
     def set_theme(self, theme: assets.Theme):
         dpg.set_item_theme(item=self.dpg_id, theme=theme.dpg_id)
+
+    def set_widget_configuration(self, **kwargs):
+        # if any value is widget then get its dpg_id
+        _new_kwargs = {}
+        for _k in kwargs.keys():
+            _v = kwargs[_k]
+            if isinstance(_v, Widget):
+                _v = _v.dpg_id
+            _new_kwargs[_k] = _v
+        # configure
+        dpg.configure_item(item=self.dpg_id, **_new_kwargs)
+
+    def display_raw_configuration(self) -> t.Dict:
+        """
+        Note that raw dpg_id is not treated
+        """
+        return dpg.get_item_configuration(item=self.dpg_id)
 
 
 @dataclasses.dataclass(frozen=True)

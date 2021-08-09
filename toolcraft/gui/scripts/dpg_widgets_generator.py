@@ -76,6 +76,9 @@ def gen_widget(_method, _widget_name, _color_fields):
         if _param_name == "policy":
             _param_type = "TableSizingPolicy"
             _param_value = "None"
+        if _param_name == "user_data":
+            _param_type = "t.Union[Widget, t.List[Widget]]"
+            _param_value = "None"
         if _param_name in _color_fields.keys():
             _param_type = "Color"
             _param_value = _color_fields[_param_name]
@@ -133,11 +136,25 @@ def gen_widget(_method, _widget_name, _color_fields):
     for _cp in _callback_params:
         _lines += [
             "",
-            f"\tdef {_cp}_fn(self, **kwargs):",
+            f"\tdef {_cp}_fn("
+            f"\n\t\tself, "
+            f"\n\t\tsender_dpg_id: int, "
+            f"\n\t\tapp_data: t.Any, "
+            f"\n\t\tuser_data: t.Union[Widget, t.List[Widget]]"
+            f"\n\t):",
+            # todo: remove this sanity check
+            "\t\t# eventually remove this sanity check ("
+            "dpg_widgets_generator.py)...",
+            "\t\tassert sender_dpg_id == self.dpg_id, \\"
+            "\n\t\t\t'was expecting the dpg_id to match ...'",
+            "",
+            "\t\t# logic ...",
             f"\t\tif self.{_cp} is None:",
             f"\t\t\treturn None",
             f"\t\telse:",
-            f"\t\t\treturn self.{_cp}.fn()",
+            f"\t\t\treturn self.{_cp}.fn("
+            f"\n\t\t\t\tsender=self, app_data=app_data, user_data=user_data"
+            f"\n\t\t\t)",
         ]
 
     # replace \t to 4 spaces
@@ -233,6 +250,8 @@ from .. import Widget, Callback, Color
         (dpg.add_progress_bar, "ProgressBar", {}),
         (dpg.add_checkbox, "CheckBox", {}),
         (dpg.add_colormap_scale, "ColorMapScale", {}),
+        (dpg.add_drag_line, "DragLine", {'color': 'Color.DEFAULT'}),
+        (dpg.add_drag_point, "DragPoint", {'color': 'Color.DEFAULT'}),
     ]
     _widget_lines = []
     for _method, _widget_name, _color_fields in _widget_items:

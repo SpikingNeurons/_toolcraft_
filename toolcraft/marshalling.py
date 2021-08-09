@@ -717,6 +717,9 @@ class YamlRepr(Tracker):
         # return
         return _instance
 
+    def clone(self) -> "YamlRepr":
+        return self.from_yaml(self.yaml())
+
     def as_dict(
         self
     ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:

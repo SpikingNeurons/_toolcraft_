@@ -229,6 +229,12 @@ class Plot(BPlot):
                 ]
             )
 
+    # noinspection PyMethodMayBeStatic
+    def update_series(self, series_dpg_id: int, **kwargs):
+        # todo: test code to see if series_dpg_id belongs to this plot ...
+        #  this will need some tracking code when series are added
+        dpg.configure_item(series_dpg_id, **kwargs)
+
     def add_area_series(
         self, *,
         x: PLOT_DATA_TYPE,

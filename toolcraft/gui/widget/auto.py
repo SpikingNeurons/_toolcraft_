@@ -467,7 +467,7 @@ class BTable(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -575,7 +575,7 @@ class TabButton(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -593,7 +593,7 @@ class TabButton(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -611,7 +611,7 @@ class TabButton(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -715,7 +715,7 @@ class TabBar(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -733,7 +733,7 @@ class TabBar(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -751,7 +751,7 @@ class TabBar(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -855,7 +855,7 @@ class Tab(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -873,7 +873,7 @@ class Tab(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -991,7 +991,7 @@ class Button(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1009,7 +1009,7 @@ class Button(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1027,7 +1027,7 @@ class Button(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1159,7 +1159,7 @@ class Combo(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1177,7 +1177,7 @@ class Combo(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1195,7 +1195,7 @@ class Combo(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1419,7 +1419,7 @@ class Child(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1437,7 +1437,7 @@ class Child(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1597,7 +1597,7 @@ class Window(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1803,7 +1803,7 @@ class CollapsingHeader(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1821,7 +1821,7 @@ class CollapsingHeader(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1931,7 +1931,7 @@ class Group(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -1949,7 +1949,7 @@ class Group(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2030,7 +2030,7 @@ class Legend(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2048,7 +2048,7 @@ class Legend(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2150,7 +2150,7 @@ class XAxis(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2168,7 +2168,7 @@ class XAxis(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2270,7 +2270,7 @@ class YAxis(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2288,7 +2288,7 @@ class YAxis(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2439,7 +2439,7 @@ class SubPlot(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2561,7 +2561,7 @@ class SimplePlot(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2579,7 +2579,7 @@ class SimplePlot(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2777,7 +2777,7 @@ class BPlot(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2795,7 +2795,7 @@ class BPlot(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2813,7 +2813,7 @@ class BPlot(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2951,7 +2951,7 @@ class InputIntX(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2969,7 +2969,7 @@ class InputIntX(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -2987,7 +2987,7 @@ class InputIntX(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3133,7 +3133,7 @@ class InputInt(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3151,7 +3151,7 @@ class InputInt(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3169,7 +3169,7 @@ class InputInt(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3279,7 +3279,7 @@ class ProgressBar(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3297,7 +3297,7 @@ class ProgressBar(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3403,7 +3403,7 @@ class CheckBox(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3421,7 +3421,7 @@ class CheckBox(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3439,7 +3439,7 @@ class CheckBox(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3597,7 +3597,7 @@ class DragLine(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3677,7 +3677,7 @@ class DragPoint(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
@@ -3688,5 +3688,886 @@ class DragPoint(Widget):
             return None
         else:
             return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass(frozen=True)
+class SliderInt(Widget):
+    """
+    Refer:
+    >>> dpg.add_slider_int
+
+    Adds slider for a single int value. Directly entry can be done with
+    double click or CTRL+Click. Min and Max alone are a soft limit for the
+    slider. Use clamped keyword to also apply limits to the direct entry
+    modes.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Height of the item.
+    height: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # ...
+    default_value: int = 0
+
+    # Sets orientation to vertical.
+    vertical: bool = False
+
+    # Disable direct entry methods or Enter key allowing to input text
+    # directly into the widget.
+    no_input: bool = False
+
+    # Applies the min and max limits to direct entry methods also such as
+    # double click and CTRL+Click.
+    clamped: bool = False
+
+    # Applies a limit only to sliding entry only.
+    min_value: int = 0
+
+    # Applies a limit only to sliding entry only.
+    max_value: int = 100
+
+    # ...
+    format: str = '%d'
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_slider_int(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            default_value=self.default_value,
+            vertical=self.vertical,
+            no_input=self.no_input,
+            clamped=self.clamped,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            format=self.format,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass(frozen=True)
+class SliderIntX(Widget):
+    """
+    Refer:
+    >>> dpg.add_slider_intx
+
+    Adds multi slider for up to 4 int values. CTRL+Click to directly
+    modify the value.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # ...
+    default_value: t.List[int] = (0, 0, 0, 0)
+
+    # number of components
+    size: int = 4
+
+    # Disable direct entry methods or Enter key allowing to input text
+    # directly into the widget.
+    no_input: bool = False
+
+    # Applies the min and max limits to direct entry methods also such as
+    # double click and CTRL+Click.
+    clamped: bool = False
+
+    # Applies a limit only to sliding entry only.
+    min_value: int = 0
+
+    # Applies a limit only to sliding entry only.
+    max_value: int = 100
+
+    # ...
+    format: str = '%d'
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_slider_intx(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            width=self.width,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            default_value=self.default_value,
+            size=self.size,
+            no_input=self.no_input,
+            clamped=self.clamped,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            format=self.format,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass(frozen=True)
+class SliderFloat(Widget):
+    """
+    Refer:
+    >>> dpg.add_slider_float
+
+    Adds slider for a single float value. Directly entry can be done with
+    double click or CTRL+Click. Min and Max alone are a soft limit for the
+    slider. Use clamped keyword to also apply limits to the direct entry
+    modes.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Height of the item.
+    height: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # ...
+    default_value: float = 0.0
+
+    # Sets orientation to vertical.
+    vertical: bool = False
+
+    # Disable direct entry methods or Enter key allowing to input text
+    # directly into the widget.
+    no_input: bool = False
+
+    # Applies the min and max limits to direct entry methods also such as
+    # double click and CTRL+Click.
+    clamped: bool = False
+
+    # Applies a limit only to sliding entry only.
+    min_value: float = 0.0
+
+    # Applies a limit only to sliding entry only.
+    max_value: float = 100.0
+
+    # ...
+    format: str = '%.3f'
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_slider_float(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            default_value=self.default_value,
+            vertical=self.vertical,
+            no_input=self.no_input,
+            clamped=self.clamped,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            format=self.format,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass(frozen=True)
+class SliderFloatX(Widget):
+    """
+    Refer:
+    >>> dpg.add_slider_floatx
+
+    Adds multi slider for up to 4 float values. Directly entry can be done
+    with double click or CTRL+Click. Min and Max alone are a soft limit
+    for the slider. Use clamped keyword to also apply limits to the direct
+    entry modes.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # ...
+    default_value: t.List[float] = (0.0, 0.0, 0.0, 0.0)
+
+    # Number of components.
+    size: int = 4
+
+    # Disable direct entry methods or Enter key allowing to input text
+    # directly into the widget.
+    no_input: bool = False
+
+    # Applies the min and max limits to direct entry methods also such as
+    # double click and CTRL+Click.
+    clamped: bool = False
+
+    # Applies a limit only to sliding entry only.
+    min_value: float = 0.0
+
+    # Applies a limit only to sliding entry only.
+    max_value: float = 100.0
+
+    # ...
+    format: str = '%.3f'
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_slider_floatx(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            width=self.width,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            default_value=self.default_value,
+            size=self.size,
+            no_input=self.no_input,
+            clamped=self.clamped,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            format=self.format,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass(frozen=True)
+class Slider3D(Widget):
+    """
+    Refer:
+    >>> dpg.add_3d_slider
+
+    Adds a 3D box slider that allows a 3d point to be show in 2d
+    represented cube space.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # Width of the item.
+    width: int = 0
+
+    # Height of the item.
+    height: int = 0
+
+    # Offsets the widget to the right the specified number multiplied by the
+    # indent style.
+    indent: int = -1
+
+    # Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a callback.
+    callback: Callback = None
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # Attempt to render widget.
+    show: bool = True
+
+    # Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.List[int] = dataclasses.field(default_factory=list)
+
+    # Used by filter widget.
+    filter_key: str = ''
+
+    # Scroll tracking
+    tracked: bool = False
+
+    # 0.0f
+    track_offset: float = 0.5
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # ...
+    default_value: t.List[float] = (0.0, 0.0, 0.0, 0.0)
+
+    # Applies upper limit to slider.
+    max_x: float = 100.0
+
+    # Applies upper limit to slider.
+    max_y: float = 100.0
+
+    # Applies upper limit to slider.
+    max_z: float = 100.0
+
+    # Applies lower limit to slider.
+    min_x: float = 0.0
+
+    # Applies lower limit to slider.
+    min_y: float = 0.0
+
+    # Applies lower limit to slider.
+    min_z: float = 0.0
+
+    # Size of the widget.
+    scale: float = 1.0
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> int:
+        _ret = dpg.add_3d_slider(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            default_value=self.default_value,
+            max_x=self.max_x,
+            max_y=self.max_y,
+            max_z=self.max_z,
+            min_x=self.min_x,
+            min_y=self.min_y,
+            min_z=self.min_z,
+            scale=self.scale,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
                 sender=self, app_data=app_data, user_data=user_data
             )

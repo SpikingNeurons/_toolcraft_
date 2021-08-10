@@ -140,7 +140,7 @@ def gen_widget(_method, _widget_name, _color_fields):
             f"\n\t\tself, "
             f"\n\t\tsender_dpg_id: int, "
             f"\n\t\tapp_data: t.Any, "
-            f"\n\t\tuser_data: t.Union[Widget, t.List[Widget]]"
+            f"\n\t\tuser_data: t.Any"
             f"\n\t):",
             # todo: remove this sanity check
             "\t\t# eventually remove this sanity check ("
@@ -252,6 +252,11 @@ from .. import Widget, Callback, Color
         (dpg.add_colormap_scale, "ColorMapScale", {}),
         (dpg.add_drag_line, "DragLine", {'color': 'Color.DEFAULT'}),
         (dpg.add_drag_point, "DragPoint", {'color': 'Color.DEFAULT'}),
+        (dpg.add_slider_int, "SliderInt", {}),
+        (dpg.add_slider_intx, "SliderIntX", {}),
+        (dpg.add_slider_float, "SliderFloat", {}),
+        (dpg.add_slider_floatx, "SliderFloatX", {}),
+        (dpg.add_3d_slider, "Slider3D", {}),
     ]
     _widget_lines = []
     for _method, _widget_name, _color_fields in _widget_items:

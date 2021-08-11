@@ -80,6 +80,13 @@ class StateFile(m.Tracker, abc.ABC):
         ...
 
     def delete(self):
+        # todo: remove this later ... once bug is caught that deletes state
+        #  files
+        raise Exception(
+            f"Something is attempting to delete things related to "
+            f"{self.path} ... keep this until we catch the bug which is "
+            f"deleting state files"
+        )
         util.io_make_path_editable(self.path)
         self.path.unlink()
         self.reset()

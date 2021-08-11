@@ -10,8 +10,6 @@ todo: Some bugs to be fixed
 import pathlib
 import sys
 
-from pydantic.dataclasses import dataclass
-
 sys.path.append("..\\..")
 import typing as t
 import dataclasses
@@ -170,7 +168,7 @@ def try_auto_hashed_download_file():
 
     df0 = DnTestFile()
 
-    assert df0.get_hashes() == df.config.auto_hashes.get()
+    assert df0.get_hashes() == df.config.auto_hashes
 
     df0.delete(force=True)
     df.delete(force=True)
@@ -381,6 +379,7 @@ class TestStorage(m.HashableClass):
                "list": [_ for _ in result]
             }
         )
+
 
 def try_arrow_storage():
     ts = TestStorage(1, 2.0)
@@ -781,11 +780,11 @@ def try_main():
         util.io_path_delete(_TEMP_PATH, force=True)
     _TEMP_PATH.mkdir(parents=True, exist_ok=True)
     _TEMP_PATH = _TEMP_PATH.resolve()
-    try_hashable_ser()
-    try_download_file()
-    try_auto_hashed_download_file()
-    try_metainfo_file()
-    try_creating_folders()
+    # try_hashable_ser()
+    # try_download_file()
+    # try_auto_hashed_download_file()
+    # try_metainfo_file()
+    # try_creating_folders()
     try_arrow_storage()
     _TEMP_PATH.rmdir()
 

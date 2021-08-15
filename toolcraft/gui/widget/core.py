@@ -184,9 +184,9 @@ class Plot(BPlot):
     def clear(self):
         # plot series are added to YAxis so we clear its children to clear
         # the plot
-        for _k, _w in self.children.items():
-            if _k.startswith("_y"):
-                dpg.delete_item(item=_w.dpg_id, children_only=True)
+        for _v in self.children.values():
+            if isinstance(_v, YAxis):
+                dpg.delete_item(item=_v.dpg_id, children_only=True)
 
     def get_y_axis(self, axis_dim: int) -> YAxis:
         if axis_dim not in [1, 2, 3]:
@@ -286,8 +286,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_area_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y=y,
             label=label,
@@ -353,8 +355,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_bar_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y=y,
             label=label,
@@ -435,8 +439,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_candle_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             dates=dates,
             opens=opens,
             closes=closes,
@@ -513,8 +519,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_drag_line(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             label=label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
@@ -585,8 +593,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_drag_point(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             label=label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
@@ -659,8 +669,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_error_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y=y,
             negative=negative,
@@ -746,8 +758,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_heat_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             rows=rows,
             cols=cols,
@@ -833,8 +847,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_histogram_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             label=label,
             before=0 if before is None else before.dpg_id,
@@ -899,8 +915,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_hline_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             label=label,
             before=0 if before is None else before.dpg_id,
@@ -970,8 +988,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_image_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             texture_id=texture_id,
             bounds_min=bounds_min,
             bounds_max=bounds_max,
@@ -1033,8 +1053,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_line_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y=y,
             label=label,
@@ -1110,8 +1132,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_pie_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y=y,
             radius=radius,
@@ -1181,8 +1205,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_plot_annotation(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             label=label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
@@ -1242,8 +1268,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_scatter_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y=y,
             label=label,
@@ -1304,8 +1332,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_shade_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y1=y1,
             label=label,
@@ -1364,8 +1394,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_stair_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y=y,
             label=label,
@@ -1427,8 +1459,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_stem_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y=y,
             label=label,
@@ -1496,8 +1530,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_text_point(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             y=y,
             label=label,
@@ -1555,8 +1591,10 @@ class Plot(BPlot):
 
         """
 
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+
         _dpg_id = dpg.add_vline_series(
-            parent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,
+            parent=_y_axis.dpg_id,
             x=x,
             label=label,
             before=0 if before is None else before.dpg_id,
@@ -1567,3 +1605,4 @@ class Plot(BPlot):
         )
 
         return _dpg_id
+

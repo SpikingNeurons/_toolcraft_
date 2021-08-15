@@ -164,8 +164,10 @@ for _method in get_methods_related_to_plot():
                           f"if {_param} is None else {_param}.fn,"
         _kwargs.append(_assign_str)
     _lines += [
+        f"\t\t_y_axis = self.get_y_axis(axis_dim=y_axis_dim)",
+        f"\t\t",
         f"\t\t_dpg_id = dpg.{_method.__name__}(",
-        f"\t\t\tparent=self.get_y_axis(axis_dim=y_axis_dim).dpg_id,",
+        f"\t\t\tparent=_y_axis.dpg_id,",
         *_kwargs,
         f"\t\t)",
         f"\t\t",

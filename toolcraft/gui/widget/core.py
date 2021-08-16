@@ -237,15 +237,15 @@ class Plot(BPlot):
 
     def add_area_series(
         self, *,
-        x: PLOT_DATA_TYPE,
-        y: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
-        fill: t.List[int] = (0, 0, 0, -255),
+        fill: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
@@ -262,6 +262,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -269,11 +274,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             fill:
               ...
             contribute_to_bounds:
@@ -293,11 +293,11 @@ class Plot(BPlot):
             x=x,
             y=y,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             fill=fill,
             contribute_to_bounds=contribute_to_bounds,
         )
@@ -306,14 +306,14 @@ class Plot(BPlot):
 
     def add_bar_series(
         self, *,
-        x: PLOT_DATA_TYPE,
-        y: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         weight: float = 1.0,
         horizontal: bool = False,
         y_axis_dim: int = 1,
@@ -331,6 +331,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -338,11 +343,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             weight:
               ...
             horizontal:
@@ -362,11 +362,11 @@ class Plot(BPlot):
             x=x,
             y=y,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             weight=weight,
             horizontal=horizontal,
         )
@@ -375,19 +375,19 @@ class Plot(BPlot):
 
     def add_candle_series(
         self, *,
-        dates: PLOT_DATA_TYPE,
-        opens: PLOT_DATA_TYPE,
-        closes: PLOT_DATA_TYPE,
-        lows: PLOT_DATA_TYPE,
-        highs: PLOT_DATA_TYPE,
+        dates: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        opens: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        closes: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        lows: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        highs: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
-        bull_color: t.List[int] = (0, 255, 113, 255),
-        bear_color: t.List[int] = (218, 13, 79, 255),
+        bull_color: t.Union[t.List[int], t.Tuple[int]] = (0, 255, 113, 255),
+        bear_color: t.Union[t.List[int], t.Tuple[int]] = (218, 13, 79, 255),
         weight: int = 0.25,
         tooltip: bool = True,
         y_axis_dim: int = 1,
@@ -411,6 +411,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -418,11 +423,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             bull_color:
               ...
             bear_color:
@@ -449,11 +449,11 @@ class Plot(BPlot):
             lows=lows,
             highs=highs,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             bull_color=bull_color,
             bear_color=bear_color,
             weight=weight,
@@ -465,14 +465,14 @@ class Plot(BPlot):
     def add_drag_line(
         self, *,
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         callback: t.Optional[Callback] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         default_value: t.Any = 0.0,
-        color: t.List[int] = (0, 0, 0, -255),
+        color: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
         thickness: float = 1.0,
         show_label: bool = True,
         vertical: bool = True,
@@ -487,6 +487,11 @@ class Plot(BPlot):
         Args:
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -496,11 +501,6 @@ class Plot(BPlot):
               Registers a callback.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             default_value:
               ...
             color:
@@ -524,12 +524,12 @@ class Plot(BPlot):
         _dpg_id = dpg.add_drag_line(
             parent=_y_axis.dpg_id,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             callback=None if callback is None else callback.fn,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             default_value=default_value,
             color=color,
             thickness=thickness,
@@ -542,14 +542,14 @@ class Plot(BPlot):
     def add_drag_point(
         self, *,
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         callback: t.Optional[Callback] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         default_value: t.Any = (0.0, 0.0),
-        color: t.List[int] = (0, 0, 0, -255),
+        color: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
         thickness: float = 1.0,
         show_label: bool = True,
         y_axis_dim: int = 1,
@@ -563,6 +563,11 @@ class Plot(BPlot):
         Args:
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -572,11 +577,6 @@ class Plot(BPlot):
               Registers a callback.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             default_value:
               ...
             color:
@@ -598,12 +598,12 @@ class Plot(BPlot):
         _dpg_id = dpg.add_drag_point(
             parent=_y_axis.dpg_id,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             callback=None if callback is None else callback.fn,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             default_value=default_value,
             color=color,
             thickness=thickness,
@@ -614,16 +614,16 @@ class Plot(BPlot):
 
     def add_error_series(
         self, *,
-        x: PLOT_DATA_TYPE,
-        y: PLOT_DATA_TYPE,
-        negative: PLOT_DATA_TYPE,
-        positive: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        negative: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        positive: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         contribute_to_bounds: bool = True,
         horizontal: bool = False,
         y_axis_dim: int = 1,
@@ -645,6 +645,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -652,11 +657,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             contribute_to_bounds:
               ...
             horizontal:
@@ -678,11 +678,11 @@ class Plot(BPlot):
             negative=negative,
             positive=positive,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             contribute_to_bounds=contribute_to_bounds,
             horizontal=horizontal,
         )
@@ -691,15 +691,15 @@ class Plot(BPlot):
 
     def add_heat_series(
         self, *,
-        x: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         rows: int,
         cols: int,
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         scale_min: float = 0.0,
         scale_max: float = 1.0,
         bounds_min: t.Any = (0.0, 0.0),
@@ -724,6 +724,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -731,11 +736,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             scale_min:
               Sets the color scale min. Typically paired with the color
               scale widget scale_min.
@@ -766,11 +766,11 @@ class Plot(BPlot):
             rows=rows,
             cols=cols,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             scale_min=scale_min,
             scale_max=scale_max,
             bounds_min=bounds_min,
@@ -783,13 +783,13 @@ class Plot(BPlot):
 
     def add_histogram_series(
         self, *,
-        x: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         bins: int = -1,
         bar_scale: float = 1.0,
         min_range: float = 0.0,
@@ -811,6 +811,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -818,11 +823,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             bins:
               ...
             bar_scale:
@@ -853,11 +853,11 @@ class Plot(BPlot):
             parent=_y_axis.dpg_id,
             x=x,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             bins=bins,
             bar_scale=bar_scale,
             min_range=min_range,
@@ -872,13 +872,13 @@ class Plot(BPlot):
 
     def add_hline_series(
         self, *,
-        x: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
@@ -893,6 +893,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -900,11 +905,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             contribute_to_bounds:
               ...
             y_axis_dim:
@@ -921,11 +921,11 @@ class Plot(BPlot):
             parent=_y_axis.dpg_id,
             x=x,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             contribute_to_bounds=contribute_to_bounds,
         )
 
@@ -933,18 +933,18 @@ class Plot(BPlot):
 
     def add_image_series(
         self, *,
-        texture_id: int,
-        bounds_min: PLOT_DATA_TYPE,
-        bounds_max: PLOT_DATA_TYPE,
+        texture_id: t.Union[int, str],
+        bounds_min: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        bounds_max: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
-        uv_min: t.List[float] = (0.0, 0.0),
-        uv_max: t.List[float] = (1.0, 1.0),
-        tint_color: t.List[int] = (255, 255, 255, 255),
+        uv_min: t.Union[t.List[float], t.Tuple[float]] = (0.0, 0.0),
+        uv_max: t.Union[t.List[float], t.Tuple[float]] = (1.0, 1.0),
+        tint_color: t.Union[t.List[int], t.Tuple[int]] = (255, 255, 255, 255),
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -962,6 +962,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -969,11 +974,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             uv_min:
               normalized texture coordinates
             uv_max:
@@ -996,11 +996,11 @@ class Plot(BPlot):
             bounds_min=bounds_min,
             bounds_max=bounds_max,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             uv_min=uv_min,
             uv_max=uv_max,
             tint_color=tint_color,
@@ -1010,14 +1010,14 @@ class Plot(BPlot):
 
     def add_line_series(
         self, *,
-        x: PLOT_DATA_TYPE,
-        y: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -1033,6 +1033,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1040,11 +1045,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -1060,11 +1060,11 @@ class Plot(BPlot):
             x=x,
             y=y,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
         )
 
         return _dpg_id
@@ -1074,14 +1074,14 @@ class Plot(BPlot):
         x: float,
         y: float,
         radius: float,
-        values: PLOT_DATA_TYPE,
-        labels: t.List[str],
+        values: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        labels: t.Union[t.List[str], t.Tuple[str]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         format: str = '%0.2f',
         angle: float = 90.0,
         normalize: bool = False,
@@ -1106,6 +1106,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1113,11 +1118,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             format:
               ...
             angle:
@@ -1142,11 +1142,11 @@ class Plot(BPlot):
             values=values,
             labels=labels,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             format=format,
             angle=angle,
             normalize=normalize,
@@ -1157,14 +1157,14 @@ class Plot(BPlot):
     def add_plot_annotation(
         self, *,
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         default_value: t.Any = (0.0, 0.0),
-        offset: t.List[float] = (0.0, 0.0),
-        color: t.List[int] = (0, 0, 0, -255),
+        offset: t.Union[t.List[float], t.Tuple[float]] = (0.0, 0.0),
+        color: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
         clamped: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
@@ -1177,6 +1177,11 @@ class Plot(BPlot):
         Args:
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1184,11 +1189,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             default_value:
               ...
             offset:
@@ -1210,11 +1210,11 @@ class Plot(BPlot):
         _dpg_id = dpg.add_plot_annotation(
             parent=_y_axis.dpg_id,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             default_value=default_value,
             offset=offset,
             color=color,
@@ -1225,14 +1225,14 @@ class Plot(BPlot):
 
     def add_scatter_series(
         self, *,
-        x: PLOT_DATA_TYPE,
-        y: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -1248,6 +1248,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1255,11 +1260,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -1275,25 +1275,25 @@ class Plot(BPlot):
             x=x,
             y=y,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
         )
 
         return _dpg_id
 
     def add_shade_series(
         self, *,
-        x: PLOT_DATA_TYPE,
-        y1: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        y1: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         y2: t.Any = [],
         y_axis_dim: int = 1,
     ) -> int:
@@ -1310,6 +1310,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1317,11 +1322,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             y2:
               ...
             y_axis_dim:
@@ -1339,11 +1339,11 @@ class Plot(BPlot):
             x=x,
             y1=y1,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             y2=y2,
         )
 
@@ -1351,14 +1351,14 @@ class Plot(BPlot):
 
     def add_stair_series(
         self, *,
-        x: PLOT_DATA_TYPE,
-        y: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -1374,6 +1374,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1381,11 +1386,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -1401,26 +1401,26 @@ class Plot(BPlot):
             x=x,
             y=y,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
         )
 
         return _dpg_id
 
     def add_stem_series(
         self, *,
-        x: PLOT_DATA_TYPE,
-        y: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         indent: int = -1,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -1436,6 +1436,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             indent:
               Offsets the widget to the right the specified number
               multiplied by the indent style.
@@ -1446,11 +1451,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -1466,12 +1466,12 @@ class Plot(BPlot):
             x=x,
             y=y,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             indent=indent,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
         )
 
         return _dpg_id
@@ -1481,11 +1481,11 @@ class Plot(BPlot):
         x: float,
         y: float,
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         x_offset: int = Ellipsis,
         y_offset: int = Ellipsis,
         vertical: bool = False,
@@ -1504,6 +1504,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1511,11 +1516,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             x_offset:
               ...
             y_offset:
@@ -1537,11 +1537,11 @@ class Plot(BPlot):
             x=x,
             y=y,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
             x_offset=x_offset,
             y_offset=y_offset,
             vertical=vertical,
@@ -1551,13 +1551,13 @@ class Plot(BPlot):
 
     def add_vline_series(
         self, *,
-        x: PLOT_DATA_TYPE,
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        user_data: t.Any = None,
-        use_internal_label: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
         """
@@ -1571,6 +1571,11 @@ class Plot(BPlot):
               ...
             label:
               Overrides 'name' as label.
+            user_data:
+              User data for callbacks.
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1578,11 +1583,6 @@ class Plot(BPlot):
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            user_data:
-              User data for callbacks.
-            use_internal_label:
-              Use generated internal label instead of user specified
-              (appends ### uuid).
             y_axis_dim:
               ...
 
@@ -1597,11 +1597,11 @@ class Plot(BPlot):
             parent=_y_axis.dpg_id,
             x=x,
             label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            user_data=user_data,
-            use_internal_label=use_internal_label,
         )
 
         return _dpg_id

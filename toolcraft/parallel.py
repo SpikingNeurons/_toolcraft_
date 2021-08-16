@@ -19,6 +19,7 @@ import queue
 import time
 import numpy as np
 import abc
+import tensorflow as tf
 
 from . import util
 

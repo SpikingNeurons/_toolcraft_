@@ -944,7 +944,7 @@ class Folder(StorageHashable):
 class ResultsFolder(Folder):
     """
     A special folder that store results for Hashable class with unique naming
-    convention anu unique path checking.
+    convention and unique path checking.
 
     It will also be used by StoreField decorator to store the pyarrow results.
     """

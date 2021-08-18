@@ -125,6 +125,24 @@ class FileGroupConfig(s.Config):
 
 
 @dataclasses.dataclass(frozen=True)
+class FileGroupResultsFolder(s.ResultsFolder):
+
+    class LITERAL(s.ResultsFolder.LITERAL):
+        results_folder_name = "_results"
+
+    for_hashable: "FileGroup"
+
+    @property
+    def name(self) -> str:
+        return self.LITERAL.results_folder_name
+
+    @property
+    @util.CacheResult
+    def root_dir(self) -> pathlib.Path:
+        return self.for_hashable.path
+
+
+@dataclasses.dataclass(frozen=True)
 class FileGroup(StorageHashable, abc.ABC):
     """
     todo: While file_group.py is for blob storage. In future we can enable it to
@@ -266,6 +284,10 @@ class FileGroup(StorageHashable, abc.ABC):
             for f in self.path.iterdir():
                 if f.name in self.file_keys and f.is_file():
                     continue
+                if f.name.startswith(
+                    FileGroupResultsFolder.LITERAL.results_folder_name
+                ):
+                    continue
                 _unknown_files.append(f)
 
         # return
@@ -297,6 +319,13 @@ class FileGroup(StorageHashable, abc.ABC):
     @property
     def is_outdated(self) -> bool:
         return False
+
+    @property
+    @util.CacheResult
+    def results_folder(self) -> FileGroupResultsFolder:
+        return FileGroupResultsFolder(
+            for_hashable=self,
+        )
 
     # def __getattribute__(self, item: str) -> t.Any:
     #     """
@@ -698,7 +727,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 msgs=[
                     f"We were trying to create files for class "
                     f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in dir {self.path} we "
+                    f"{self.name!r} in dir `{self.path}` but, we "
                     f"found below unknown files",
                     [f.name for f in _unknown_files]
                 ]

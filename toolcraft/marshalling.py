@@ -1321,9 +1321,9 @@ class HashableClass(YamlRepr, abc.ABC):
         # todo: this we do unnecessarily and folders will be created even if
         #  we do not use the store fields ... this also adds small overhead
         #  while creating instances of HashableClasses instances ...
-        #  Ideally if this is connected the respective DfFiles are read on
+        #  Ideally if this is connected the respective Tables are read on
         #  first call ... Currently we so this in advance only to avoid
-        #  polluting logs .... check if we can handle logging of DfFile init
+        #  polluting logs .... check if we can handle logging of Table init
         #  in first call smartly so that logs are not polluted
         if self.__class__.results_folder != HashableClass.results_folder:
             self.results_folder.init_store_df_files()

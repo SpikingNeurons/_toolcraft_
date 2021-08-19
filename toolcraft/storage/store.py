@@ -30,8 +30,8 @@ import dataclasses
 from .. import marshalling as m
 from .. import error as e
 from .. import util
-from .df_file import \
-    DfFile, FILTERS_TYPE, FILTER_VALUE_TYPE, bake_expression
+from .table import \
+    Table, FILTERS_TYPE, FILTER_VALUE_TYPE, bake_expression
 from . import Folder, ResultsFolder
 
 
@@ -44,7 +44,7 @@ _IS_STORE_FIELD = '_is_store_field'
 @dataclasses.dataclass(frozen=True)
 class StoreFieldsFolder(Folder):
     """
-    A special Folder for StoreFields that will be saved as DfFile's
+    A special Folder for StoreFields that will be saved as Table's
     Note that here we use `for_hashable` to get `path`, so that user can use
     `parent_folder=None`
     """
@@ -52,8 +52,8 @@ class StoreFieldsFolder(Folder):
     for_hashable: str
 
     @property
-    def contains(self) -> t.Type[DfFile]:
-        return DfFile
+    def contains(self) -> t.Type[Table]:
+        return Table
 
     @property
     def uses_parent_folder(self) -> bool:
@@ -144,7 +144,7 @@ class OnCallReturn(t.NamedTuple):
         self,
         for_hashable: m.HashableClass,
         store_field: "StoreField",
-        df_file: DfFile,
+        df_file: Table,
         **kwargs
     ) -> t.Union[bool, pa.Table]:
         """
@@ -317,8 +317,8 @@ class StoreField:
         Decorating for_hashable's methods or properties with this class will
         allow them to store their results to disk as pa.Table's.
 
-        The resulting object is DfFile which will be managed by
-        StoreFieldsFolder. The name of DfFile will be property/method name.
+        The resulting object is Table which will be managed by
+        StoreFieldsFolder. The name of Table will be property/method name.
 
         Args:
             streamed_write:
@@ -423,21 +423,21 @@ class StoreField:
         )
 
         # ------------------------------------------------------- 02
-        # get store_fields_folder the Folder that manages all DfFiles for
+        # get store_fields_folder the Folder that manages all Tables for
         # for_hashable
         _folder = for_hashable.results_folder.store  # type: StoreFieldsFolder
 
         # ------------------------------------------------------- 03
-        # get DfFile
+        # get Table
         _item = self.dec_fn_name
         if _item in _folder.items.keys():
-            _df_file = _folder.items[_item]  # type: DfFile
+            _df_file = _folder.items[_item]  # type: Table
         else:
-            # The DfFile is special Folder it takes string that is name as
+            # The Table is special Folder it takes string that is name as
             # function to create a sub-folder under _folder. Note that
             # for_hashable is known to _folder so _df_file does not need to
             # know it as it is known via parent_folder
-            _df_file = DfFile(
+            _df_file = Table(
                 for_hashable=_item, parent_folder=_folder
             )
             # we need to update config for partition_cols and table_schema

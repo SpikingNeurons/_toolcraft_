@@ -1868,7 +1868,9 @@ def np_to_pa(data: np.ndarray) -> pa.Array:
     return pa.array(np_to_lnp(data=data))
 
 
-def pa_to_np(data: t.Union[pa.Array, pa.ChunkedArray]) -> np.ndarray:
+def pa_to_np(
+    data: t.Union[pa.Array, pa.ChunkedArray, pa.ListArray]
+) -> np.ndarray:
     """
     Unit test code
 
@@ -1882,6 +1884,8 @@ def pa_to_np(data: t.Union[pa.Array, pa.ChunkedArray]) -> np.ndarray:
         data = data.to_numpy(zero_copy_only=False)
     elif isinstance(data, pa.ChunkedArray):
         data = data.to_numpy()
+    elif isinstance(data, pa.ListArray):
+        return np.asarray(data)
     else:
         e.code.CodingError(
             msgs=[

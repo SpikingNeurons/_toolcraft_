@@ -31,7 +31,7 @@ class StateFile(m.Tracker, abc.ABC):
       storage.StoreField where we create two data frames one for info and other
       for config. Then we can stream them or store to some database where we
       can retrieve them ....
-      As of now we limit them to be saved alongside FileGroup, DfFile and
+      As of now we limit them to be saved alongside FileGroup, Table and
       Folder ... and hence this class does not make sense here but instead
       should be moved to storage module ....
       But we might have more usage for this so we will retain here

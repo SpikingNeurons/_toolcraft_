@@ -254,7 +254,7 @@ def bake_expression(
 
 # noinspection PyArgumentList
 def _read_table(
-    df_file: "DfFile",
+    df_file: "Table",
     columns: t.List[str],
     filter_expression: pds.Expression,
     partitioning: pds.Partitioning,
@@ -288,7 +288,7 @@ def _read_table(
 
 
 def _write_table(
-    df_file: "DfFile",
+    df_file: "Table",
     table: pa.Table,
     partitioning: pds.Partitioning,
 ):
@@ -318,7 +318,7 @@ def _write_table(
     )
 
 
-class DfFileInternal(m.Internal):
+class TableInternal(m.Internal):
 
     partitioning: t.Optional[pds.Partitioning]
     schema: t.Optional[pa.Schema]
@@ -412,7 +412,7 @@ class DfFileInternal(m.Internal):
 
 
 @dataclasses.dataclass
-class DfFileConfig(s.Config):
+class TableConfig(s.Config):
 
     schema: t.Optional[t.Dict] = None
     partition_cols: t.Optional[t.List[str]] = None
@@ -438,10 +438,10 @@ class DfFileConfig(s.Config):
 
 # noinspection PyDataclass
 @dataclasses.dataclass(frozen=True)
-class DfFile(Folder):
+class Table(Folder):
     """
     This means files storage for Data frames i.e. for columnar data.
-    Although it is named DfFile we extend Folder to implement this because of
+    Although it is named Table we extend Folder to implement this because of
     Hive formatting where we have folders for columns.
 
     Every Dataframe is a Folder:
@@ -480,20 +480,20 @@ class DfFile(Folder):
 
     @property
     @util.CacheResult
-    def config(self) -> DfFileConfig:
-        return DfFileConfig(
+    def config(self) -> TableConfig:
+        return TableConfig(
             hashable=self, path_prefix=self.path.as_posix()
         )
 
     @property
     @util.CacheResult
-    def internal(self) -> DfFileInternal:
-        return DfFileInternal(self)
+    def internal(self) -> TableInternal:
+        return TableInternal(self)
 
     @property
     def contains(self) -> None:
         # although default we make sure that this is overridden
-        # we know that the DfFile folder will have unmanageable content
+        # we know that the Table folder will have unmanageable content
         # managed by pyarrow
         return None
 
@@ -523,7 +523,7 @@ class DfFile(Folder):
             e.code.NotAllowed(
                 msgs=[
                     f"We only allow for_hashable to be a str as this is "
-                    f"DfFile.",
+                    f"Table.",
                     f"Most likely for_hashable is name of method on which "
                     f"StoreField decorator was used.",
                 ]
@@ -584,7 +584,7 @@ class DfFile(Folder):
         else:
             return bool(_table)
 
-    # Note that the parent delete is for Folder but for DfFile also we have
+    # Note that the parent delete is for Folder but for Table also we have
     # folder which represents folder and we will take care of the delete. But
     # note that this delete is special with `filters` argument while `force`
     # argument will have no purpose.

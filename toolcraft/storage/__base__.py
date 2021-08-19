@@ -986,7 +986,7 @@ class ResultsFolder(Folder):
     @util.CacheResult
     def store_fields(self) -> t.List[str]:
         """
-        Gets you the DfFiles that will be stored under store
+        Gets you the Tables that will be stored under store
         That is returns properties/methods decorated by StoreField where each
         of them will have a sub-folder under Store
         """

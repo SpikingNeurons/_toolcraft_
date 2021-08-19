@@ -61,7 +61,7 @@ class FileGroupConfig(s.Config):
 
     # updated when some sort of check is performed
     # + like hash check e.g. FileGroup, NpyGroup etc.
-    # + schema checks e.g. DfFile
+    # + schema checks e.g. Table
     checked_on: t.List[datetime.datetime] = dataclasses.field(
         default_factory=list
     )
@@ -149,7 +149,7 @@ class FileGroup(StorageHashable, abc.ABC):
       use file_system.py (with no need for write, append filters like
       database features). This will nicely handle blob storage requirements as
       well as columnar storage for analytics. While data can move across
-      multiple file systems. Model it based on df_file.py
+      multiple file systems. Model it based on table.py
       ...
       This might feel less priority as the main job of file_group will be to
       move data on internal servers rather than moving data on cloud for

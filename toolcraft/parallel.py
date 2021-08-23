@@ -44,7 +44,9 @@ class _Task(Task):
 
 
 class TaskRunner:
-    ...
+
+    def setup(self):
+        ...
 
 
 class ProcessWithQueues(mp.Process):
@@ -64,6 +66,7 @@ class ProcessWithQueues(mp.Process):
         self.task_runner = task_runner
 
     def run(self):
+        self.task_runner.setup()
         while True:
             next_task = self.task_queue.get()  # type: Task
             if next_task == _KILL_PILL:
@@ -137,7 +140,8 @@ class TaskRunnerPool:
         # yield until queue is empty
         while True:
             # go to sleep
-            time.sleep(_time_for_retrieval)
+            # todo: see if it has any impact and then change
+            # time.sleep(_time_for_retrieval)
 
             # grow task queue if small
             if _tasks_available:

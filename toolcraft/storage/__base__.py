@@ -506,7 +506,8 @@ class StorageHashable(m.HashableClass, abc.ABC):
             e.code.CodingError(
                 msgs=[
                     f"All the files inside folder should be deleted by now ...",
-                    f"Expected path dir to be empty"
+                    f"Expected path dir to be empty",
+                    f"Check path {self.path}"
                 ]
             )
 

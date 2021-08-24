@@ -19,7 +19,7 @@ class Suffix:
 
 
 @dataclasses.dataclass
-class StateFile(m.Tracker, abc.ABC):
+class StateFile(m.YamlRepr, abc.ABC):
     """
 
     Manages the state of HashableClass
@@ -98,6 +98,31 @@ class StateFile(m.Tracker, abc.ABC):
     @abc.abstractmethod
     def check_if_backup_matches(self):
         ...
+
+    # noinspection PyTypeChecker
+    @classmethod
+    def from_dict(
+        cls,
+        yaml_state: t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+        **kwargs
+    ) -> "StateFile":
+        e.code.CodingError(
+            msgs=[
+                f"For state files we refrain using as_dict and from_dict"
+            ]
+        )
+        raise
+
+    # noinspection PyTypeChecker
+    def as_dict(
+        self
+    ) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+        e.code.CodingError(
+            msgs=[
+                f"For state files we refrain using as_dict and from_dict"
+            ]
+        )
+        raise
 
 
 @dataclasses.dataclass
@@ -218,10 +243,28 @@ class Config(StateFile):
     @property
     @util.CacheResult
     def dataclass_field_names(self) -> t.List[str]:
+        # we do not want to use this values to be saved in serialized state
         return [
             f_name for f_name in super().dataclass_field_names
             if f_name not in ["hashable", "path_prefix"]
         ]
+
+    @property
+    def _dict(self) -> t.Dict:
+        """
+        Refer
+        >>> util.notifying_list_dict_class_factory
+        """
+        _ret = {}
+        for _f_name in self.dataclass_field_names:
+            _v = getattr(self, _f_name)
+            # this handles the proxy list/dict conversions
+            if isinstance(_v, list):
+                _v = list(_v)
+            if isinstance(_v, dict):
+                _v = dict(_v)
+            _ret[_f_name] = _v
+        return _ret
 
     def __post_init__(self):
         """
@@ -231,12 +274,15 @@ class Config(StateFile):
         # if path exists load data dict from it
         # that is sync with contents on disk
         if self.path.exists():
-            _hashable_dict_from_disk = \
-                m.FrozenDict.from_yaml(self.path.read_text())
-            # update internal dict from HashableDict loaded from disk
-            self.__dict__.update(
-                _hashable_dict_from_disk.get()
+            _dict_from_dick = m.YamlLoader.load(
+                cls=dict, file_or_text=self.path
             )
+            # update internal dict from HashableDict loaded from disk
+            for _k, _v in _dict_from_dick.items():
+                # this will take care of conversion of list/dict into
+                # notifier list/dict
+                # check util.notifying_list_dict_class_factory
+                setattr(self, _k, _v)
 
         # ------------------------------------------------------------ 02
         # start syncing i.e. any updates via __setattr__ will be synced
@@ -278,7 +324,7 @@ class Config(StateFile):
     def sync(self):
         # -------------------------------------------------- 01
         # get current state
-        _current_state = self.make_frozen_dict_from_current_state().yaml()
+        _current_state = m.YamlDumper.dump(self._dict)
 
         # -------------------------------------------------- 02
         # if file exists on the disk then check if the contents are different
@@ -363,8 +409,8 @@ class Config(StateFile):
             )
 
         # get the state as dict
-        _self_yaml_dict = self.make_frozen_dict_from_current_state().as_dict()
-        _backup_yaml_dict = m.FrozenDict.from_yaml(
+        _self_yaml_dict = self.as_dict()
+        _backup_yaml_dict = self.from_yaml(
             self.backup_path.read_text()
         ).as_dict()
 
@@ -407,18 +453,3 @@ class Config(StateFile):
                             )
                         ]
                     )
-
-    def make_frozen_dict_from_current_state(self) -> m.FrozenDict:
-        # here we convert proxy notifier list and dict back to normal python
-        # builtins
-        _dict = {}
-        for f_name in self.dataclass_field_names:
-            value = getattr(self, f_name)
-            if isinstance(value, list):
-                value = list(value)
-            if isinstance(value, dict):
-                value = dict(value)
-            _dict[f_name] = value
-
-        # noinspection PyTypeChecker
-        return m.FrozenDict(item=_dict)

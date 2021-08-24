@@ -964,12 +964,14 @@ class FileGroup(StorageHashable, abc.ABC):
         # perform action
         if response == "y":
 
+            # -----------------------------------------------------------03.01
             # some variables to indicate progress
             # todo: make it like progress bar
             _total_keys = len(self.file_keys)
             _s_fmt = len(str(_total_keys))
             spinner = self.spinner
 
+            # -----------------------------------------------------------03.02
             # delete all files for the group
             for i, fk in enumerate(self.file_keys):
 
@@ -989,6 +991,12 @@ class FileGroup(StorageHashable, abc.ABC):
                             f"{_key_path}"
                         ]
                     )
+
+            # -----------------------------------------------------------03.03
+            # delete results folder as most likely we will not need it
+            # todo: if you want to retain the items inside this folder odify
+            #  this code
+            self.results_folder.delete(force=force)
         else:
             e.code.ExitGracefully(
                 msgs=[
@@ -1199,6 +1207,7 @@ class NpyMemMap:
 
         # check if already called
         try:
+            # noinspection PyUnresolvedReferences
             _ = self.call_helper
             # we do not expect attribute call_helper here
             e.code.CodingError(

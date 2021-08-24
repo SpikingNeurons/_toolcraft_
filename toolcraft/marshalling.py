@@ -582,6 +582,17 @@ class YamlDumper(yaml.Dumper):
     def ignore_aliases(self, data):
         return True
 
+    @classmethod
+    def dump(cls, item) -> str:
+        """
+        The method that dumps with specific yaml config for toolcraft
+        """
+        return yaml.dump(
+            item, Dumper=YamlDumper,
+            sort_keys=False,
+            default_flow_style=False,
+        )
+
 
 class YamlLoader(yaml.UnsafeLoader):
     """
@@ -599,6 +610,37 @@ class YamlLoader(yaml.UnsafeLoader):
         """
         self.extra_kwargs = extra_kwargs
         super().__init__(stream=stream)
+
+    @staticmethod
+    def load(
+        cls, file_or_text: t.Union[pathlib.Path, str],  **kwargs
+    ) -> t.Union[dict, "YamlRepr"]:
+        # get text
+        _text = file_or_text
+        if isinstance(file_or_text, pathlib.Path):
+            _text = file_or_text.read_text()
+
+        # load with Loader
+        _loader = YamlLoader(stream=_text, extra_kwargs=kwargs)
+        try:
+            _instance = _loader.get_single_data()
+        finally:
+            _loader.dispose()
+
+        # check
+        if _instance.__class__ != cls:
+            e.code.CodingError(
+                msgs=[
+                    f"We expect yaml str is for correct class ",
+                    {
+                        "expected": cls,
+                        "found": _instance.__class__
+                    }
+                ]
+            )
+
+        # return
+        return _instance
 
 
 class YamlRepr(Tracker):
@@ -699,49 +741,18 @@ class YamlRepr(Tracker):
     # hashables ... so we need this yaml ... but note that hex_has is cached
     # and we need make it sure that any mutations are temporary
     # Note on (sort_keys=False):
-    #     sort_keys=True makes sure that dict keys are sorted in yaml and
-    #     hence any key order will lead to same hex_hash ... but this will
-    #     lose the key insertion order ...
-    #     todo: disable sorted key behaviour on need basis as pyyaml
-    #       supports this ... as of now we want users pass any dict key
-    #       order while the hex_hash is automatically unique
+    #     sort_keys=False makes sure that we can use insertion order feature
+    #     provided by python 3.7+ ... also pyyaml is now supporting it
     def yaml(self) -> str:
-        return yaml.dump(
-            self, Dumper=YamlDumper,
-            sort_keys=False,
-            default_flow_style=False,
-        )
+        return YamlDumper.dump(self)
 
     @classmethod
     def from_yaml(
-        cls, file_or_text: t.Union[pathlib.Path, str],  **kwargs
+        cls,
+        file_or_text: t.Union[pathlib.Path, str],  **kwargs
     ) -> "YamlRepr":
-        # get text
-        _text = file_or_text
-        if isinstance(file_or_text, pathlib.Path):
-            _text = file_or_text.read_text()
-
-        # load with Loader
-        _loader = YamlLoader(stream=_text, extra_kwargs=kwargs)
-        try:
-            _instance = _loader.get_single_data()
-        finally:
-            _loader.dispose()
-
-        # check
-        if _instance.__class__ != cls:
-            e.code.CodingError(
-                msgs=[
-                    f"We expect yaml str is for correct class ",
-                    {
-                        "expected": cls,
-                        "found": _instance.__class__
-                    }
-                ]
-            )
-
         # return
-        return _instance
+        return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
     def clone(self) -> "YamlRepr":
         return self.from_yaml(self.yaml())
@@ -772,7 +783,6 @@ class YamlRepr(Tracker):
         item: t.Union[dict, list],
         key_or_index: str,
         allowed_types: t.Tuple[t.Type],
-        allowed_nesting: bool
     ):
 
         # ------------------------------------------------------------ 01
@@ -830,17 +840,9 @@ class YamlRepr(Tracker):
                 # ---------------------------------------------------- 04.04
                 # if nested dict or list try to verify keys and values
                 if isinstance(v, (dict, list)):
-                    # if nesting not allowed raise error
-                    if not allowed_nesting:
-                        e.validation.NotAllowed(
-                            msgs=[
-                                f"Nesting is not allowed so please avoid using "
-                                f"the nested component at {current_key}"
-                            ]
-                        )
                     # check the value
                     cls.can_be_frozen(
-                        v, current_key, allowed_types, allowed_nesting)
+                        v, current_key, allowed_types)
                 # ---------------------------------------------------- 04.05
                 # else value needs to be one of supported hashable
                 else:
@@ -886,64 +888,64 @@ class YamlRepr(Tracker):
         else:
             e.code.ShouldNeverHappen(msgs=[])
 
-
-class FrozenDict(YamlRepr):
-    @property
-    def allowed_types(self) -> t.Tuple[t.Type]:
-        return SUPPORTED_HASHABLE_OBJECTS
-
-    @property
-    def allowed_nesting(self) -> bool:
-        return True
-
-    def __init__(
-        self,
-        item: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-    ):
-        self._item = {}
-        self.update_internal_dict(item=item)
-
-    def update_internal_dict(
-        self,
-        item: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-    ):
-        item = item.copy()
-        # ------------------------------------------------------------ 01
-        # validation
-        self.can_be_frozen(
-            item=item,
-            key_or_index=f"{self.yaml_tag()}::",
-            allowed_types=self.allowed_types,
-            allowed_nesting=self.allowed_nesting,
-        )
-        # ------------------------------------------------------------ 02
-        # save reference
-        self._item.update(item)
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"!frozen_dict"
-
-    def get(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        _ret = {}
-        for k, v in self._item.items():
-            if isinstance(v, YamlRepr):
-                v = v.as_dict()
-            _ret[k] = v
-        return _ret
-
-    def as_dict(
-        self
-    ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        return self.get()
-
-    @classmethod
-    def from_dict(
-        cls,
-        yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-        **kwargs
-    ) -> "FrozenDict":
-        return cls(item=yaml_state)
+#
+# class _FrozenDict:
+#     @property
+#     def allowed_types(self) -> t.Tuple[t.Type]:
+#         return SUPPORTED_HASHABLE_OBJECTS
+#
+#     @property
+#     def allowed_nesting(self) -> bool:
+#         return True
+#
+#     def __init__(
+#         self,
+#         item: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+#     ):
+#         self._item = {}
+#         self.update_internal_dict(item=item)
+#
+#     def update_internal_dict(
+#         self,
+#         item: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+#     ):
+#         item = item.copy()
+#         # ------------------------------------------------------------ 01
+#         # validation
+#         self.can_be_frozen(
+#             item=item,
+#             key_or_index=f"{self.yaml_tag()}::",
+#             allowed_types=self.allowed_types,
+#             allowed_nesting=self.allowed_nesting,
+#         )
+#         # ------------------------------------------------------------ 02
+#         # save reference
+#         self._item.update(item)
+#
+#     @classmethod
+#     def yaml_tag(cls) -> str:
+#         return f"!frozen_dict"
+#
+#     def get(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+#         _ret = {}
+#         for k, v in self._item.items():
+#             if isinstance(v, YamlRepr):
+#                 v = v.as_dict()
+#             _ret[k] = v
+#         return _ret
+#
+#     def as_dict(
+#         self
+#     ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+#         return self.get()
+#
+#     @classmethod
+#     def from_dict(
+#         cls,
+#         yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+#         **kwargs
+#     ) -> "FrozenDict":
+#         return cls(item=yaml_state)
 
 
 class FrozenKeras(YamlRepr):
@@ -976,7 +978,6 @@ class FrozenKeras(YamlRepr):
             _k_config,
             key_or_index=f"{self.yaml_tag()}::",
             allowed_types=SUPPORTED_HASHABLE_OBJECTS,
-            allowed_nesting=True,
         )
 
         # -------------------------------------------------------- 02
@@ -1290,12 +1291,10 @@ class HashableClass(YamlRepr, abc.ABC):
             # ----------------------------------------------------------01.02
             # raise error to inform to use FrozenDict
             if isinstance(v, dict):
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Use `{FrozenDict.__name__}` instead of normal "
-                        f"python `dict` while creating instance of "
-                        f"HashableClass `{self.__class__}`"
-                    ]
+                self.can_be_frozen(
+                    item=v,
+                    key_or_index=f"{f_name}::",
+                    allowed_types=SUPPORTED_HASHABLE_OBJECTS,
                 )
             # ----------------------------------------------------------01.03
             # raise error to inform to use FrozenKeras
@@ -1313,7 +1312,6 @@ class HashableClass(YamlRepr, abc.ABC):
                 self.can_be_frozen(
                     item=v,
                     key_or_index=f"{f_name}::",
-                    allowed_nesting=True,
                     allowed_types=SUPPORTED_HASHABLE_OBJECTS,
                 )
             # ----------------------------------------------------------01.05
@@ -1411,14 +1409,11 @@ class HashableClass(YamlRepr, abc.ABC):
 
 
 SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
-    int, float, str, slice,
+    int, float, str, slice, list, dict,
     np.float32, np.int64, np.int32,
     datetime.datetime, None,
-    FrozenDict, FrozenEnum, FrozenKeras, HashableClass,
+    FrozenEnum, FrozenKeras, HashableClass,
     pa.Schema,
-
-    # Note that list and HashableClass are handle by code and please do not
-    # include here ....
 ]
 # noinspection PyUnresolvedReferences
 SUPPORTED_HASHABLE_OBJECTS = SUPPORTED_HASHABLE_OBJECTS_TYPE.__args__

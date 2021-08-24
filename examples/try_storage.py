@@ -188,10 +188,10 @@ def try_metainfo_file():
     for _ in range(5):
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _)
         print(df.yaml())
-        print(df.config.make_frozen_dict_from_current_state().get())
+        print(df.config.make_dict_from_current_state().get())
         df.get_file(file_key="file")
         print(df.yaml())
-        print(df.config.make_frozen_dict_from_current_state().get())
+        print(df.config.make_dict_from_current_state().get())
         time.sleep(1)
 
     df.delete(force=True)

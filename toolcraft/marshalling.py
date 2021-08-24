@@ -698,8 +698,19 @@ class YamlRepr(Tracker):
     # never override and never cache ... in some rare cases we update frozen
     # hashables ... so we need this yaml ... but note that hex_has is cached
     # and we need make it sure that any mutations are temporary
+    # Note on (sort_keys=False):
+    #     sort_keys=True makes sure that dict keys are sorted in yaml and
+    #     hence any key order will lead to same hex_hash ... but this will
+    #     lose the key insertion order ...
+    #     todo: disable sorted key behaviour on need basis as pyyaml
+    #       supports this ... as of now we want users pass any dict key
+    #       order while the hex_hash is automatically unique
     def yaml(self) -> str:
-        return yaml.dump(self, Dumper=YamlDumper)
+        return yaml.dump(
+            self, Dumper=YamlDumper,
+            sort_keys=False,
+            default_flow_style=False,
+        )
 
     @classmethod
     def from_yaml(

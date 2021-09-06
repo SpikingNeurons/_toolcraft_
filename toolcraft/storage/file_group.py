@@ -608,7 +608,9 @@ class FileGroup(StorageHashable, abc.ABC):
             # raise error
             e.code.CodingError(
                 msgs=[
-                    f"Hashes for some files did not match. Check below",
+                    f"Hashes for some files did not match. ",
+                    f"FileGroup: {self.name}",
+                    f"Check below",
                     _failed_hashes
                 ]
             )
